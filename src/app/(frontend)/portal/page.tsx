@@ -7,7 +7,6 @@ import { detectQR as detectQRShared } from "@/frontend/lib/qr-detect";
 import { PortalTracker } from "@/frontend/components/PortalTracker";
 import { WhatsAppFab, WhatsAppCta, WhatsAppMini, type PortalBranch } from "@/frontend/components/PortalWhatsApp";
 import { PortalHow, PortalReviews, type PublicReviews } from "@/frontend/components/PortalSections";
-import { PortalNewCarousel, PortalNewSkeleton, type NuevoItem } from "@/frontend/components/PortalNewCarousel";
 import { PortalBranches } from "@/frontend/components/PortalBranches";
 import { PortalSide } from "@/frontend/components/PortalSide";
 import { ReserveButton, WaitlistButton, EMPTY_HOLDS, type Holds } from "@/frontend/components/PortalReserve";
@@ -609,17 +608,7 @@ export default function PortalPage() {
   const totalPagesEq = Math.ceil(filteredEquipment.length / PAGE_SIZE);
   const pagedEquipment = filteredEquipment.slice((pageEq - 1) * PAGE_SIZE, pageEq * PAGE_SIZE);
 
-  // Portada: novedades de todo el catálogo (productos, repuestos, programas, videojuegos, consolas y equipos)
-  // con foto, máx. 10, del más nuevo al más antiguo.
-  // Como el portal se recarga solo cada 15 s, lo que se agrega aparece sin refrescar la página.
   const verEnCatalogo = (t: typeof tab, q: string) => { setTab(t); setSearch(q); setCategoryFilter("all"); setBranchFilter("all"); setPageInv(1); scrollToCatalog(); };
-  const nuevos: (NuevoItem & { fecha: string })[] = [
-    ...inventory.filter(it => it.quantity > 0 && it.image).map(it => ({ key: `inv-${it.id}`, img: it.image!, tipo: [it.kind === "part" ? "Repuesto" : "Producto", it.category].filter(Boolean).join(" · "), nombre: it.name, precio: it.price, fecha: it.createdAt || "", abrir: () => verEnCatalogo(it.kind === "part" ? "parts" : "inventory", it.name) })),
-    ...equipment.filter(e => e.condition === "disponible" && parseEqImages(e.image).length).map(e => ({ key: `eq-${e.id}`, img: parseEqImages(e.image)[0], tipo: `Equipo · ${e.code}`, nombre: getEqDisplayName(e), precio: e.price, fecha: e.createdAt || "", abrir: () => { setSelectedEq(e); setCarouselIdx(0); } })),
-    ...consoles.filter(c => c.condition === "disponible" && parseEqImages(c.image).length).map(c => ({ key: `cn-${c.id}`, img: parseEqImages(c.image)[0], tipo: c.code ? `Consola · ${c.code}` : "Consola", nombre: getConsoleDisplayName(c), precio: c.price, fecha: c.createdAt || "", abrir: () => { setSelectedCn(c); setCarouselIdx(0); } })),
-    ...software.filter(sw => parseEqImages(sw.image).length).map(sw => ({ key: `sw-${sw.id}`, img: parseEqImages(sw.image)[0], tipo: ["Programa", sw.category].filter(Boolean).join(" · "), nombre: sw.name, precio: sw.price ?? null, fecha: sw.createdAt || "", abrir: () => { setSelectedSw(sw); setCarouselIdx(0); } })),
-    ...videogames.filter(v => parseEqImages(v.image).length).map(v => ({ key: `vg-${v.id}`, img: parseEqImages(v.image)[0], tipo: v.platform ? `Videojuego · ${v.platform}` : "Videojuego", nombre: v.name, precio: v.price ?? null, fecha: v.createdAt || "", abrir: () => { setSelectedVg(v); setCarouselIdx(0); } })),
-  ].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflowX: "clip" }}>
@@ -741,8 +730,6 @@ export default function PortalPage() {
             </form>
           </div>
 
-          {/* Novedades con foto; mientras carga o sin conexión, su esqueleto de carga */}
-          {nuevos.length > 0 ? <PortalNewCarousel items={nuevos} /> : cargando ? <PortalNewSkeleton /> : null}
         </div>
       </section>
 

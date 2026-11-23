@@ -835,7 +835,7 @@ svg.ui-ic { display: inline-block; flex-shrink: 0; vertical-align: -0.15em; }
 /* (la foto y el oscurecido van en línea en el portal; en celular el texto ocupa todo el ancho: se oscurece parejo) */
 .pt-hero2.has-cover h1, .pt-hero2.has-cover .pt-lead, .pt-hero2.has-cover .pt-trust, .pt-hero2.has-cover .pt-trackbox label, .pt-hero2.has-cover .pt-hint { text-shadow: 0 1px 10px rgba(2,6,23,.55); }
 @media (max-width: 960px) { .pt-hero2.has-cover::before { content: ""; position: absolute; inset: 0; z-index: 0; background: rgba(15,23,42,.55); } }
-/* Portada: el código se escribe bajo el título; a la derecha va el carrusel de Novedades */
+/* Portada: el código se escribe bajo el título */
 .pt-hero2 .pt-trackbox { background: transparent; color: #fff; padding: 0; border-radius: 0; box-shadow: none; margin-top: 28px; max-width: 520px; }
 .pt-hero2 .pt-trackbox label { margin: 0 0 8px; color: #dbe5ef; font-size: 14px; font-weight: 600; }
 .pt-hero2 .pt-trackrow input { border-color: transparent; }
@@ -843,34 +843,6 @@ svg.ui-ic { display: inline-block; flex-shrink: 0; vertical-align: -0.15em; }
 @media (hover: hover) and (pointer: fine) { .pt-hero2 .pt-btn-scan:hover { background: rgba(255,255,255,.14); } }
 .pt-hero2 .pt-hint { color: #a9b7c9; }
 .pt-hero2 .pt-hint b { color: #fff; }
-/* Portada: carrusel "Lo nuevo" (últimos 10 del catálogo con foto) */
-.pt-new { position: relative; background: #fff; color: var(--text-primary); border-radius: 16px; overflow: hidden; box-shadow: 0 24px 48px rgba(2,6,23,.45); }
-@media (min-width: 641px) and (max-width: 960px) { .pt-new { width: 100%; max-width: 520px; justify-self: center; } }
-.pt-new-head { display: flex; align-items: center; gap: 12px; margin: 0; padding: 16px 20px 0; font-weight: 600; }
-.pt-new-head::before, .pt-new-head::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-.pt-new-head span { font-size: 26px; font-style: italic; line-height: 1.1; color: var(--text-primary); letter-spacing: 0; }
-.pt-new-slide { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; border: 0; background: #fff; cursor: pointer; }
-.pt-new-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 12px 20px; opacity: 0; transition: opacity .5s ease; }
-.pt-new-slide img.on { opacity: 1; }
-.pt-new-arr { position: absolute; top: calc(50% - 10px); width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: rgba(255,255,255,.92); color: var(--text-primary); display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 6px rgba(15,23,42,.12); }
-.pt-new-arr.l { left: 10px; } .pt-new-arr.r { right: 10px; }
-@media (hover: hover) and (pointer: fine) { .pt-new-arr:hover { background: #fff; border-color: var(--text-faint); } }
-.pt-new-cap { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding: 10px 16px 4px; border-top: 1px solid var(--border); }
-.pt-new-cap > div { min-width: 0; }
-.pt-new-cap small { display: block; font-size: 12px; color: var(--text-muted); }
-.pt-new-cap b { display: block; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pt-new-cap > span { font-size: 18px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.pt-new-foot { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 8px 0 12px; }
-.pt-new-foot > span { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.pt-new-dots { display: flex; justify-content: center; gap: 6px; }
-.pt-new-dots button { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 4px; background: #cbd5e1; cursor: pointer; position: relative; transition: width .25s ease, background .25s ease; }
-.pt-new-dots button::after { content: ""; position: absolute; inset: -14px -5px; } /* más fácil de tocar (unos 18 × 35 px) */
-.pt-new-dots button.on { width: 18px; background: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .pt-new-slide img, .pt-new-dots button { transition: none; } }
-@media (max-width: 640px) {
-  .pt-new-slide img { padding: 10px 14px; }
-  .pt-new-head span { font-size: 22px; }
-}
 @media (max-width: 640px) { .pt-hero2 .pt-trackbox { margin-top: 20px; } }
 
 .pt-what { position: relative; z-index: 2; display: grid; margin: -28px 0 0; background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 6px rgba(15,23,42,0.05); }
