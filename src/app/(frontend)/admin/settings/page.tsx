@@ -12,6 +12,7 @@ import { AiCard, GoogleReviewsCard, ImeiCard, PaymentQrCard } from "@/frontend/c
 import { pressKey } from "@/frontend/lib/a11y";
 import { PageSkeleton } from "@/frontend/components/Skeletons";
 import BrandColorsPanel from "@/frontend/components/BrandColorsPanel";
+import { coverBackground, type CoverFit } from "@/shared/portal-cover";
 import { BRAND_DEFAULT, BRAND_PRESETS, type BrandColors } from "@/shared/brand-colors";
 
 // Configuración por apartados: primero las tarjetas; al tocar una se ve solo ese apartado (?s=… en la dirección)
@@ -27,7 +28,7 @@ const APARTADOS: { key: Apartado; icon: React.ReactNode; title: string; desc: st
 ];
 const esApartado = (v: string | null): v is Apartado => !!v && APARTADOS.some((a) => a.key === v);
 
-interface Settings { portalCover?: string | null; brandColors?: BrandColors; id: string; companyName: string; slogan: string; logo: string | null; phone: string | null; email: string | null; address: string | null; website: string | null; city: string | null; warrantyDays: number; abandonDays: number; terms: string | null; publicUrl: string | null; }
+interface Settings { portalCover?: string | null; portalCoverFit?: CoverFit; brandColors?: BrandColors; id: string; companyName: string; slogan: string; logo: string | null; phone: string | null; email: string | null; address: string | null; website: string | null; city: string | null; warrantyDays: number; abandonDays: number; terms: string | null; publicUrl: string | null; }
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function AdminSettingsPage() {
   const [logo, setLogo] = useState<string | null>(null);
   // Foto de portada del portal: se sube al elegirla y se guarda con "Guardar"
   const [portalCover, setPortalCover] = useState<string | null>(null);
+  const [portalCoverFit, setPortalCoverFit] = useState<CoverFit>("cover");
   const [brandColors, setBrandColors] = useState<BrandColors>(BRAND_DEFAULT);
   const [coverUploading, setCoverUploading] = useState(false);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -113,6 +115,7 @@ export default function AdminSettingsPage() {
         setSlogan(s.slogan);
         setLogo(s.logo);
         setPortalCover(s.portalCover || null);
+        setPortalCoverFit(s.portalCoverFit === "contain" ? "contain" : "cover");
         if (s.brandColors) setBrandColors(s.brandColors);
         setPhone(s.phone || "");
         setEmail(s.email || "");
@@ -185,6 +188,7 @@ export default function AdminSettingsPage() {
           slogan: slogan.trim(),
           logo,
           portalCover,
+          portalCoverFit,
           phone: phone.trim() || null,
           email: email.trim() || null,
           address: address.trim() || null,
@@ -301,7 +305,7 @@ export default function AdminSettingsPage() {
             <label htmlFor="f-admin-settings-cover" style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", display: "block", marginBottom: 4 }}>Portada del portal</label>
             <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>Foto de fondo de la parte de arriba del portal. Si no subes ninguna, queda el fondo oscuro (el de Configuración › Colores).</p>
             <div className="settings-cover-row" style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-              <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Cambiar foto de portada" onClick={() => coverRef.current?.click()}                 style={{ width: 280, maxWidth: "100%", aspectRatio: "12 / 5", borderRadius: 10, overflow: "hidden", position: "relative", flexShrink: 0, cursor: "pointer", background: portalCover ? `linear-gradient(90deg, rgba(15,23,42,.9) 0%, rgba(15,23,42,.72) 40%, rgba(15,23,42,.3) 100%), url("${portalCover}") center / cover no-repeat, var(--brand-dark)` : "var(--brand-dark)", display: "flex", alignItems: "center", padding: "0 16px" }}>
+              <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Cambiar foto de portada" onClick={() => coverRef.current?.click()}                 style={{ width: 280, maxWidth: "100%", aspectRatio: "12 / 5", borderRadius: 10, overflow: "hidden", position: "relative", flexShrink: 0, cursor: "pointer", ...(portalCover ? coverBackground(portalCover, portalCoverFit) : { background: "var(--brand-dark)" }), display: "flex", alignItems: "center", padding: "0 16px" }}>
                 <span style={{ position: "relative", zIndex: 1, color: "#fff", fontWeight: 700, fontSize: 13, lineHeight: 1.25, maxWidth: "60%" }}>Reparamos tu equipo y tú ves el avance en línea</span>
               </div>
               <div style={{ flex: 1, minWidth: 200 }}>
@@ -309,6 +313,12 @@ export default function AdminSettingsPage() {
                 <button onClick={() => coverRef.current?.click()} disabled={coverUploading} style={{ padding: "8px 16px", background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)", borderRadius: 8, color: "var(--accent-dim)", fontSize: 11, fontWeight: 600, cursor: coverUploading ? "wait" : "pointer", marginBottom: 6, display: "block" }}><Upload size={14} strokeWidth={STROKE} aria-hidden="true" /> {coverUploading ? "Subiendo…" : portalCover ? "Cambiar foto" : "Subir foto"}</button>
                 {portalCover && <button onClick={() => setPortalCover(null)} style={{ padding: "6px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 8, color: "var(--danger-bright)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}><Trash2 size={14} strokeWidth={STROKE} aria-hidden="true" /> Quitar</button>}
                 <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>Foto horizontal de 1920 × 800 px o más (tu taller, tu vitrina, equipos). JPG, PNG o WEBP, máximo 5MB. Se oscurece a la izquierda para que el texto se lea.</p>
+                <div role="group" aria-label="Cómo se ve la foto" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>Cómo se ve la foto:</span>
+                  {([["cover", "Llenar (recorta)"], ["contain", "Completa (sin recortar)"]] as const).map(([v, txt]) => (
+                    <button key={v} type="button" aria-pressed={portalCoverFit === v} onClick={() => setPortalCoverFit(v)} style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1px solid ${portalCoverFit === v ? "var(--accent)" : "var(--border)"}`, background: portalCoverFit === v ? "var(--accent)" : "transparent", color: portalCoverFit === v ? "#fff" : "var(--text-secondary)" }}>{txt}</button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

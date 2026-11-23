@@ -6,11 +6,13 @@ import { invalidateSettingsCache } from "@/backend/company";
 import { normalizePublicUrl } from "@/shared/branding";
 import { readKV, writeKV } from "@/backend/automation";
 import { getBrandColors, saveBrandColors } from "@/backend/brand-colors";
+import { esCoverFit } from "@/shared/portal-cover";
 import { isHexColor, isPrintMode } from "@/shared/brand-colors";
 
 // Foto de portada del portal (Configuración): dirección de una imagen subida, o null para el fondo azul.
 // Se guarda aparte (KeyValue) para no agrandar la fila de Settings.
 const COVER_KEY = "portal.cover";
+const FIT_KEY = "portal.coverFit";
 const validCover = (v: unknown): v is string => typeof v === "string" && /^\/uploads\/[\w.-]+$/.test(v);
 
 const SETTINGS_ID = "global";
@@ -32,7 +34,8 @@ export async function GET() {
     }
 
     const portalCover = await readKV<string | null>(COVER_KEY, null);
-    return NextResponse.json({ ...settings, portalCover: validCover(portalCover) ? portalCover : null, brandColors: await getBrandColors() });
+    const fit = await readKV<string>(FIT_KEY, "cover");
+    return NextResponse.json({ ...settings, portalCover: validCover(portalCover) ? portalCover : null, portalCoverFit: esCoverFit(fit) ? fit : "cover", brandColors: await getBrandColors() });
   } catch (error) {
     console.error("Settings GET error:", error);
     return NextResponse.json({
@@ -40,7 +43,7 @@ export async function GET() {
       companyName: "RepairTrackQR",
       slogan: "Servicio Técnico Especializado",
       logo: null, phone: null, email: null, address: null, website: null,
-      city: null, warrantyDays: 30, abandonDays: 90, terms: null, publicUrl: null, portalCover: null,
+      city: null, warrantyDays: 30, abandonDays: 90, terms: null, publicUrl: null, portalCover: null, portalCoverFit: "cover",
     });
   }
 }
@@ -114,9 +117,10 @@ export async function PUT(request: Request) {
     });
 
     if (body.portalCover !== undefined) await writeKV(COVER_KEY, body.portalCover);
+    if (esCoverFit(body.portalCoverFit)) await writeKV(FIT_KEY, body.portalCoverFit);
     if (brandColors !== undefined) await saveBrandColors({ accent: brandColors.accent, dark: brandColors.dark, print: brandColors.print });
     invalidateSettingsCache();
-    return NextResponse.json({ ...settings, portalCover: body.portalCover !== undefined ? body.portalCover : await readKV<string | null>(COVER_KEY, null), brandColors: await getBrandColors() });
+    return NextResponse.json({ ...settings, portalCover: body.portalCover !== undefined ? body.portalCover : await readKV<string | null>(COVER_KEY, null), portalCoverFit: esCoverFit(body.portalCoverFit) ? body.portalCoverFit : await readKV<string>(FIT_KEY, "cover"), brandColors: await getBrandColors() });
   } catch (error) {
     if (errMsg(error) === "NO_AUTH") {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
