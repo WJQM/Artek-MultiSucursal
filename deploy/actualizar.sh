@@ -15,11 +15,16 @@
 # ============================================================
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/var/www/repairtrack}"
+# La carpeta del sistema es la que contiene este script (sirve para tener dos copias en el servidor)
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+export APP_DIR
+APP_NAME="$(basename "$APP_DIR")"
 SOURCE="${1:-}"
 cd "$APP_DIR"
 
-if [ ! -f .env ]; then echo "❌ No existe $APP_DIR/.env (ver deploy/GUIA-HETZNER.md)"; exit 1; fi
+if [ ! -f .env ]; then echo "❌ No existe $APP_DIR/.env (ver deploy/GUIA-OVHCLOUD.md)"; exit 1; fi
+PORT="$(grep -E '^PORT=' .env | tail -1 | cut -d= -f2 | tr -d "\"'\r")"
+PORT="${PORT:-3000}"
 
 echo "▶ 1/5 Respaldo previo"
 bash "$APP_DIR/scripts/backup-diario.sh" || { echo "❌ El respaldo falló; no se actualiza."; exit 1; }
@@ -46,19 +51,19 @@ cp -r public .next/standalone/public
 cp -r .next/static .next/standalone/.next/static
 
 echo "▶ 5/5 Reiniciando"
-if pm2 describe repairtrack >/dev/null 2>&1; then
-  pm2 reload repairtrack --update-env
+if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
+  pm2 reload "$APP_NAME" --update-env
 else
   pm2 start "$APP_DIR/deploy/ecosystem.config.cjs"
 fi
 pm2 save >/dev/null
 
 for i in $(seq 1 20); do
-  if curl -fsS -o /dev/null http://127.0.0.1:3000/api/settings; then
+  if curl -fsS -o /dev/null "http://127.0.0.1:$PORT/api/settings"; then
     echo "✅ Actualizado y funcionando."
     exit 0
   fi
   sleep 2
 done
-echo "⚠️  La app no responde todavía. Revisa: pm2 logs repairtrack --lines 50"
+echo "⚠️  La app no responde todavía. Revisa: pm2 logs $APP_NAME --lines 50"
 exit 1

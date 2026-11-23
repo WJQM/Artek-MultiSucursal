@@ -13,7 +13,7 @@
 # ============================================
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/var/www/repairtrack}"
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 BACKUP_DIR="${BACKUP_DIR:-/root/backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 STAMP=$(date +"%Y-%m-%d_%H%M")
