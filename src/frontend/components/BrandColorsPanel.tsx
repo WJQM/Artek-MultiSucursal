@@ -1,5 +1,6 @@
 "use client";
-import { CircleCheck, Printer, RotateCcw, TriangleAlert } from "@/frontend/components/icons";
+import { CircleCheck, Palette, Printer, RotateCcw, TriangleAlert } from "@/frontend/components/icons";
+import { coloresDeFoto } from "@/frontend/lib/colores-foto";
 import { STROKE } from "@/frontend/components/UiIcons";
 import { apiFetch } from "@/frontend/lib/api";
 import { sileo } from "@/frontend/lib/toast";
@@ -21,10 +22,22 @@ const sameColors = (a: BrandColors, b: BrandColors) => a.accent.toLowerCase() ==
 const same = (a: BrandColors, b: BrandColors) => sameColors(a, b) && (a.print || "bw") === (b.print || "bw");
 const ORIGINAL: BrandColors = { ...BRAND_DEFAULT, print: "bw" };
 
-export default function BrandColorsPanel({ initial, onSaved }: { initial: BrandColors; onSaved?: (c: BrandColors) => void }) {
+export default function BrandColorsPanel({ initial, onSaved, cover }: { initial: BrandColors; onSaved?: (c: BrandColors) => void; cover?: string | null }) {
   const [saved, setSaved] = useState<BrandColors>(initial);
   const [c, setC] = useState<BrandColors>(initial);
   const [saving, setSaving] = useState(false);
+  const [leyendo, setLeyendo] = useState(false);
+
+  const tomarDeFoto = async () => {
+    if (!cover) return;
+    setLeyendo(true);
+    try {
+      const r = await coloresDeFoto(cover);
+      if (!r) { sileo.error({ title: "No se pudo leer la foto de portada" }); return; }
+      setC((x) => ({ ...x, dark: r.dark, accent: r.accent || x.accent }));
+      sileo.success({ title: "Colores tomados de la foto", description: r.accent ? "Revisa la vista previa y presiona Guardar" : "La foto no tiene un color vivo: se cambió solo el Oscuro" });
+    } finally { setLeyendo(false); }
+  };
   const n = normalizeBrand(c);
   const vars = brandVars(c) as React.CSSProperties;
   const cambiado = !same(c, saved);
@@ -84,6 +97,12 @@ export default function BrandColorsPanel({ initial, onSaved }: { initial: BrandC
             );
           })}
         </div>
+        {cover && (
+          <button type="button" onClick={tomarDeFoto} disabled={leyendo}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 12, padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)", fontSize: 13, fontWeight: 600, cursor: leyendo ? "wait" : "pointer" }}>
+            <Palette size={16} strokeWidth={STROKE} aria-hidden="true" /> {leyendo ? "Leyendo la foto…" : "Tomar colores de la foto de portada"}
+          </button>
+        )}
       </div>
 
       <div style={card}>

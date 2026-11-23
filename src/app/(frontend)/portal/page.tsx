@@ -12,7 +12,7 @@ import { PortalSide } from "@/frontend/components/PortalSide";
 import { ReserveButton, WaitlistButton, EMPTY_HOLDS, type Holds } from "@/frontend/components/PortalReserve";
 import { thumb } from "@/shared/thumb";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
-import { coverBackground, type CoverFit } from "@/shared/portal-cover";
+import { coverVars, type CoverFit, type PortalNav } from "@/shared/portal-cover";
 import type { Html5Qrcode } from "html5-qrcode";
 interface InventoryItem { kind?: string;
   id: string; name: string; category: string | null; quantity: number;
@@ -164,11 +164,11 @@ export default function PortalPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerDivId = "portal-qr-reader";
-  const [settings, setSettings] = useState<{ companyName: string; logo: string | null; slogan: string; phone: string | null; city: string | null; warrantyDays: number; portalCover?: string | null; portalCoverFit?: CoverFit }>({ companyName: "", logo: null, slogan: "", phone: null, city: null, warrantyDays: 30 });
+  const [settings, setSettings] = useState<{ companyName: string; logo: string | null; slogan: string; phone: string | null; city: string | null; warrantyDays: number; portalCover?: string | null; portalCoverFit?: CoverFit; portalCoverMobile?: string | null; portalNav?: PortalNav }>({ companyName: "", logo: null, slogan: "", phone: null, city: null, warrantyDays: 30 });
   const [contactBranches, setContactBranches] = useState<PortalBranch[]>([]);
   const [publicReviews, setPublicReviews] = useState<PublicReviews | null>(null);
 
-  useEffect(() => { setMounted(true); loadData(); fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setSettings({ companyName: d.companyName, logo: d.logo, slogan: d.slogan, phone: d.phone || null, city: d.city || null, warrantyDays: Number(d.warrantyDays) || 30, portalCover: d.portalCover || null, portalCoverFit: d.portalCoverFit === "contain" ? "contain" : "cover" }); }).catch(() => {}); fetch("/api/branches").then(r => r.ok ? r.json() : []).then(b => { if (Array.isArray(b)) setContactBranches(b); }).catch(() => {}); fetch("/api/reviews/public").then(r => r.ok ? r.json() : null).then(d => { if (d && Array.isArray(d.reviews)) setPublicReviews(d); }).catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- se recarga solo cuando cambia lo indicado
+  useEffect(() => { setMounted(true); loadData(); fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setSettings({ companyName: d.companyName, logo: d.logo, slogan: d.slogan, phone: d.phone || null, city: d.city || null, warrantyDays: Number(d.warrantyDays) || 30, portalCover: d.portalCover || null, portalCoverFit: d.portalCoverFit === "contain" ? "contain" : "cover", portalCoverMobile: d.portalCoverMobile || null, portalNav: d.portalNav === "dark" ? "dark" : "light" }); }).catch(() => {}); fetch("/api/branches").then(r => r.ok ? r.json() : []).then(b => { if (Array.isArray(b)) setContactBranches(b); }).catch(() => {}); fetch("/api/reviews/public").then(r => r.ok ? r.json() : null).then(d => { if (d && Array.isArray(d.reviews)) setPublicReviews(d); }).catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- se recarga solo cuando cambia lo indicado
   useEffect(() => { const interval = setInterval(() => loadData(true), 15000); return () => clearInterval(interval); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- se recarga solo cuando cambia lo indicado
 
   // Deep link: ?eq={id} opens equipment modal automatically once data is loaded
@@ -675,7 +675,7 @@ export default function PortalPage() {
 
 
       {/* Barra superior: marca, secciones y WhatsApp siempre a mano */}
-      <header className="pt-nav">
+      <header className={`pt-nav${settings.portalNav === "dark" ? " is-dark" : ""}`}>
         <div className="pt-wrap">
           <a className="pt-brand" href="/portal">
             {settings.logo
@@ -695,7 +695,7 @@ export default function PortalPage() {
       {/* Franja de la marca con el buscador de órdenes como protagonista */}
       <main>
       {/* Fondo: la foto de portada de Configuración (oscurecida para leer el texto) o el azul oscuro */}
-      <section className={`pt-hero2${settings.portalCover ? " has-cover" : ""}`} id="seguimiento" style={settings.portalCover ? coverBackground(settings.portalCover, settings.portalCoverFit) : undefined}>
+      <section className={`pt-hero2${settings.portalCover ? " has-cover" : ""}`} id="seguimiento" style={settings.portalCover ? coverVars(settings.portalCover, settings.portalCoverFit, settings.portalCoverMobile) : undefined}>
         <div className="pt-wrap pt-hero2-grid">
           <div>
                         <h1>Reparamos tu equipo y tú ves el avance en línea.</h1>

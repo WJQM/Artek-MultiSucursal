@@ -12,7 +12,7 @@ import { AiCard, GoogleReviewsCard, ImeiCard, PaymentQrCard } from "@/frontend/c
 import { pressKey } from "@/frontend/lib/a11y";
 import { PageSkeleton } from "@/frontend/components/Skeletons";
 import BrandColorsPanel from "@/frontend/components/BrandColorsPanel";
-import { coverBackground, type CoverFit } from "@/shared/portal-cover";
+import { coverBackground, type CoverFit, type PortalNav } from "@/shared/portal-cover";
 import { BRAND_DEFAULT, BRAND_PRESETS, type BrandColors } from "@/shared/brand-colors";
 
 // Configuración por apartados: primero las tarjetas; al tocar una se ve solo ese apartado (?s=… en la dirección)
@@ -28,7 +28,7 @@ const APARTADOS: { key: Apartado; icon: React.ReactNode; title: string; desc: st
 ];
 const esApartado = (v: string | null): v is Apartado => !!v && APARTADOS.some((a) => a.key === v);
 
-interface Settings { portalCover?: string | null; portalCoverFit?: CoverFit; brandColors?: BrandColors; id: string; companyName: string; slogan: string; logo: string | null; phone: string | null; email: string | null; address: string | null; website: string | null; city: string | null; warrantyDays: number; abandonDays: number; terms: string | null; publicUrl: string | null; }
+interface Settings { portalCover?: string | null; portalCoverFit?: CoverFit; portalCoverMobile?: string | null; portalNav?: PortalNav; brandColors?: BrandColors; id: string; companyName: string; slogan: string; logo: string | null; phone: string | null; email: string | null; address: string | null; website: string | null; city: string | null; warrantyDays: number; abandonDays: number; terms: string | null; publicUrl: string | null; }
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -44,6 +44,10 @@ export default function AdminSettingsPage() {
   // Foto de portada del portal: se sube al elegirla y se guarda con "Guardar"
   const [portalCover, setPortalCover] = useState<string | null>(null);
   const [portalCoverFit, setPortalCoverFit] = useState<CoverFit>("cover");
+  const [portalCoverMobile, setPortalCoverMobile] = useState<string | null>(null);
+  const [portalNav, setPortalNav] = useState<PortalNav>("light");
+  const [coverMobileUploading, setCoverMobileUploading] = useState(false);
+  const coverMobileRef = useRef<HTMLInputElement>(null);
   const [brandColors, setBrandColors] = useState<BrandColors>(BRAND_DEFAULT);
   const [coverUploading, setCoverUploading] = useState(false);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -116,6 +120,8 @@ export default function AdminSettingsPage() {
         setLogo(s.logo);
         setPortalCover(s.portalCover || null);
         setPortalCoverFit(s.portalCoverFit === "contain" ? "contain" : "cover");
+        setPortalCoverMobile(s.portalCoverMobile || null);
+        setPortalNav(s.portalNav === "dark" ? "dark" : "light");
         if (s.brandColors) setBrandColors(s.brandColors);
         setPhone(s.phone || "");
         setEmail(s.email || "");
@@ -139,6 +145,21 @@ export default function AdminSettingsPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleCoverMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { sileo.error({ title: "La foto no debe superar 5MB" }); return; }
+    setCoverMobileUploading(true);
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const res = await apiFetch("/api/upload", { method: "POST", body: fd });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok && d.url) { setPortalCoverMobile(d.url); sileo.success({ title: "Foto cargada", description: "Presiona Guardar para mostrarla en el portal" }); }
+      else sileo.error({ title: d.error || "No se pudo subir la foto" });
+    } catch { sileo.error({ title: "Sin conexión", description: "Revisa tu internet e intenta de nuevo" }); }
+    finally { setCoverMobileUploading(false); }
+  };
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -189,6 +210,8 @@ export default function AdminSettingsPage() {
           logo,
           portalCover,
           portalCoverFit,
+          portalCoverMobile,
+          portalNav,
           phone: phone.trim() || null,
           email: email.trim() || null,
           address: address.trim() || null,
@@ -321,6 +344,25 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
             </div>
+            <div style={{ borderTop: "1px solid var(--border)", marginTop: 18, paddingTop: 16 }}>
+              <label htmlFor="f-admin-settings-cover-m" style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", display: "block", marginBottom: 10 }}>Foto para celular (opcional)</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Cambiar foto para celular" onClick={() => coverMobileRef.current?.click()}
+                  style={{ width: 96, aspectRatio: "4 / 5", borderRadius: 10, overflow: "hidden", flexShrink: 0, cursor: "pointer", border: "1px solid var(--border)", background: (portalCoverMobile || portalCover) ? `linear-gradient(color-mix(in srgb, var(--brand-dark) 55%, transparent), color-mix(in srgb, var(--brand-dark) 55%, transparent)), url("${portalCoverMobile || portalCover}") center / cover no-repeat, var(--brand-dark)` : "var(--brand-dark)" }} />
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <input id="f-admin-settings-cover-m" type="file" ref={coverMobileRef} accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleCoverMobileUpload} style={{ display: "none" }} />
+                  <button onClick={() => coverMobileRef.current?.click()} disabled={coverMobileUploading} style={{ padding: "8px 16px", background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)", borderRadius: 8, color: "var(--accent-dim)", fontSize: 11, fontWeight: 600, cursor: coverMobileUploading ? "wait" : "pointer", marginRight: 8 }}>{coverMobileUploading ? "Subiendo…" : portalCoverMobile ? "Cambiar foto" : "Subir foto"}</button>
+                  {portalCoverMobile && <button onClick={() => setPortalCoverMobile(null)} style={{ padding: "6px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 8, color: "var(--danger-bright)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}><Trash2 size={14} strokeWidth={STROKE} aria-hidden="true" /> Quitar</button>}
+                  <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>Foto vertical de 1080 × 1350 px, con lo importante al centro. Se usa en celulares y tablets; si no subes ninguna, se usa la de computadora.</p>
+                </div>
+              </div>
+            </div>
+            <div role="group" aria-label="Barra superior del portal" style={{ borderTop: "1px solid var(--border)", marginTop: 18, paddingTop: 16, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>Barra superior del portal:</span>
+              {([["light", "Blanca"], ["dark", "Color Oscuro"]] as const).map(([v, txt]) => (
+                <button key={v} type="button" aria-pressed={portalNav === v} onClick={() => setPortalNav(v)} style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1px solid ${portalNav === v ? "var(--accent)" : "var(--border)"}`, background: portalNav === v ? "var(--accent)" : "transparent", color: portalNav === v ? "#fff" : "var(--text-secondary)" }}>{txt}</button>
+              ))}
+            </div>
           </div>
           </>)}
 
@@ -447,7 +489,7 @@ export default function AdminSettingsPage() {
           </>)}
 
           {/* Apartados que se guardan al instante, sin el botón Guardar */}
-          {sec === "colores" && <BrandColorsPanel initial={brandColors} onSaved={setBrandColors} />}
+          {sec === "colores" && <BrandColorsPanel initial={brandColors} onSaved={setBrandColors} cover={portalCover} />}
           {sec === "avisos" && <AutomationPanel parte="avisos" />}
           {sec === "respaldos" && <AutomationPanel parte="respaldos" />}
           {sec === "integraciones" && <><PaymentQrCard /><AiCard /><ImeiCard /><GoogleReviewsCard /></>}

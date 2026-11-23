@@ -834,6 +834,14 @@ svg.ui-ic { display: inline-block; flex-shrink: 0; vertical-align: -0.15em; }
 /* Portada con foto (Configuración › Portada del portal) */
 /* (la foto y el oscurecido van en línea en el portal; en celular el texto ocupa todo el ancho: se oscurece parejo) */
 .pt-hero2.has-cover h1, .pt-hero2.has-cover .pt-lead, .pt-hero2.has-cover .pt-trust, .pt-hero2.has-cover .pt-trackbox label, .pt-hero2.has-cover .pt-hint { text-shadow: 0 1px 10px rgba(2,6,23,.55); }
+/* Portada con foto: foto y sombreado desde variables (coverVars); en celular, la foto vertical si hay */
+.pt-hero2.has-cover { background-color: var(--brand-dark); background-image: linear-gradient(90deg, color-mix(in srgb, var(--brand-dark) 90%, transparent) 0%, color-mix(in srgb, var(--brand-dark) 72%, transparent) 40%, color-mix(in srgb, var(--brand-dark) 30%, transparent) 100%), var(--pt-cover); background-size: var(--pt-cover-size, cover); background-position: var(--pt-cover-pos, center); background-repeat: no-repeat; }
+@media (max-width: 960px) { .pt-hero2.has-cover { background-image: var(--pt-cover-m); background-size: cover; background-position: center; } }
+/* Barra de arriba del portal en el color Oscuro (Configuración › Portal de clientes) */
+.pt-nav.is-dark { background: var(--brand-dark); border-bottom-color: transparent; }
+.pt-nav.is-dark .pt-brand { color: #fff; }
+.pt-nav.is-dark .pt-links a { color: rgba(255,255,255,.82); }
+@media (hover: hover) and (pointer: fine) { .pt-nav.is-dark .pt-links a:hover { color: #fff; } }
 @media (max-width: 960px) { .pt-hero2.has-cover::before { content: ""; position: absolute; inset: 0; z-index: 0; background: color-mix(in srgb, var(--brand-dark) 55%, transparent); } }
 /* Portada: el código se escribe bajo el título */
 .pt-hero2 .pt-trackbox { background: transparent; color: #fff; padding: 0; border-radius: 0; box-shadow: none; margin-top: 28px; max-width: 520px; }
