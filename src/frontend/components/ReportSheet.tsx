@@ -1,7 +1,8 @@
 "use client";
 // Diseño común de los reportes y extractos imprimibles (reporte mensual, extractos de órdenes,
 // inventario, catálogo de equipos y lista de compra). Mismo estilo que la cotización y la nota
-// de venta (DocKit): membrete con banda negra, solo en negro (tablas con líneas finas).
+// de venta (DocKit): membrete con banda, tablas con líneas finas. Sigue la opción de impresión
+// de Ajustes: blanco y negro, o a color (banda Oscura y detalles en el color Principal).
 // Hoja carta. Sirve para páginas React (<RxHero/>, RX_CSS) y para las
 // ventanas que se escriben con document.write (rxHeroHtml, rxDocument).
 import type { ReactNode } from "react";
@@ -76,18 +77,20 @@ table.rx-t { width:100%; border-collapse:collapse; font-size:11px; }
 .rx-empty { color:var(--rx-muted); font-style:italic; font-size:12px; }
 .rx-note { color:var(--rx-muted); font-size:11px; }
 .rx-foot { display:flex; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; color:var(--rx-muted); border-top:1px solid var(--rx-line); padding-top:8px; font-size:10.5px; }
-/* Solo negro, membrete con banda negra (impresoras de tóner): banda negra con el nombre y el título,
-   sin fondos de color, líneas finas; las barras de colores quedan en grises. */
+/* Blanco y negro por defecto (impresoras de tóner): banda negra con el nombre y el título,
+   sin fondos de color, líneas finas; las barras de colores quedan en grises.
+   Con la opción "A color" las variables --doc-* (ver brand-colors.ts) pintan la banda, el logo,
+   los números de los recuadros y los títulos de sección. Sin esas variables queda en negro. */
 .rx { --rx-navy:#000; --rx-teal:#000; --rx-mint:#000; --rx-ink:#000; --rx-muted:#000; --rx-line:#000; --rx-soft:#fff; --rx-tealsoft:#fff; font-family:"Helvetica Neue",Arial,Helvetica,sans-serif; }
-.rx-hero { background:#000; color:#fff; border-radius:0; padding:14px 18px; align-items:center; }
+.rx-hero { background:var(--doc-band, #000); color:#fff; border-radius:0; padding:14px 18px; align-items:center; box-shadow:inset 0 -3px 0 var(--doc-stripe, transparent); }
 .rx-hero svg, .rx-sect svg { display:none; }
 .rx-logo { background:#fff; border-radius:0; }
-.rx-logo img { filter:grayscale(1); }
+.rx-logo img { filter:var(--doc-logo-filter, grayscale(1)); }
 .rx-co small, .rx-doc small { color:#fff; }
 .rx-doc > span { background:none; color:#fff; border-radius:0; padding:0; font-weight:400; font-size:12px; letter-spacing:0; }
-.rx-doc b { color:#fff; }
-.rx-kpi { border:0; border-top:1px solid #000; border-radius:0; padding:8px 0 0; }
-.rx-kpi b { color:#000 !important; }
+.rx-doc b { color:var(--doc-code, #fff); }
+.rx-kpi { border:0; border-top:1px solid var(--doc-accent, #000); border-radius:0; padding:8px 0 0; }
+.rx-kpi b { color:var(--doc-accent, #000) !important; }
 .rx-kpi span, .rx-income > span { text-transform:none; letter-spacing:0; font-weight:400; font-size:11.5px; }
 .rx-income { background:#fff; color:#000; border:0; border-top:1.5px solid #000; border-bottom:.5px solid #000; border-radius:0; padding:12px 0; }
 .rx-income > span, .rx-legend { color:#000; }
@@ -96,7 +99,7 @@ table.rx-t { width:100%; border-collapse:collapse; font-size:11px; }
 .rx-stack, .rx-meter { border:.5px solid #000; border-radius:0; }
 .rx-meter i { border-radius:0; }
 .rx-sect em { background:none; color:#000; border:0; border-radius:0; padding:0; font-weight:400; }
-.rx-sect { text-transform:none; letter-spacing:0; font-size:14px; font-weight:700; border-bottom-width:1px; }
+.rx-sect { text-transform:none; letter-spacing:0; font-size:14px; font-weight:700; border-bottom:1px solid var(--doc-accent, #000); color:var(--doc-accent, #000); }
 .rx-chip { background:#fff; color:#000; border:.5px solid #000; border-radius:0; font-weight:400; }
 .rx-tech .n { color:#000; }
 .rx-tw { border:0; border-radius:0; }
@@ -111,7 +114,7 @@ table.rx-t { width:100%; border-collapse:collapse; font-size:11px; }
 .rx-client .tot b { color:#000; }
 .rx-check { border-color:#000; border-radius:0; }
 /* Colores que vienen escritos en cada reporte (estados, montos, etiquetas): también en negro. */
-.rx-page *:not(.no-print, .no-print *, .rx-hero, .rx-hero *) { color:#000 !important; }
+.rx-page *:not(.no-print, .no-print *, .rx-hero, .rx-hero *, .rx-kpi b, .rx-sect) { color:#000 !important; }
 .rx-page [style*="background"]:not(i):not(.no-print, .no-print *) { background:#fff !important; }
 @media print {
   .rx-bar, .no-print { display:none !important; }
@@ -175,7 +178,7 @@ export const rxNum = (n: number) => (Number(n) || 0).toLocaleString("es-BO");
 const contactLine = (s: RxCompany, branch?: string | null) =>
   [branch, s.phone, s.address].filter(Boolean).join(" · ");
 
-/** Banda negra del encabezado (páginas React). */
+/** Banda del encabezado (páginas React). */
 export function RxHero({ s, branch, label, title, sub }: { s: RxCompany; branch?: string | null; icon?: ReactNode; label: string; title: ReactNode; sub?: ReactNode }) {
   const line = contactLine(s, branch);
   return (
@@ -189,7 +192,7 @@ export function RxHero({ s, branch, label, title, sub }: { s: RxCompany; branch?
   );
 }
 
-/** Banda negra del encabezado (ventanas escritas con document.write). Todo el texto se escapa. */
+/** Banda del encabezado (ventanas escritas con document.write). Todo el texto se escapa. */
 export function rxHeroHtml({ s, branch, label, title, sub }: { s: RxCompany; branch?: string | null; icon?: string; label: string; title: string; sub?: string }) {
   const line = contactLine(s, branch);
   const logo = s.logo ? `<span class="rx-logo"><img src="${rxEsc(s.logo)}" alt=""></span>` : "";
@@ -197,10 +200,21 @@ export function rxHeroHtml({ s, branch, label, title, sub }: { s: RxCompany; bra
     + `<div class="rx-doc"><span>${rxEsc(label)}</span><b>${rxEsc(title)}</b>${sub ? `<small>${rxEsc(sub)}</small>` : ""}</div></div>`;
 }
 
+const DOC_VARS = ["--doc-band", "--doc-accent", "--doc-code", "--doc-stripe", "--doc-logo-filter"];
+
+/** Copia los colores de impresión de esta página (ya resueltos) para la ventana nueva,
+ *  que no carga globals.css ni los colores de la marca. */
+function docVarsCss() {
+  if (typeof window === "undefined") return "";
+  const cs = getComputedStyle(document.documentElement);
+  const list = DOC_VARS.map((k) => [k, cs.getPropertyValue(k).trim()]).filter(([, v]) => v);
+  return list.length ? `:root{${list.map(([k, v]) => `${k}:${v}`).join(";")}}` : "";
+}
+
 /** Documento completo para una ventana nueva: barra (Imprimir / Cerrar), hoja y estilos. */
 export function rxDocument({ title, barTitle, landscape, wide, body, autoPrint }: { title: string; barTitle: string; landscape?: boolean; wide?: boolean; body: string; autoPrint?: boolean }) {
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${rxEsc(title)}</title>`
-    + `<style>html,body{margin:0;background:#fff}${RX_CSS}${rxPageCss(landscape)}</style></head><body><div class="rx">`
+    + `<style>html,body{margin:0;background:#fff}${docVarsCss()}${RX_CSS}${rxPageCss(landscape)}</style></head><body><div class="rx">`
     + `<div class="rx-bar"><span>${rxEsc(barTitle)}</span><div><button class="go" onclick="window.print()">Imprimir</button><button onclick="window.close()">Cerrar</button></div></div>`
     + `<div class="rx-page${wide ? " wide" : ""}">${body}</div></div>`
     + (autoPrint ? `<script>window.onload=function(){setTimeout(function(){window.print()},300)}</script>` : "")
