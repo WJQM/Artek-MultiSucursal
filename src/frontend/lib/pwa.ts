@@ -7,7 +7,7 @@ export interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_DAYS = 14;
 
-/** Hay dos apps: la del portal (clientes: /portal y /track) y la del sistema (todo lo demás) */
+/** Solo se instala el sistema. En las páginas de clientes (/portal y /track) no se ofrece instalar. */
 export type PwaApp = "sistema" | "portal";
 export function appOf(pathname: string): PwaApp {
   return /^\/(portal|track)(\/|$)/.test(pathname) ? "portal" : "sistema";
@@ -15,14 +15,11 @@ export function appOf(pathname: string): PwaApp {
 function currentApp(): PwaApp {
   return typeof window === "undefined" ? "sistema" : appOf(window.location.pathname);
 }
-// Cada app recuerda por separado si se instaló o si se cerró su aviso
-const key = (k: string) => (currentApp() === "portal" ? `${k}:portal` : k);
 const DISMISS_KEY = "pwaInstallDismissedUntil";
 const INSTALLED_KEY = "pwaInstalled";
 const SHOWN_KEY = "pwaBannerShown";
 
 let deferred: BeforeInstallPromptEvent | null = null;
-let deferredApp: PwaApp | null = null; // app a la que corresponde el aviso del navegador
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
 
@@ -42,7 +39,7 @@ export function isStandalone(): boolean {
 }
 
 export function isInstalled(): boolean {
-  return isStandalone() || ls()?.getItem(key(INSTALLED_KEY)) === "1";
+  return isStandalone() || ls()?.getItem(INSTALLED_KEY) === "1";
 }
 
 /** iPhone/iPad en Safari: no hay botón de instalar, se hace con Compartir → Agregar a inicio */
@@ -55,26 +52,25 @@ export function isIosSafari(): boolean {
 
 /** El usuario cerró o rechazó el banner hace menos de 14 días */
 export function isDismissed(): boolean {
-  const until = Number(ls()?.getItem(key(DISMISS_KEY)) || 0);
+  const until = Number(ls()?.getItem(DISMISS_KEY) || 0);
   return until > Date.now();
 }
 
 export function dismiss() {
-  ls()?.setItem(key(DISMISS_KEY), String(Date.now() + DISMISS_DAYS * 86_400_000));
+  ls()?.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DAYS * 86_400_000));
   notify();
 }
 
 /** El banner automático se muestra una sola vez por sesión (antes aparecía en cada página) */
 export function bannerAlreadyShown(): boolean {
-  return ss()?.getItem(key(SHOWN_KEY)) === "1";
+  return ss()?.getItem(SHOWN_KEY) === "1";
 }
 export function markBannerShown() {
-  ss()?.setItem(key(SHOWN_KEY), "1");
+  ss()?.setItem(SHOWN_KEY, "1");
 }
 
 export function canInstall(): boolean {
-  // El aviso del navegador es de la app de la página donde llegó (portal o sistema)
-  return !!deferred && deferredApp === currentApp() && !isInstalled();
+  return !!deferred && currentApp() === "sistema" && !isInstalled();
 }
 
 export async function promptInstall(): Promise<"accepted" | "dismissed" | "unavailable"> {
@@ -85,7 +81,7 @@ export async function promptInstall(): Promise<"accepted" | "dismissed" | "unava
     const { outcome } = await ev.userChoice;
     deferred = null; // el evento solo se puede usar una vez
     (window as PwaWindow).__pwaDeferred = undefined;
-    if (outcome === "accepted") ls()?.setItem(key(INSTALLED_KEY), "1");
+    if (outcome === "accepted") ls()?.setItem(INSTALLED_KEY, "1");
     else dismiss();
     notify();
     return outcome;
@@ -114,9 +110,8 @@ export function initPwa() {
     const ev = (window as PwaWindow).__pwaDeferred as BeforeInstallPromptEvent | undefined;
     if (!ev || ev === deferred) return;
     deferred = ev;
-    deferredApp = currentApp();
     // Si el navegador ofrece instalar, la app no está instalada (p. ej. la desinstalaron)
-    ls()?.removeItem(key(INSTALLED_KEY));
+    ls()?.removeItem(INSTALLED_KEY);
     notify();
   };
   take();
@@ -125,7 +120,7 @@ export function initPwa() {
   window.addEventListener("appinstalled", () => {
     deferred = null;
     (window as PwaWindow).__pwaDeferred = undefined;
-    ls()?.setItem(key(INSTALLED_KEY), "1");
+    ls()?.setItem(INSTALLED_KEY, "1");
     notify();
   });
 }

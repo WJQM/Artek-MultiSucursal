@@ -411,9 +411,6 @@ body { padding-bottom: var(--safe-bottom); }
 @media (max-width: 640px) {
   .pwa-banner { left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); max-width: none; }
 }
-/* Portal: el botón de WhatsApp está abajo a la derecha → el aviso va a la izquierda sin taparlo */
-.pwa-banner.pwa-portal { right: auto; left: calc(20px + var(--safe-left, 0px)); }
-@media (max-width: 640px) { .pwa-banner.pwa-portal { left: 12px; right: 84px; } }
 @media print { .pwa-banner { display: none !important; } }
 
 /* ===== DOCUMENTOS (comprobantes, certificados, fichas, reportes) EN CELULAR =====

@@ -9,7 +9,7 @@ import {
 } from "@/frontend/lib/pwa";
 
 // Páginas de impresión o de un solo uso: aquí no se ofrece instalar nada
-// (el banner salía también en las hojas impresas). En /portal y /track se ofrece la app del PORTAL.
+// (el banner salía también en las hojas impresas). En /portal y /track tampoco: solo se instala el sistema.
 const HIDE_ON = [
   "/certificate-view", "/delivery", "/print", "/print-qr",
   "/quotations/print", "/equipment/print", "/consoles/print", "/inventory/print",
@@ -33,18 +33,18 @@ export function PwaSetup() {
   const portal = appOf(pathname) === "portal";
 
   useEffect(() => { initPwa(); }, []);
-  // Nombre de la app (el mismo de su manifiesto: "[Empresa] Sistema" o "[Empresa]")
+  // Nombre de la app (el mismo de su manifiesto: "[Empresa] Sistema")
   useEffect(() => {
     if (!visible) return;
-    fetch(portal ? "/manifest-portal.json" : "/manifest.json").then((r) => r.json()).then((m) => { if (m?.name) setAppName(m.name); }).catch(() => {});
-  }, [visible, portal]);
+    fetch("/manifest.json").then((r) => r.json()).then((m) => { if (m?.name) setAppName(m.name); }).catch(() => {});
+  }, [visible]);
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const installable = snap[0] === "1";
   const dismissed = snap[1] === "1";
   const ios = snap[2] === "1"; // iPhone: no hay botón, se muestra cómo hacerlo
 
   const hiddenHere = HIDE_ON.some((p) => pathname === p || pathname.startsWith(p + "/"));
-  const eligible = (installable || ios) && !dismissed && !hiddenHere;
+  const eligible = (installable || ios) && !dismissed && !hiddenHere && !portal;
 
   // Mostrar una sola vez por sesión
   useEffect(() => {
@@ -63,10 +63,9 @@ export function PwaSetup() {
   if (!visible || !eligible) return null;
 
   const title = `Instalar ${appName}`;
-  const text = portal ? "Consulta tu equipo y mira nuestro catálogo desde tu celular" : "Acceso rápido como app";
 
   return (
-    <div className={`pwa-banner${portal ? " pwa-portal" : ""}`} role="dialog" aria-label="Instalar aplicación">
+    <div className="pwa-banner" role="dialog" aria-label="Instalar aplicación">
       <span style={{ display: "flex", flexShrink: 0 }}><Smartphone size={26} strokeWidth={STROKE} aria-hidden="true" /></span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, marginBottom: 2 }}>{title}</div>
@@ -77,7 +76,7 @@ export function PwaSetup() {
             {" "}y luego <b>Agregar a inicio</b>
           </div>
         ) : (
-          <div style={{ fontSize: 11, opacity: 0.9 }}>{text}</div>
+          <div style={{ fontSize: 11, opacity: 0.9 }}>Acceso rápido como app</div>
         )}
       </div>
       {installable && (

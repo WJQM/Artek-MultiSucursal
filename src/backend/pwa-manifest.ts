@@ -1,7 +1,7 @@
-// Las dos apps instalables del sitio:
-//  - "sistema": para el personal (login → panel / mis asignaciones). Ícono con una llave pequeña.
-//  - "portal":  para los clientes (portal público y seguimiento de su equipo).
-// Nombre, slogan e ícono salen de Admin → Configuración.
+// La única app instalable del sitio es la del SISTEMA, para el personal (login → panel /
+// mis asignaciones); su ícono lleva una llave pequeña. El portal de clientes no se instala:
+// se abre en el navegador. "portal" solo se usa para el ícono de la pestaña (sin la llave).
+// Nombre e ícono salen de Admin → Configuración.
 import { getSettings, DEFAULT_COMPANY_NAME } from "@/backend/company";
 import { brandThemeColor } from "@/backend/brand-colors";
 
@@ -16,25 +16,24 @@ export async function pwaNames() {
   const s = await getSettings();
   const name = s?.companyName?.trim() || DEFAULT_COMPANY_NAME;
   const v = s?.updatedAt ? s.updatedAt.getTime() : 0;
-  return { name, slogan: s?.slogan || "", v };
+  return { name, v };
 }
 
 export function iconUrl(size: number, v: number, app: PwaApp) {
   return `/api/brand/icon?size=${size}&v=${v}${app === "sistema" ? "&badge=1" : ""}`;
 }
 
-export async function buildManifest(app: PwaApp) {
-  const { name, slogan, v } = await pwaNames();
-  const isSys = app === "sistema";
+export async function buildManifest() {
+  const { name, v } = await pwaNames();
   const color = await brandThemeColor(); // el Oscuro de Configuración › Colores
+  // Android corta los nombres largos: "ARTEK Sistema" cabe; si no, solo el nombre (el ícono ya lleva la llave)
+  const short = `${shortName(name, 12)} Sistema`;
   const manifest = {
-    id: isSys ? "/" : "/portal",
-    name: isSys ? `${name} Sistema` : name,
-    // Android corta los nombres largos: "ARTEK Sistema" cabe; si no, solo el nombre (el ícono ya lleva la llave)
-    short_name: isSys ? (`${shortName(name, 12)} Sistema`.length <= 14 ? `${shortName(name, 12)} Sistema` : shortName(name, 12)) : shortName(name, 12),
-    description: isSys ? "Sistema del taller: órdenes, técnicos y reportes" : (slogan || "Consulta tu equipo y mira nuestro catálogo"),
-    start_url: isSys ? "/?source=pwa" : "/portal?source=pwa",
-    // El portal también usa "/" para que el seguimiento (/track/…) se abra dentro de la app
+    id: "/",
+    name: `${name} Sistema`,
+    short_name: short.length <= 14 ? short : shortName(name, 12),
+    description: "Sistema del taller: órdenes, técnicos y reportes",
+    start_url: "/?source=pwa",
     scope: "/",
     display: "standalone",
     orientation: "any",
@@ -42,10 +41,10 @@ export async function buildManifest(app: PwaApp) {
     theme_color: color,
     lang: "es",
     icons: [
-      { src: iconUrl(192, v, app), sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: iconUrl(512, v, app), sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: iconUrl(192, v, "sistema"), sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: iconUrl(512, v, "sistema"), sizes: "512x512", type: "image/png", purpose: "any" },
     ],
-    ...(isSys ? { shortcuts: [{ name: "Panel", short_name: "Panel", url: "/dashboard" }] } : {}),
+    shortcuts: [{ name: "Panel", short_name: "Panel", url: "/dashboard" }],
   };
   return new Response(JSON.stringify(manifest), {
     headers: { "Content-Type": "application/manifest+json", "Cache-Control": "no-cache" },
