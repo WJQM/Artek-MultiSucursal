@@ -1,6 +1,4 @@
 "use client";
-import { Scissors } from "@/frontend/components/icons";
-import { STROKE } from "@/frontend/components/UiIcons";
 // Piezas comunes de los documentos (recepción, entrega, cotización, nota de venta, fichas).
 // Estilos en globals.css, sección "Documentos impresos y en línea (dk-*)". Hoja carta.
 import type { ReactNode } from "react";
@@ -75,13 +73,13 @@ export function DocCopies({ render }: { render: (label: string) => ReactNode }) 
   return <DocPair left={render("Copia taller")} right={render("Copia cliente")} />;
 }
 
-/** Hoja horizontal partida en dos mitades (pueden ser distintas) con línea de corte. Varias seguidas: una por hoja. */
+/** Hoja horizontal partida en dos mitades (pueden ser distintas) con una línea punteada para cortar, sin texto. Varias seguidas: una por hoja. */
 export function DocPair({ left, right, breakAfter }: { left: ReactNode; right: ReactNode; breakAfter?: boolean }) {
   return (
     <div className="dk-sheet print-content" style={breakAfter ? { breakAfter: "page" } : undefined}>
       <div className="dk-copies">
         <div className="dk-copy">{left}</div>
-        <div className="dk-cut"><span><Scissors size={14} strokeWidth={STROKE} aria-hidden="true" /> cortar aquí</span></div>
+        <div className="dk-cut" aria-hidden="true" />
         <div className="dk-copy">{right}</div>
       </div>
     </div>
