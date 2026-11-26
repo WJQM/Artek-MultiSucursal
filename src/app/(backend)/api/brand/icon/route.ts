@@ -1,6 +1,7 @@
 // Ícono de la app (pestaña del navegador, app instalada en el celular).
 // Si la empresa subió un logo en Configuración se usa ese, centrado en un cuadrado blanco;
-// si no, el ícono por defecto de /public.
+// si no, el ícono por defecto de /public. El de la app del sistema (192 y 512) sale con
+// esquinas redondeadas y transparentes, como los íconos de Windows 11 y del celular.
 import { readFile } from "fs/promises";
 import path from "path";
 import { getSettings } from "@/backend/company";
@@ -27,9 +28,19 @@ async function defaultIcon(size: number): Promise<Buffer> {
   return readFile(path.join(process.cwd(), "public", file));
 }
 
-/** Llave pequeña en la esquina: distingue la app del sistema (personal) de la del portal */
+/** Recorta el ícono con esquinas redondeadas (22 % del lado); las esquinas quedan transparentes */
+async function rounded(icon: Buffer, size: number): Promise<Buffer> {
+  const sharp = (await import("sharp")).default;
+  const r = Math.round(size * 0.22);
+  const mask = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${r}" ry="${r}" fill="#fff"/></svg>`;
+  return sharp(icon).resize(size, size).ensureAlpha().composite([{ input: Buffer.from(mask), blend: "dest-in" }]).png().toBuffer();
+}
+
+/** Llave pequeña en la esquina: marca el ícono de la app del sistema (personal) */
 async function withBadge(icon: Buffer, size: number): Promise<Buffer> {
   const sharp = (await import("sharp")).default;
+  // 180 es el de iPhone: iOS ya lo redondea y pinta de negro las esquinas transparentes
+  if (size >= 192) icon = await rounded(icon, size);
   const d = Math.round(size * 0.4);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}" viewBox="0 0 40 40">
     <circle cx="20" cy="20" r="19" fill="#149aa5" stroke="#fff" stroke-width="2.5"/>
@@ -53,7 +64,7 @@ export async function GET(request: Request) {
   const s = await getSettings();
   const out = await baseIcon(s, size);
   if (!badge) return png(out);
-  const key = `badge:${s?.updatedAt?.getTime?.() ?? 0}:${size}`;
+  const key = `badge:r:${s?.updatedAt?.getTime?.() ?? 0}:${size}`;
   const hit = cache.get(key);
   if (hit) return png(hit);
   try {
