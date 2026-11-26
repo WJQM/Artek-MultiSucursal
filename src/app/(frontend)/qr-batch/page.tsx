@@ -1,5 +1,5 @@
 "use client";
-import { Columns2, Disc3, Gamepad2, Joystick, Laptop, Package, Printer, Tag, X } from "@/frontend/components/icons";
+import { Columns2, Gamepad2, Laptop, Printer, Tag, X } from "@/frontend/components/icons";
 import { STROKE } from "@/frontend/components/UiIcons";
 import { useEffect, useState } from "react";
 import { publicBase } from "@/frontend/lib/public-base";
@@ -11,10 +11,12 @@ import { pressKey } from "@/frontend/lib/a11y";
 
 const PAGE_SIZE = 40;
 
-type Kind = "inventory" | "consoles" | "equipment" | "software" | "videogames";
+// Solo equipos y consolas: su QR abre la ficha con fotos y especificaciones.
+// Productos, programas y videojuegos no llevan QR (no tienen una pantalla propia que abrir).
+type Kind = "equipment" | "consoles";
 
-// Fila tal como llega de /api/inventory, /api/consoles, /api/equipment, /api/software o /api/videogames
-interface CatalogRow { id: string; code?: string; name: string; brand?: string | null; model?: string | null; price?: number | null; quantity?: number; image?: string | null; category?: string | null; platform?: string | null }
+// Fila tal como llega de /api/equipment o /api/consoles
+interface CatalogRow { id: string; code?: string; name: string; brand?: string | null; model?: string | null; price?: number | null; image?: string | null }
 
 interface Item {
   id: string;
@@ -30,44 +32,35 @@ interface Item {
 }
 
 const KIND_LABEL: Record<Kind, { label: string; icon: React.ReactNode; color: string; prefix: string }> = {
-  inventory: { label: "Productos", icon: <Package size={18} strokeWidth={STROKE} aria-hidden="true" />, color: "#b45309", prefix: "INV" },
-  consoles: { label: "Consolas", icon: <Gamepad2 size={18} strokeWidth={STROKE} aria-hidden="true" />, color: "#c2410c", prefix: "CN" },
   equipment: { label: "Equipos", icon: <Laptop size={18} strokeWidth={STROKE} aria-hidden="true" />, color: "#0e7490", prefix: "EQ" },
-  software: { label: "Programas", icon: <Disc3 size={18} strokeWidth={STROKE} aria-hidden="true" />, color: "#0369a1", prefix: "SW" },
-  videogames: { label: "Videojuegos", icon: <Joystick size={18} strokeWidth={STROKE} aria-hidden="true" />, color: "#dc2626", prefix: "VG" },
+  consoles: { label: "Consolas", icon: <Gamepad2 size={18} strokeWidth={STROKE} aria-hidden="true" />, color: "#c2410c", prefix: "CN" },
 };
 
 // Ficha elegida para imprimir de a dos por hoja (en el orden en que se marcó)
-interface FichaSel { kind: "equipment" | "consoles"; id: string; name: string; code?: string; price?: number }
+interface FichaSel { kind: Kind; id: string; name: string; code?: string; price?: number }
 
 export default function QrBatchPage() {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [, setBranches] = useState<{ id: string; name: string }[]>([]);
-  const [activeBranch, setActiveBranch] = useState<string>("");
+  const [, setActiveBranch] = useState<string>("");
   const [settings, setSettings] = useState<{ companyName: string; logo: string | null }>({ companyName: "", logo: null });
 
-  const [kind, setKind] = useState<Kind>("inventory");
+  const [kind, setKind] = useState<Kind>("equipment");
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
   const [size, setSize] = useState<"S" | "M" | "L">("M");
   const [showLogo, setShowLogo] = useState(true);
-  // Qué se imprime: etiquetas QR (como siempre) o fichas de venta en media hoja (equipos y consolas mezclados)
+  // Qué se imprime: etiquetas QR o fichas de venta en media hoja (equipos y consolas mezclados)
   const [que, setQue] = useState<"qr" | "fichas">("qr");
   const [fichas, setFichas] = useState<FichaSel[]>([]);
   const [verElegidas, setVerElegidas] = useState(false);
-  const esFicha = (k: Kind): k is "equipment" | "consoles" => k === "equipment" || k === "consoles";
-  const cambiarQue = (q: "qr" | "fichas") => {
-    setQue(q); setVerElegidas(false);
-    if (q === "fichas" && !esFicha(kind)) setKind("equipment");
-  };
+  const cambiarQue = (q: "qr" | "fichas") => { setQue(q); setVerElegidas(false); };
   const fichaElegida = (id: string) => fichas.some(f => f.id === id);
   const alternarFicha = (it: Item) => {
-    if (!esFicha(it.kind)) return;
-    const k = it.kind;
-    setFichas(fs => fs.some(f => f.id === it.id) ? fs.filter(f => f.id !== it.id) : [...fs, { kind: k, id: it.id, name: it.name, code: it.code, price: it.price }]);
+    setFichas(fs => fs.some(f => f.id === it.id) ? fs.filter(f => f.id !== it.id) : [...fs, { kind: it.kind, id: it.id, name: it.name, code: it.code, price: it.price }]);
   };
 
   useEffect(() => {
@@ -91,14 +84,10 @@ export default function QrBatchPage() {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.items || data.results || []);
         const mapped: Item[] = list.map((it: CatalogRow) => {
-          let qrUrl = "";
-          let subtitle = "";
-          if (kind === "inventory") { qrUrl = `${origin}/portal?branchId=${activeBranch}`; subtitle = `Stock: ${it.quantity || 0} · Bs. ${it.price || 0}`; }
-          else if (kind === "consoles") { qrUrl = `${origin}/consoles/print/${it.id}`; subtitle = `${it.code || ""} · Bs. ${it.price || 0}`; }
-          else if (kind === "equipment") { qrUrl = `${origin}/equipment/print/${it.id}`; subtitle = `${it.code || ""} · Bs. ${it.price || 0}`; }
-          else if (kind === "software") { qrUrl = `${origin}/portal?sw=${it.id}`; subtitle = it.category || ""; }
-          else if (kind === "videogames") { qrUrl = `${origin}/portal?vg=${it.id}`; subtitle = it.platform || ""; }
-          return { id: it.id, code: it.code, name: it.name, brand: it.brand, model: it.model, price: kind === "software" || kind === "videogames" ? undefined : it.price, image: it.image, kind, qrUrl, subtitle };
+          // El QR abre la ficha del equipo o consola (/equipment/print/… o /consoles/print/…)
+          const qrUrl = `${origin}/${kind}/print/${it.id}`;
+          const subtitle = `${it.code || ""} · Bs. ${it.price || 0}`;
+          return { id: it.id, code: it.code, name: it.name, brand: it.brand, model: it.model, price: it.price ?? undefined, image: it.image, kind, qrUrl, subtitle };
         });
         setItems(mapped);
       }
@@ -188,7 +177,7 @@ export default function QrBatchPage() {
 
         {/* Selector tipo */}
         <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-          {(Object.keys(KIND_LABEL) as Kind[]).filter(k => que === "qr" || esFicha(k)).map(k => {
+          {(Object.keys(KIND_LABEL) as Kind[]).map(k => {
             const m = KIND_LABEL[k];
             const active = kind === k && !verElegidas;
             return (

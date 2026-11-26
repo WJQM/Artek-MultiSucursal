@@ -15,11 +15,8 @@ const SIZE_CONFIG: Record<"S" | "M" | "L", { cols: number; perPage: number; labe
 
 // Mismo color por tipo que en el resto de documentos
 const KIND: Record<string, { label: string; color: string }> = {
-  inventory: { label: "Producto", color: "#b45309" },
   consoles: { label: "Consola", color: "#c2410c" },
   equipment: { label: "Equipo", color: "#0e7490" },
-  software: { label: "Programa", color: "#0369a1" },
-  videogames: { label: "Videojuego", color: "#dc2626" },
 };
 
 interface BatchItem { id: string; name: string; code?: string; price?: number; kind: string; qrUrl: string }
@@ -75,7 +72,7 @@ export default function QrBatchPrintPage() {
         {pages.map((pageItems, pageIdx) => (
           <div key={pageIdx} className="qr-page" style={{ display: "grid", gridTemplateColumns: `repeat(${config.cols}, 1fr)`, gap: 10, justifyItems: "center" }}>
             {pageItems.map((item) => {
-              const k = KIND[item.kind] || { label: "Producto", color: "#1e2a3a" };
+              const k = KIND[item.kind] || KIND.equipment;
               return <QrLabel key={item.id} s={company} kind={k.label} color={k.color} code={item.code || ""} name={item.name} sub={item.price ? `Bs. ${item.price}` : undefined} url={item.qrUrl} size={config.label} />;
             })}
           </div>
