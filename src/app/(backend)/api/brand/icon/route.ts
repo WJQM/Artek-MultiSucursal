@@ -1,7 +1,7 @@
 // Ícono de la app (pestaña del navegador, app instalada en el celular).
 // Si la empresa subió un logo en Configuración se usa ese, centrado en un cuadrado blanco;
-// si no, el ícono por defecto de /public. El de la app del sistema (192 y 512) sale con
-// esquinas redondeadas y transparentes, como los íconos de Windows 11 y del celular.
+// si no, el ícono por defecto de /public. Todos los tamaños salen con esquinas redondeadas y
+// transparentes, como los íconos de Windows 11 y del celular, menos el de iPhone (180).
 import { readFile } from "fs/promises";
 import path from "path";
 import { getSettings } from "@/backend/company";
@@ -36,11 +36,24 @@ async function rounded(icon: Buffer, size: number): Promise<Buffer> {
   return sharp(icon).resize(size, size).ensureAlpha().composite([{ input: Buffer.from(mask), blend: "dest-in" }]).png().toBuffer();
 }
 
+/** Igual que rounded(), guardado en memoria; si falla se devuelve el ícono cuadrado */
+async function roundedCached(icon: Buffer, size: number, t: number): Promise<Buffer> {
+  const key = `round:${t}:${size}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+  try {
+    const out = await rounded(icon, size);
+    cache.set(key, out);
+    return out;
+  } catch (e) {
+    console.error("[brand/icon] No se pudieron redondear las esquinas:", e);
+    return icon;
+  }
+}
+
 /** Llave pequeña en la esquina: marca el ícono de la app del sistema (personal) */
 async function withBadge(icon: Buffer, size: number): Promise<Buffer> {
   const sharp = (await import("sharp")).default;
-  // 180 es el de iPhone: iOS ya lo redondea y pinta de negro las esquinas transparentes
-  if (size >= 192) icon = await rounded(icon, size);
   const d = Math.round(size * 0.4);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}" viewBox="0 0 40 40">
     <circle cx="20" cy="20" r="19" fill="#149aa5" stroke="#fff" stroke-width="2.5"/>
@@ -62,7 +75,9 @@ export async function GET(request: Request) {
   const size = SIZES.includes(req) ? req : 192;
   const badge = new URL(request.url).searchParams.get("badge") === "1" && size >= 180;
   const s = await getSettings();
-  const out = await baseIcon(s, size);
+  const base = await baseIcon(s, size);
+  // 180 es el de iPhone: iOS ya lo redondea y pinta de negro las esquinas transparentes
+  const out = size === 180 ? base : await roundedCached(base, size, s?.updatedAt?.getTime?.() ?? 0);
   if (!badge) return png(out);
   const key = `badge:r:${s?.updatedAt?.getTime?.() ?? 0}:${size}`;
   const hit = cache.get(key);
