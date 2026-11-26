@@ -32,7 +32,6 @@ interface SoftwareItem { showInPortal?: boolean; price?: number | null;
 }
 
 const INITIAL_CATEGORIES = ["Programas", "Sistemas Operativos", "Drivers", "Utilidades", "Office", "Diseño", "Antivirus"];
-const RATINGS = ["", "PEGI 3", "PEGI 7", "PEGI 12", "PEGI 16", "PEGI 18", "ESRB E", "ESRB E10+", "ESRB T", "ESRB M", "ESRB AO"];
 
 function parseImages(img: string | null): string[] {
   if (!img) return [];
@@ -54,8 +53,6 @@ export default function SoftwarePage() {
   const [size, setSize] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("");
-  const [rating, setRating] = useState("");
-  const [price, setPrice] = useState("");
   const [minRequirements, setMinRequirements] = useState("");
   const [recRequirements, setRecRequirements] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -122,7 +119,7 @@ export default function SoftwarePage() {
         const data = (() => { try { return JSON.parse(savedForm); } catch { return null; } })();
         setEditingId(data.editingId || null); setName(data.name || ""); setCategory(data.category || "");
         setSize(data.size || "");
-        setDescription(data.description || ""); setLanguage(data.language || ""); setRating(data.rating || ""); setPrice(data.price ?? "");
+        setDescription(data.description || ""); setLanguage(data.language || "");
         setMinRequirements(data.minRequirements || ""); setRecRequirements(data.recRequirements || "");
         setImageUrls(data.imageUrls || []); setImagePreviews(data.imagePreviews || []);
         setShowForm(true);
@@ -153,7 +150,7 @@ export default function SoftwarePage() {
 
   const resetForm = () => {
     setName(""); setCategory(""); setSize("");
-    setDescription(""); setLanguage(""); setRating(""); setPrice("");
+    setDescription(""); setLanguage("");
     setMinRequirements(""); setRecRequirements("");
     setImageUrls([]); setImagePreviews([]);
     setEditingId(null); setShowForm(false);
@@ -178,7 +175,7 @@ export default function SoftwarePage() {
 
   const handleTakePhoto = () => {
     sessionStorage.setItem("softwareFormData", JSON.stringify({
-      editingId, name, category, size, description, language, rating, price,
+      editingId, name, category, size, description, language,
       minRequirements, recRequirements, imageUrls, imagePreviews,
     }));
     sessionStorage.setItem("cameraReturnUrl", "/software");
@@ -196,9 +193,7 @@ export default function SoftwarePage() {
       category: category || null,
       size: size.trim() || null,
       description: description.trim() || null,
-      price: price.toString().trim() === "" ? null : price,
       language: language.trim() || null,
-      rating: rating || null,
       minRequirements: minRequirements.trim() || null,
       recRequirements: recRequirements.trim() || null,
       image: imageData,
@@ -217,7 +212,7 @@ export default function SoftwarePage() {
   const editItem = (item: SoftwareItem) => {
     setEditingId(item.id); setName(item.name); setCategory(item.category || "");
     setSize(item.size || "");
-    setDescription(item.description || ""); setLanguage(item.language || ""); setRating(item.rating || ""); setPrice(item.price != null ? String(item.price) : "");
+    setDescription(item.description || ""); setLanguage(item.language || "");
     setMinRequirements(item.minRequirements || ""); setRecRequirements(item.recRequirements || "");
     const imgs = parseImages(item.image);
     setImageUrls(imgs); setImagePreviews(imgs);
@@ -357,10 +352,6 @@ export default function SoftwarePage() {
               <div className="ox-row" style={{ marginTop: 12 }}>
                 <Field label="Peso"><input className="ox-input" value={size} onChange={(e) => setSize(e.target.value)} placeholder="Ej: 50 GB, 1.2 GB..." /></Field>
                 <Field label="Idioma"><input className="ox-input" value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="Español, Inglés, Multi..." /></Field>
-                <Field label="Clasificación">
-                  <select className="ox-input" value={rating} onChange={(e) => setRating(e.target.value)}>{RATINGS.map(r => <option key={r} value={r}>{r || "Sin clasificar"}</option>)}</select>
-                </Field>
-                <Field label="Precio (Bs.)" hint="Opcional · costo de instalación"><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Ej: 50" inputMode="decimal" /></Field>
               </div>
             </FormSection>
 

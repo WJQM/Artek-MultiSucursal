@@ -974,7 +974,7 @@ export default function PortalPage() {
                 {pagedSoftware.map(sw => (
                   <PortalCard key={sw.id} name={sw.name} branch={multiSuc ? sw.branch?.name : null}
                     summary={[sw.language, sw.size]} images={parseEqImages(sw.image)}
-                    tag={sw.category} badge={sw.rating ? { label: sw.rating, tone: "muted" } : null}
+                    tag={sw.category}
                     fallbackIcon={<Disc3 size={40} strokeWidth={1.5} aria-hidden="true" />}
                     onOpen={() => { setSelectedSw(sw); setCarouselIdx(0); }} />
                 ))}
@@ -998,7 +998,7 @@ export default function PortalPage() {
                 {pagedVideogames.map(vg => (
                   <PortalCard key={vg.id} name={vg.name} branch={multiSuc ? vg.branch?.name : null}
                     summary={[vg.genre, vg.language, vg.size]} images={parseEqImages(vg.image)}
-                    tag={vg.platform} badge={vg.rating ? { label: vg.rating, tone: "muted" } : null}
+                    tag={vg.platform}
                     fallbackIcon={<Gamepad2 size={40} strokeWidth={1.5} aria-hidden="true" />}
                     onOpen={() => { setSelectedVg(vg); setCarouselIdx(0); }} />
                 ))}
@@ -1020,7 +1020,7 @@ export default function PortalPage() {
               title={vg.name} kindLabel="Videojuego"
               images={parseEqImages(vg.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
               summary={[vg.platform, vg.genre, vg.language, vg.size]}
-              chips={[...(vg.platform ? [{ label: vg.platform, color: platColor }] : []), ...(vg.rating ? [{ label: vg.rating }] : []), ...(vg.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.branch.name}</> }] : [])]}
+              chips={[...(vg.platform ? [{ label: vg.platform, color: platColor }] : []), ...(vg.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.branch.name}</> }] : [])]}
               shareUrl={`${portalUrl}?vg=${vg.id}`}
               groups={[]}
               blocks={<>
@@ -1103,7 +1103,7 @@ export default function PortalPage() {
               title={sw.name} kindLabel="Programa"
               images={parseEqImages(sw.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
               summary={[sw.category, sw.language, sw.size]}
-              chips={[...(sw.category ? [{ label: sw.category, color: "#0369a1" }] : []), ...(sw.rating ? [{ label: sw.rating }] : []), ...(sw.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.branch.name}</> }] : [])]}
+              chips={[...(sw.category ? [{ label: sw.category, color: "#0369a1" }] : []), ...(sw.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.branch.name}</> }] : [])]}
               shareUrl={`${portalUrl}?sw=${sw.id}`}
               groups={[]}
               blocks={<>

@@ -33,7 +33,6 @@ interface VideogameItem { showInPortal?: boolean; price?: number | null;
 }
 
 const INITIAL_PLATFORMS = ["PC", "Nintendo Switch", "Nintendo Wii", "PSP", "PS Vita"];
-const RATINGS = ["", "PEGI 3", "PEGI 7", "PEGI 12", "PEGI 16", "PEGI 18", "ESRB E", "ESRB E10+", "ESRB T", "ESRB M", "ESRB AO"];
 
 function parseImages(img: string | null): string[] {
   if (!img) return [];
@@ -58,8 +57,6 @@ export default function VideogamesPage() {
   const [minRequirements, setMinRequirements] = useState("");
   const [recRequirements, setRecRequirements] = useState("");
   const [language, setLanguage] = useState("");
-  const [rating, setRating] = useState("");
-  const [price, setPrice] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -132,12 +129,11 @@ export default function VideogamesPage() {
         setName(data.name || "");
         setPlatform(data.platform || "");
         setGenre(data.genre || "");
-        setDescription(data.description || ""); setPrice(data.price ?? "");
+        setDescription(data.description || "");
         setSize(data.size || "");
         setMinRequirements(data.minRequirements || "");
         setRecRequirements(data.recRequirements || "");
         setLanguage(data.language || "");
-        setRating(data.rating || "");
         setImageUrls(data.imageUrls || []);
         setImagePreviews(data.imagePreviews || []);
         setShowForm(true);
@@ -188,8 +184,8 @@ export default function VideogamesPage() {
   };
 
   const resetForm = () => {
-    setName(""); setPlatform(""); setGenre(""); setDescription(""); setSize(""); setPrice("");
-    setMinRequirements(""); setRecRequirements(""); setLanguage(""); setRating("");
+    setName(""); setPlatform(""); setGenre(""); setDescription(""); setSize("");
+    setMinRequirements(""); setRecRequirements(""); setLanguage("");
     setImageUrls([]); setImagePreviews([]); setEditingId(null); setShowForm(false);
   };
 
@@ -216,7 +212,7 @@ export default function VideogamesPage() {
 
   const handleTakePhoto = () => {
     sessionStorage.setItem("videogameFormData", JSON.stringify({
-      editingId, name, platform, genre, description, size, minRequirements, recRequirements, language, rating, price, imageUrls, imagePreviews,
+      editingId, name, platform, genre, description, size, minRequirements, recRequirements, language, imageUrls, imagePreviews,
     }));
     sessionStorage.setItem("cameraReturnUrl", "/videogames");
     window.location.href = "/camera.html";
@@ -236,12 +232,10 @@ export default function VideogamesPage() {
       platform: platform || null,
       genre: genre.trim() || null,
       description: description.trim() || null,
-      price: price.toString().trim() === "" ? null : price,
       size: size.trim() || null,
       minRequirements: minRequirements.trim() || null,
       recRequirements: recRequirements.trim() || null,
       language: language.trim() || null,
-      rating: rating || null,
       image: imageData,
     };
     try {
@@ -260,12 +254,11 @@ export default function VideogamesPage() {
     setName(item.name);
     setPlatform(item.platform || "");
     setGenre(item.genre || "");
-    setDescription(item.description || ""); setPrice(item.price != null ? String(item.price) : "");
+    setDescription(item.description || "");
     setSize(item.size || "");
     setMinRequirements(item.minRequirements || "");
     setRecRequirements(item.recRequirements || "");
     setLanguage(item.language || "");
-    setRating(item.rating || "");
     const imgs = parseImages(item.image);
     setImageUrls(imgs); setImagePreviews(imgs);
     setShowForm(true);
@@ -417,19 +410,15 @@ export default function VideogamesPage() {
                 <Field label="Género"><input className="ox-input" value={genre} onChange={(e) => setGenre(e.target.value)} placeholder="Acción, RPG, Deportes..." /></Field>
                 <Field label="Peso"><input className="ox-input" value={size} onChange={(e) => setSize(e.target.value)} placeholder="50 GB, 1.2 GB..." /></Field>
                 <Field label="Idioma"><input className="ox-input" value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="Español, Inglés, Multi..." /></Field>
-                <Field label="Clasificación">
-                  <select className="ox-input" value={rating} onChange={(e) => setRating(e.target.value)}>{RATINGS.map(r => <option key={r} value={r}>{r || "Sin clasificar"}</option>)}</select>
-                </Field>
-              </div>
+                              </div>
             </FormSection>
 
             <FormSection icon={<Camera size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Portada y fotos">
               <FormPhotos previews={imagePreviews} onRemove={removeImage} onCamera={handleTakePhoto} inputRef={fileInputRef} onSelect={handleImageSelect} uploading={uploading} />
             </FormSection>
 
-            <FormSection icon={<FileText size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Precio y descripción">
-              <Field label="Precio (Bs.)" hint="Opcional · por ejemplo, el costo de instalación"><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Ej: 50" inputMode="decimal" /></Field>
-              <Field label="Descripción" style={{ marginTop: 12 }}><textarea className="ox-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descripción del juego..." rows={3} /></Field>
+            <FormSection icon={<FileText size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Descripción">
+              <Field label="Descripción"><textarea className="ox-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descripción del juego..." rows={3} /></Field>
               {platform === "PC" && (
                 <div className="ox-row" style={{ marginTop: 12 }}>
                   <Field label="Requisitos mínimos (PC)"><textarea className="ox-input" value={minRequirements} onChange={(e) => setMinRequirements(e.target.value)} placeholder="CPU: Intel i3 | RAM: 4GB | GPU: GTX 650..." rows={2} /></Field>
@@ -460,11 +449,10 @@ export default function VideogamesPage() {
                   <div className="cat-badges">
                     <div className="cat-badges-row">
                       {item.platform && <div style={{ padding: "3px 8px", borderRadius: 6, background: `${platColor}dd`, color: "#fff", fontSize: 11, fontWeight: 700 }}>{item.platform}</div>}
-                      {item.rating && <div style={{ marginLeft: "auto", padding: "3px 8px", borderRadius: 6, background: "rgba(239,68,68,0.9)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{item.rating}</div>}
                     </div>
                     {item.showInPortal === false && <HiddenBadge inline />}
                   </div>
-                  {imgs.length > 1 && <div style={{ position: "absolute", ...(item.rating ? { top: 34 } : { top: 10 }), right: 10, zIndex: 2, padding: "2px 6px", borderRadius: 5, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, fontWeight: 700 }}><Camera size={14} strokeWidth={STROKE} aria-hidden="true" /> {imgs.length}</div>}
+                  {imgs.length > 1 && <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, padding: "2px 6px", borderRadius: 5, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, fontWeight: 700 }}><Camera size={14} strokeWidth={STROKE} aria-hidden="true" /> {imgs.length}</div>}
 
                   <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Ver foto" className={firstImg ? "cat-img" : "cat-img cat-noimg"} onClick={(e) => { if (firstImg) { e.stopPropagation(); setViewImage(firstImg); } }} style={{ width: "100%", aspectRatio: "3/4", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative", cursor: firstImg ? "pointer" : "default" }}>
                     {firstImg ? (<img loading="lazy" decoding="async" src={firstImg} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />) : (<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}><span style={{ fontSize: 48, opacity: 0.15 }}><Gamepad2 size={48} strokeWidth={1.5} aria-hidden="true" /></span><span className="cat-noimg-txt" style={{ fontSize: 11, color: "var(--text-muted)", opacity: 0.5 }}>Sin imagen</span></div>)}

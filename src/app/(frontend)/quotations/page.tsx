@@ -71,6 +71,31 @@ function PickerSearch({ value, onChange, placeholder }: { value: string; onChang
   );
 }
 
+// Líneas con precio editable en la cotización (servicios, instalaciones y conceptos libres).
+// Artículos, equipos y consolas mantienen el precio del catálogo.
+const PRECIO_EDITABLE: string[] = ["service", "software", "videogame", "custom"];
+
+function PriceInput({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+  const [txt, setTxt] = useState(String(value));
+  const [prev, setPrev] = useState(value);
+  if (value !== prev) {
+    setPrev(value);
+    const actual = txt.trim() === "" ? 0 : parseFloat(txt.replace(",", "."));
+    if (actual !== value) setTxt(String(value));
+  }
+  return (
+    <input className="ox-input tabular" inputMode="decimal" aria-label={label} value={txt}
+      onChange={(e) => {
+        const t = e.target.value;
+        if (!/^\d*[.,]?\d{0,2}$/.test(t)) return;
+        setTxt(t);
+        const n = parseFloat(t.replace(",", "."));
+        onChange(Number.isFinite(n) ? n : 0);
+      }}
+      style={{ width: 76, padding: "4px 8px", fontSize: 13, height: "auto" }} />
+  );
+}
+
 function PickerCard({ selected, mark, onClick, title, sub, low, price }: { selected: boolean; mark: string; onClick: () => void; title: string; sub?: string; low?: boolean; price: number }) {
   return (
     <button type="button" className="ox-item" aria-pressed={selected} onClick={onClick}>
@@ -139,9 +164,14 @@ export default function QuotationsPage() {
   const matches = (q: string, ...fields: (string | null | undefined)[]) => q === "" || fields.some(f => (f || "").toLowerCase().includes(q.toLowerCase()));
   const filteredConsoles = consoleList.filter(c => c.condition === "disponible" && matches(searchConsole, c.name, c.brand, c.model));
   const filteredServices = serviceList.filter(sv => matches(searchService, sv.name));
-  // Programas y videojuegos: solo los que tienen precio
-  const filteredSoftware = softwareList.filter(x => typeof x.price === "number" && matches(searchSoftware, x.name, x.category));
-  const filteredVideogames = videogameList.filter(x => typeof x.price === "number" && matches(searchVideogame, x.name, x.platform));
+  // Programas y videojuegos: todos (la cotización cobra su instalación)
+  const filteredSoftware = softwareList.filter(x => matches(searchSoftware, x.name, x.category));
+  const filteredVideogames = videogameList.filter(x => matches(searchVideogame, x.name, x.platform));
+  // Programas y juegos no tienen precio propio: se cobra la instalación con el precio del servicio
+  // "Instalación de programas" / "Instalación de juegos" (Catálogo → Servicios), editable en cada línea.
+  const servicioInstalacion = (kind: "software" | "videogame") =>
+    serviceList.find(sv => /instalaci[oó]n/i.test(sv.name) && (kind === "videogame" ? /juego/i : /programa|software/i).test(sv.name)) || null;
+  const precioInstalacion = (kind: "software" | "videogame") => servicioInstalacion(kind)?.price ?? 0;
 
   // El servidor filtra y pagina (antes llegaban todas las cotizaciones y ventas de la sucursal)
   const [qTotal, setQTotal] = useState(0);
@@ -166,6 +196,8 @@ export default function QuotationsPage() {
     setSelectedItems(prev => [...prev, { inventoryId: inv.id, name: inv.name, price: inv.price, qty: 1, stock: inv.quantity, kind: "inventory" }]);
   };
 
+  const updatePrice = (key: string, price: number) =>
+    setSelectedItems(prev => prev.map(i => lineKey(i) === key ? { ...i, price: Math.max(0, Math.round(price * 100) / 100) } : i));
   const updateQty = (key: string, newQty: number) => {
     const item = selectedItems.find(i => lineKey(i) === key);
     if (!item) return;
@@ -201,7 +233,7 @@ export default function QuotationsPage() {
     const name = kind === "videogame" && x.platform ? `${x.name} (${x.platform})` : x.name;
     setSelectedItems(prev => prev.some(i => i.inventoryId === x.id && lineKind(i) === kind)
       ? prev.map(i => i.inventoryId === x.id && lineKind(i) === kind ? { ...i, qty: i.qty + 1 } : i)
-      : [...prev, { inventoryId: x.id, name, price: x.price || 0, qty: 1, stock: 0, kind }]);
+      : [...prev, { inventoryId: x.id, name: `Instalación: ${name}`, price: precioInstalacion(kind), qty: 1, stock: 0, kind }]);
   };
 
   const addCustom = () => {
@@ -426,10 +458,11 @@ export default function QuotationsPage() {
             <PickerSearch value={searchSoftware} onChange={setSearchSoftware} placeholder="Buscar programa..." />
             <div className="ox-list">
               {filteredSoftware.map(x => { const inCart = selectedItems.find(i => i.inventoryId === x.id && lineKind(i) === "software"); return (
-                <PickerCard key={x.id} selected={!!inCart} mark={String(inCart?.qty || "")} onClick={() => addCatalogLine("software", x)} title={x.name} sub={x.category || undefined} price={x.price || 0} />
+                <PickerCard key={x.id} selected={!!inCart} mark={String(inCart?.qty || "")} onClick={() => addCatalogLine("software", x)} title={x.name} sub={x.category || undefined} price={precioInstalacion("software")} />
               ); })}
             </div>
-            {filteredSoftware.length === 0 && <p className="ox-hint">No hay programas con precio. Ponles precio en Catálogo → Programas.</p>}
+            {filteredSoftware.length === 0 && <p className="ox-hint">No hay programas. Agrégalos en Catálogo → Programas.</p>}
+            <p className="ox-hint">{servicioInstalacion("software") ? `Se cobra con «${servicioInstalacion("software")!.name}». Puedes cambiar el precio en cada línea.` : "Crea «Instalación de programas» en Catálogo → Servicios para que el precio salga solo. Mientras, escríbelo en cada línea."}</p>
           </PickerBox>
 
           {/* ═══ PICKER DE VIDEOJUEGOS ═══ */}
@@ -437,10 +470,11 @@ export default function QuotationsPage() {
             <PickerSearch value={searchVideogame} onChange={setSearchVideogame} placeholder="Buscar videojuego o plataforma..." />
             <div className="ox-list">
               {filteredVideogames.map(x => { const inCart = selectedItems.find(i => i.inventoryId === x.id && lineKind(i) === "videogame"); return (
-                <PickerCard key={x.id} selected={!!inCart} mark={String(inCart?.qty || "")} onClick={() => addCatalogLine("videogame", x)} title={x.name} sub={x.platform || undefined} price={x.price || 0} />
+                <PickerCard key={x.id} selected={!!inCart} mark={String(inCart?.qty || "")} onClick={() => addCatalogLine("videogame", x)} title={x.name} sub={x.platform || undefined} price={precioInstalacion("videogame")} />
               ); })}
             </div>
-            {filteredVideogames.length === 0 && <p className="ox-hint">No hay videojuegos con precio. Ponles precio en Catálogo → Videojuegos.</p>}
+            {filteredVideogames.length === 0 && <p className="ox-hint">No hay videojuegos. Agrégalos en Catálogo → Videojuegos.</p>}
+            <p className="ox-hint">{servicioInstalacion("videogame") ? `Se cobra con «${servicioInstalacion("videogame")!.name}». Puedes cambiar el precio en cada línea.` : "Crea «Instalación de juegos» en Catálogo → Servicios para que el precio salga solo. Mientras, escríbelo en cada línea."}</p>
           </PickerBox>
 
           {/* ═══ CONCEPTO LIBRE ═══ */}
@@ -459,7 +493,9 @@ export default function QuotationsPage() {
                 {selectedItems.map(item => { const k = lineKind(item); const m = LINE_META[k]; const key = lineKey(item); const unique = isUniqueLine(item); return (
                   <div key={key} className="sel-row">
                     <div className="sel-name" style={{ fontSize: 14, fontWeight: 700, minWidth: 0 }}><LineIcon kind={k} /> {item.name}{m.tag && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 6, background: m.tint, color: m.color, fontWeight: 700, marginLeft: 6 }}>{m.tag}</span>}</div>
-                    <div className="sel-price tabular" style={{ fontSize: 12.5, color: "var(--text-muted)" }}>Bs. {item.price} {unique ? "" : "c/u"}</div>
+                    {PRECIO_EDITABLE.includes(k)
+                      ? <label className="sel-price tabular" style={{ fontSize: 12.5, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 4 }}>Bs. <PriceInput value={item.price} onChange={(n) => updatePrice(key, n)} label={`Precio de ${item.name}`} /> {unique ? "" : "c/u"}</label>
+                      : <div className="sel-price tabular" style={{ fontSize: 12.5, color: "var(--text-muted)" }}>Bs. {item.price} {unique ? "" : "c/u"}</div>}
                     {!unique ? (
                       <div className="sel-step" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <button type="button" className="ox-step" onClick={() => updateQty(key, item.qty - 1)} aria-label="Menos">−</button>
