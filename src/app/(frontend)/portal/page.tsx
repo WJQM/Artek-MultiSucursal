@@ -1,15 +1,16 @@
 "use client";
 import { Box, Camera, CircuitBoard, Clock, Cog, Cpu, Disc3, Gamepad2, Globe, HardDrive, Image as ImageIcon, Joystick, Laptop, MemoryStick, Monitor, Package, Palette, RefreshCw, Ruler, Search, Store, Tag, TriangleAlert, X, Zap } from "@/frontend/components/icons";
-import { STROKE, StatusDot } from "@/frontend/components/UiIcons";
+import { STROKE } from "@/frontend/components/UiIcons";
 import { errMsg, errOf } from "@/shared/errors";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { detectQR as detectQRShared } from "@/frontend/lib/qr-detect";
 import { PortalTracker } from "@/frontend/components/PortalTracker";
-import { WhatsAppFab, WhatsAppCta, WhatsAppMini, type PortalBranch } from "@/frontend/components/PortalWhatsApp";
+import { WhatsAppFab, WhatsAppMini, type PortalBranch } from "@/frontend/components/PortalWhatsApp";
 import { PortalHow, PortalReviews, type PublicReviews } from "@/frontend/components/PortalSections";
 import { PortalBranches } from "@/frontend/components/PortalBranches";
 import { PortalSide } from "@/frontend/components/PortalSide";
 import { ReserveButton, WaitlistButton, EMPTY_HOLDS, type Holds } from "@/frontend/components/PortalReserve";
+import { PortalSheet, type SheetSpec } from "@/frontend/components/PortalSheet";
 import { thumb } from "@/shared/thumb";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
 import { coverVars, type CoverFit, type PortalNav } from "@/shared/portal-cover";
@@ -59,6 +60,14 @@ function parseEqImages(img: string | null): string[] {
   try { const arr = JSON.parse(img); if (Array.isArray(arr)) return arr.filter(Boolean); } catch {}
   return img.trim() ? [img] : [];
 }
+
+// Resumen corto bajo el título de la ficha: "i7-12700F · 32 GB · RTX 4060 · 1 TB SSD"
+const cortoCpu = (t: string) => t.replace(/^(intel|amd)\s+/i, "").replace(/^(core|ryzen)\s+/i, (m) => (/ryzen/i.test(m) ? m : "")).replace(/\s*\(.*?\)/g, "").trim();
+const cortoRam = (t: string) => t.match(/\d+\s*GB/i)?.[0].replace(/\s+/, " ") || t;
+const cortoGpu = (t: string) => t.replace(/^(nvidia|amd|intel)\s+(geforce\s+|radeon\s+)?/i, "").trim();
+// Ícono pequeño y fila de especificación (se omite si el dato está vacío)
+const icon = (C: typeof Cpu) => <C size={14} strokeWidth={STROKE} aria-hidden="true" />;
+const spec = (ic: React.ReactNode, label: string, value: string | null | undefined): SheetSpec[] => (value && value.trim() ? [{ icon: ic, label, value }] : []);
 
 function getEqDisplayName(eq: Equipment): string {
   if (eq.type === "desktop") {
@@ -174,6 +183,8 @@ export default function PortalPage() {
   // Deep link: ?eq={id} opens equipment modal automatically once data is loaded
   const [pendingEqId, setPendingEqId] = useState<string | null>(null);
   const [pendingCnId, setPendingCnId] = useState<string | null>(null);
+  const [pendingSwId, setPendingSwId] = useState<string | null>(null);
+  const [pendingVgId, setPendingVgId] = useState<string | null>(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -181,9 +192,11 @@ export default function PortalPage() {
     if (eqId) setPendingEqId(eqId);
     const cnId = params.get("cn");
     if (cnId) setPendingCnId(cnId);
-    // QR de programas y videojuegos (/portal?sw=… / ?vg=…): abrir su pestaña
-    if (params.get("sw")) setTab("software");
-    else if (params.get("vg")) setTab("videogames");
+    // QR o enlaces compartidos de programas y videojuegos (/portal?sw=… / ?vg=…): abrir su pestaña y su ficha
+    const swId = params.get("sw");
+    const vgId = params.get("vg");
+    if (swId) { setTab("software"); setPendingSwId(swId); }
+    else if (vgId) { setTab("videogames"); setPendingVgId(vgId); }
   }, []);
   useEffect(() => {
     if (!pendingEqId || equipment.length === 0) return;
@@ -213,6 +226,18 @@ export default function PortalPage() {
       setPendingCnId(null);
     }
   }, [pendingCnId, consoles]);
+  useEffect(() => {
+    if (!pendingSwId || software.length === 0) return;
+    const found = software.find(x => x.id === pendingSwId);
+    if (found) { setSelectedSw(found); setCarouselIdx(0); }
+    setPendingSwId(null);
+  }, [pendingSwId, software]);
+  useEffect(() => {
+    if (!pendingVgId || videogames.length === 0) return;
+    const found = videogames.find(x => x.id === pendingVgId);
+    if (found) { setSelectedVg(found); setCarouselIdx(0); }
+    setPendingVgId(null);
+  }, [pendingVgId, videogames]);
 
   // Keyboard navigation for equipment carousel
   useEffect(() => {
@@ -598,6 +623,19 @@ export default function PortalPage() {
   const pagedConsoles = filteredConsoles.slice((pageCn - 1) * PAGE_SIZE, pageCn * PAGE_SIZE);
   const totalPagesEq = Math.ceil(filteredEquipment.length / PAGE_SIZE);
   const pagedEquipment = filteredEquipment.slice((pageEq - 1) * PAGE_SIZE, pageEq * PAGE_SIZE);
+  // Ficha del portal (PortalSheet): enlace para compartir, flechas anterior/siguiente sobre la lista filtrada
+  // y "También te puede interesar" (mismo tipo primero, luego el precio más parecido)
+  const portalUrl = typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal";
+  const abrir = <T,>(set: (x: T | null) => void) => (x: T) => { set(x); setCarouselIdx(0); };
+  const navOf = <T extends { id: string }>(list: T[], cur: T, open: (x: T) => void) => {
+    const i = list.findIndex(x => x.id === cur.id);
+    if (i < 0 || list.length < 2) return null;
+    return { index: i, total: list.length, onPrev: () => open(list[(i - 1 + list.length) % list.length]), onNext: () => open(list[(i + 1) % list.length]) };
+  };
+  const cercanos = <T extends { id: string; price?: number | null }>(list: T[], cur: T, same: (x: T) => boolean) =>
+    list.filter(x => x.id !== cur.id)
+      .map(x => ({ x, d: (same(x) ? 0 : 1e9) + Math.abs((x.price || 0) - (cur.price || 0)) }))
+      .sort((a, b) => a.d - b.d).slice(0, 3).map(a => a.x);
 
   const verEnCatalogo = (t: typeof tab, q: string) => { setTab(t); setSearch(q); setCategoryFilter("all"); setBranchFilter("all"); setPageInv(1); scrollToCatalog(); };
 
@@ -1004,79 +1042,28 @@ export default function PortalPage() {
         {/* Videogame Detail Modal */}
         {selectedVg && (() => {
           const vg = selectedVg;
-          const imgs = parseEqImages(vg.image);
+          const open = abrir(setSelectedVg);
           const platColor = getPlatformColor(vg.platform);
-          const currentImg = imgs[carouselIdx] || null;
           return (
-            <div role="dialog" aria-modal="true" aria-label="Detalle del videojuego" data-esc onClick={() => setSelectedVg(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20, overflowY: "auto" }}>
-              <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 620, maxHeight: "92vh", overflowY: "auto", background: "var(--bg-card)", borderRadius: 12, border: `1px solid ${platColor}40`, boxShadow: "0 20px 60px rgba(26,29,46,0.40)", animation: "fadeUp 0.3s ease-out" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "var(--bg-card)", zIndex: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 22 }}><Gamepad2 size={22} strokeWidth={STROKE} aria-hidden="true" /></span>
-                    <div>
-                      <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.2 }}>{vg.name}</h3>
-                      {vg.platform && <span style={{ fontSize: 11, fontWeight: 700, color: platColor }}>{vg.platform}</span>}
-                    </div>
-                  </div>
-                  <button onClick={() => setSelectedVg(null)} style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--danger-bright)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
-                </div>
-
-                {imgs.length > 0 ? (
-                  <div style={{ padding: "16px 20px 8px" }}>
-                    <div style={{ width: "100%", aspectRatio: "3/4", borderRadius: 14, overflow: "hidden", background: "var(--bg-tertiary)", position: "relative", maxHeight: 420 }}>
-                      {currentImg && <img role="button" tabIndex={0} onKeyDown={pressKey} src={thumb(currentImg, 800)} alt={vg.name} style={{ width: "100%", height: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={() => setViewImage(currentImg)} />}
-                      {imgs.length > 1 && (
-                        <>
-                          <button onClick={() => setCarouselIdx(i => (i - 1 + imgs.length) % imgs.length)} style={{ position: "absolute", top: "50%", left: 10, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>‹</button>
-                          <button onClick={() => setCarouselIdx(i => (i + 1) % imgs.length)} style={{ position: "absolute", top: "50%", right: 10, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>›</button>
-                          <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", padding: "3px 10px", borderRadius: 12, background: "rgba(26,29,46,0.45)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{carouselIdx + 1} / {imgs.length}</div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: "16px 20px 8px" }}>
-                    <div style={{ width: "100%", aspectRatio: "3/4", borderRadius: 14, background: `${platColor}14`, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", maxHeight: 380 }}>
-                      <span style={{ fontSize: 64, opacity: 0.3 }}><Gamepad2 size={64} strokeWidth={1.5} aria-hidden="true" /></span>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {vg.platform && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: `${platColor}18`, color: platColor, border: `1px solid ${platColor}30` }}><Gamepad2 size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.platform}</span>}
-                    {vg.genre && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(71,85,105,0.12)", color: "var(--text-secondary)", border: "1px solid rgba(71,85,105,0.25)" }}>{vg.genre}</span>}
-                    {vg.rating && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(239,68,68,0.12)", color: "var(--danger-bright)", border: "1px solid rgba(239,68,68,0.25)" }}>{vg.rating}</span>}
-                    {vg.language && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(6,182,212,0.12)", color: "#0e7490", border: "1px solid rgba(6,182,212,0.25)" }}>{vg.language}</span>}
-                    {vg.size && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(var(--accent-bright-rgb), 0.07)", color: "var(--accent-dim)", border: "1px solid rgba(var(--accent-bright-rgb), 0.11)" }}>{vg.size}</span>}
-                    {vg.branch && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", background: "rgba(var(--accent-bright-rgb), 0.06)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)" }}>{vg.branch.name}</span>}
-                  </div>
-
-                  {vg.description && (
-                    <div style={{ padding: "12px 16px", background: "var(--bg-tertiary)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.5px", marginBottom: 4 }}>Descripción</div>
-                      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>{vg.description}</div>
-                    </div>
-                  )}
-
-                  {vg.platform === "PC" && vg.minRequirements && (
-                    <div style={{ padding: "14px 16px", background: "var(--warn-bg)", borderRadius: 12, border: "1.5px solid var(--warn-line)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--warn)", letterSpacing: "0.5px", marginBottom: 4 }}>Requisitos mínimos</div>
-                      <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{vg.minRequirements}</div>
-                    </div>
-                  )}
-
-                  {vg.platform === "PC" && vg.recRequirements && (
-                    <div style={{ padding: "12px 16px", background: "rgba(16,185,129,0.06)", borderRadius: 12, border: "1px solid rgba(16,185,129,0.15)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ok)", letterSpacing: "0.5px", marginBottom: 4 }}>Requisitos recomendados</div>
-                      <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{vg.recRequirements}</div>
-                    </div>
-                  )}
-
-                  <WhatsAppCta what="este videojuego" product={vg.name} code={null} branch={vg.branch} branches={contactBranches} companyPhone={settings.phone} />
-                </div>
-              </div>
-            </div>
+            <PortalSheet ariaLabel="Detalle del videojuego"
+              icon={<Gamepad2 size={22} strokeWidth={STROKE} aria-hidden="true" />}
+              fallbackIcon={<Gamepad2 size={56} strokeWidth={1.5} aria-hidden="true" />}
+              title={vg.name} kindLabel="Videojuego"
+              images={parseEqImages(vg.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
+              summary={[vg.platform, vg.genre, vg.language, vg.size]}
+              chips={[...(vg.platform ? [{ label: vg.platform, color: platColor }] : []), ...(vg.rating ? [{ label: vg.rating }] : []), ...(vg.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.branch.name}</> }] : [])]}
+              shareUrl={`${portalUrl}?vg=${vg.id}`}
+              groups={[]}
+              blocks={<>
+                {vg.description && <div className="ps-block"><b>Descripción</b><p>{vg.description}</p></div>}
+                {vg.platform === "PC" && vg.minRequirements && <div className="ps-block"><b>Requisitos mínimos</b><p>{vg.minRequirements}</p></div>}
+                {vg.platform === "PC" && vg.recRequirements && <div className="ps-block"><b>Requisitos recomendados</b><p>{vg.recRequirements}</p></div>}
+              </>}
+              wa={{ product: vg.name, branch: vg.branch, branches: contactBranches, companyPhone: settings.phone }}
+              nav={navOf(filteredVideogames, vg, open)}
+              related={cercanos(videogames, vg, x => x.platform === vg.platform).map(x => ({ id: x.id, name: x.name, code: x.platform, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
+              relatedTitle="Otros videojuegos"
+              onClose={() => setSelectedVg(null)} />
           );
         })()}
 
@@ -1135,174 +1122,58 @@ export default function PortalPage() {
         {/* Console Detail Modal */}
         {selectedCn && (() => {
           const cn = selectedCn;
-          const imgs = parseEqImages(cn.image);
+          const open = abrir(setSelectedCn);
           const catColor = getConsoleCatColor(cn.category);
-          const currentImg = imgs[carouselIdx] || null;
           const cond = CONSOLE_CONDITIONS[cn.condition] || CONSOLE_CONDITIONS.disponible;
-          const dName = getConsoleDisplayName(cn);
+          const name = getConsoleDisplayName(cn);
           return (
-            <div role="dialog" aria-modal="true" aria-label="Detalle de la consola" data-esc onClick={() => setSelectedCn(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20, overflowY: "auto" }}>
-              <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 640, maxHeight: "92vh", overflowY: "auto", background: "var(--bg-card)", borderRadius: 12, border: `1px solid ${catColor}40`, boxShadow: "0 20px 60px rgba(26,29,46,0.40)", animation: "fadeUp 0.3s ease-out" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "var(--bg-card)", zIndex: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 22 }}><Joystick size={22} strokeWidth={STROKE} aria-hidden="true" /></span>
-                    <div>
-                      <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.2 }}>{dName}</h3>
-                      {cn.category && <span style={{ fontSize: 11, fontWeight: 700, color: catColor }}>{cn.category}</span>}
-                    </div>
-                  </div>
-                  <button onClick={() => setSelectedCn(null)} style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--danger-bright)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
-                </div>
-
-                {imgs.length > 0 ? (
-                  <div style={{ padding: "16px 20px 8px" }}>
-                    <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 14, overflow: "hidden", background: "var(--bg-tertiary)", position: "relative", maxHeight: 420 }}>
-                      {currentImg && <img role="button" tabIndex={0} onKeyDown={pressKey} src={thumb(currentImg, 800)} alt={dName} style={{ width: "100%", height: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={() => setViewImage(currentImg)} />}
-                      {imgs.length > 1 && (
-                        <>
-                          <button onClick={() => setCarouselIdx(i => (i - 1 + imgs.length) % imgs.length)} style={{ position: "absolute", top: "50%", left: 10, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>‹</button>
-                          <button onClick={() => setCarouselIdx(i => (i + 1) % imgs.length)} style={{ position: "absolute", top: "50%", right: 10, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>›</button>
-                          <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", padding: "3px 10px", borderRadius: 12, background: "rgba(26,29,46,0.45)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{carouselIdx + 1} / {imgs.length}</div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: "16px 20px 8px" }}>
-                    <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 14, background: `${catColor}14`, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", maxHeight: 380 }}>
-                      <span style={{ fontSize: 64, opacity: 0.3 }}><Joystick size={64} strokeWidth={1.5} aria-hidden="true" /></span>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {cn.category && <span style={{ padding: "5px 12px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: `${catColor}15`, color: catColor, border: `1.5px solid ${catColor}40` }}>{cn.category}</span>}
-                    {cn.state && <span style={{ padding: "5px 12px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: cn.state === "Nueva" ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color: cn.state === "Nueva" ? "var(--ok)" : "#c9952a", border: `1.5px solid ${cn.state === "Nueva" ? "rgba(16,185,129,0.35)" : "rgba(245,158,11,0.35)"}` }}>{cn.state === "Nueva" ? null : null} {cn.state}</span>}
-                    <span style={{ padding: "5px 12px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: `${cond.color}15`, color: cond.color, border: `1.5px solid ${cond.color}40` }}><StatusDot color={cond.color} /> {cond.label}</span>
-                    {cn.branch && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", background: "rgba(var(--accent-bright-rgb), 0.06)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)" }}>{cn.branch.name}</span>}
-                  </div>
-
-                  {/* Price */}
-                  <div style={{ padding: "18px 20px", background: "rgba(var(--accent-bright-rgb), 0.12)", borderRadius: 12, border: "2px solid rgba(var(--accent-bright-rgb), 0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", textAlign: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.06)" }}>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginBottom: 6, textAlign: "center" }}>Precio</div>
-                      <div style={{ fontSize: 32, fontWeight: 600, color: "var(--accent)", lineHeight: 1, letterSpacing: "-1.5px" }}>Bs. {Math.round(cn.price).toLocaleString()}</div>
-                    </div>
-                  </div>
-
-                  {/* Especificaciones */}
-                  {(cn.brand || cn.model || cn.color || cn.storage || cn.generation) && (
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "0.6px", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><span style={{ color: "var(--accent)" }}>◆</span> Especificaciones</div>
-                      <div className="eq-specs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                        {cn.brand && <SpecRow icon={<Tag size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Marca" value={cn.brand} />}
-                        {cn.model && <SpecRow icon={<Package size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Modelo" value={cn.model} />}
-                        {cn.color && <SpecRow icon={<Palette size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Color" value={cn.color} />}
-                        {cn.storage && <SpecRow icon={<HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Almacenamiento" value={cn.storage} />}
-                        {cn.generation && <SpecRow icon={<Gamepad2 size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Generación" value={cn.generation} />}
-                      </div>
-                    </div>
-                  )}
-
-                  {cn.accessories && (
-                    <div style={{ padding: "14px 16px", background: "#ffffff", borderRadius: 12, border: "1.5px solid var(--border-soft)", boxShadow: "var(--shadow-sm)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.5px", marginBottom: 6 }}>Accesorios incluidos</div>
-                      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>{cn.accessories}</div>
-                    </div>
-                  )}
-
-                  {cn.notes && (
-                    <div style={{ padding: "14px 16px", background: "var(--warn-bg)", borderRadius: 12, border: "1.5px solid var(--warn-line)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#c9952a", letterSpacing: "0.5px", marginBottom: 6 }}>Notas</div>
-                      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>{cn.notes}</div>
-                    </div>
-                  )}
-
-                  {cn.condition === "disponible" && cn.branch && holds.branches[cn.branch.id] && (holds.consoles.includes(cn.id)
-                    ? <WaitlistButton kind="console" id={cn.id} name={getConsoleDisplayName(cn)} />
-                    : <ReserveButton target={{ kind: "console", id: cn.id, name: getConsoleDisplayName(cn), price: cn.price, image: parseEqImages(cn.image)[0] || null, branch: cn.branch, available: 1, hours: holds.branches[cn.branch.id] }} maxQty={1} onChanged={() => loadData(true)} />)}
-                  <WhatsAppCta what="esta consola" product={getConsoleDisplayName(cn)} code={cn.code} price={cn.price} branch={cn.branch} branches={contactBranches} companyPhone={settings.phone} />
-                </div>
-              </div>
-            </div>
+            <PortalSheet ariaLabel="Detalle de la consola"
+              icon={<Joystick size={22} strokeWidth={STROKE} aria-hidden="true" />}
+              fallbackIcon={<Joystick size={56} strokeWidth={1.5} aria-hidden="true" />}
+              title={name} code={cn.code} kindLabel="Consola"
+              images={parseEqImages(cn.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
+              summary={[cn.storage, cn.generation, cn.state, cn.color]}
+              price={cn.price}
+              chips={[...(cn.category ? [{ label: cn.category, color: catColor }] : []), ...(cn.state ? [{ label: cn.state }] : []), { label: cond.label, color: cond.color, dot: true }, ...(cn.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {cn.branch.name}</> }] : [])]}
+              warrantyDays={settings.warrantyDays}
+              shareUrl={`${portalUrl}?cn=${cn.id}`}
+              groups={[{ title: "Detalles", items: [...spec(icon(Tag), "Marca", cn.brand), ...spec(icon(Package), "Modelo", cn.model), ...spec(icon(Palette), "Color", cn.color), ...spec(icon(HardDrive), "Almacenamiento", cn.storage), ...spec(icon(Gamepad2), "Generación", cn.generation)] }]}
+              accessories={cn.accessories} notes={cn.notes}
+              actions={cn.condition === "disponible" && cn.branch && holds.branches[cn.branch.id] ? (holds.consoles.includes(cn.id)
+                ? <WaitlistButton kind="console" id={cn.id} name={name} />
+                : <ReserveButton target={{ kind: "console", id: cn.id, name, price: cn.price, image: parseEqImages(cn.image)[0] || null, branch: cn.branch, available: 1, hours: holds.branches[cn.branch.id] }} maxQty={1} onChanged={() => loadData(true)} />) : null}
+              wa={{ product: name, code: cn.code, price: cn.price, branch: cn.branch, branches: contactBranches, companyPhone: settings.phone }}
+              nav={navOf(filteredConsoles, cn, open)}
+              related={cercanos(consoles.filter(x => x.condition === "disponible"), cn, x => x.category === cn.category).map(x => ({ id: x.id, code: x.code, name: getConsoleDisplayName(x), price: x.price, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
+              relatedTitle="También te puede interesar"
+              onClose={() => setSelectedCn(null)} />
           );
         })()}
 
         {/* Software Detail Modal */}
         {selectedSw && (() => {
           const sw = selectedSw;
-          const imgs = parseEqImages(sw.image);
-          const currentImg = imgs[carouselIdx] || null;
+          const open = abrir(setSelectedSw);
           return (
-            <div role="dialog" aria-modal="true" aria-label="Detalle del programa" data-esc onClick={() => setSelectedSw(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20, overflowY: "auto" }}>
-              <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 620, maxHeight: "92vh", overflowY: "auto", background: "var(--bg-card)", borderRadius: 12, border: "1px solid rgba(3,105,161,0.4)", boxShadow: "0 20px 60px rgba(26,29,46,0.40)", animation: "fadeUp 0.3s ease-out" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "var(--bg-card)", zIndex: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 22 }}><Disc3 size={22} strokeWidth={STROKE} aria-hidden="true" /></span>
-                    <div>
-                      <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.2 }}>{sw.name}</h3>
-                      {sw.category && <span style={{ fontSize: 11, fontWeight: 700, color: "#0369a1" }}>{sw.category}</span>}
-                    </div>
-                  </div>
-                  <button onClick={() => setSelectedSw(null)} style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--danger-bright)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
-                </div>
-
-                {imgs.length > 0 ? (
-                  <div style={{ padding: "16px 20px 8px" }}>
-                    <div style={{ width: "100%", aspectRatio: "3/4", borderRadius: 14, overflow: "hidden", background: "var(--bg-tertiary)", position: "relative", maxHeight: 420 }}>
-                      {currentImg && <img role="button" tabIndex={0} onKeyDown={pressKey} src={thumb(currentImg, 800)} alt={sw.name} style={{ width: "100%", height: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={() => setViewImage(currentImg)} />}
-                      {imgs.length > 1 && (
-                        <>
-                          <button onClick={() => setCarouselIdx(i => (i - 1 + imgs.length) % imgs.length)} style={{ position: "absolute", top: "50%", left: 10, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>‹</button>
-                          <button onClick={() => setCarouselIdx(i => (i + 1) % imgs.length)} style={{ position: "absolute", top: "50%", right: 10, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>›</button>
-                          <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", padding: "3px 10px", borderRadius: 12, background: "rgba(26,29,46,0.45)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{carouselIdx + 1} / {imgs.length}</div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: "16px 20px 8px" }}>
-                    <div style={{ width: "100%", aspectRatio: "3/4", borderRadius: 14, background: "rgba(3,105,161,0.14)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", maxHeight: 380 }}>
-                      <span style={{ fontSize: 64, opacity: 0.3 }}><Disc3 size={64} strokeWidth={1.5} aria-hidden="true" /></span>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {sw.category && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(3,105,161,0.12)", color: "#0369a1", border: "1px solid rgba(3,105,161,0.25)" }}><Tag size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.category}</span>}
-                    {sw.rating && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(239,68,68,0.12)", color: "var(--danger-bright)", border: "1px solid rgba(239,68,68,0.25)" }}>{sw.rating}</span>}
-                    {sw.language && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(6,182,212,0.12)", color: "#0e7490", border: "1px solid rgba(6,182,212,0.25)" }}>{sw.language}</span>}
-                    {sw.size && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: "rgba(var(--accent-bright-rgb), 0.07)", color: "var(--accent-dim)", border: "1px solid rgba(var(--accent-bright-rgb), 0.11)" }}>{sw.size}</span>}
-                    {sw.branch && <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", background: "rgba(var(--accent-bright-rgb), 0.06)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)" }}>{sw.branch.name}</span>}
-                  </div>
-
-                  {sw.description && (
-                    <div style={{ padding: "12px 16px", background: "var(--bg-tertiary)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.5px", marginBottom: 4 }}>Descripción</div>
-                      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>{sw.description}</div>
-                    </div>
-                  )}
-
-                  {sw.minRequirements && (
-                    <div style={{ padding: "14px 16px", background: "var(--warn-bg)", borderRadius: 12, border: "1.5px solid var(--warn-line)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--warn)", letterSpacing: "0.5px", marginBottom: 4 }}>Requisitos mínimos</div>
-                      <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{sw.minRequirements}</div>
-                    </div>
-                  )}
-
-                  {sw.recRequirements && (
-                    <div style={{ padding: "12px 16px", background: "rgba(16,185,129,0.06)", borderRadius: 12, border: "1px solid rgba(16,185,129,0.15)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ok)", letterSpacing: "0.5px", marginBottom: 4 }}>Requisitos recomendados</div>
-                      <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{sw.recRequirements}</div>
-                    </div>
-                  )}
-
-                  <WhatsAppCta what="este programa" product={sw.name} code={null} branch={sw.branch} branches={contactBranches} companyPhone={settings.phone} />
-                </div>
-              </div>
-            </div>
+            <PortalSheet ariaLabel="Detalle del programa"
+              icon={<Disc3 size={22} strokeWidth={STROKE} aria-hidden="true" />}
+              fallbackIcon={<Disc3 size={56} strokeWidth={1.5} aria-hidden="true" />}
+              title={sw.name} kindLabel="Programa"
+              images={parseEqImages(sw.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
+              summary={[sw.category, sw.language, sw.size]}
+              chips={[...(sw.category ? [{ label: sw.category, color: "#0369a1" }] : []), ...(sw.rating ? [{ label: sw.rating }] : []), ...(sw.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.branch.name}</> }] : [])]}
+              shareUrl={`${portalUrl}?sw=${sw.id}`}
+              groups={[]}
+              blocks={<>
+                {sw.description && <div className="ps-block"><b>Descripción</b><p>{sw.description}</p></div>}
+                {sw.minRequirements && <div className="ps-block"><b>Requisitos mínimos</b><p>{sw.minRequirements}</p></div>}
+                {sw.recRequirements && <div className="ps-block"><b>Requisitos recomendados</b><p>{sw.recRequirements}</p></div>}
+              </>}
+              wa={{ product: sw.name, branch: sw.branch, branches: contactBranches, companyPhone: settings.phone }}
+              nav={navOf(filteredSoftware, sw, open)}
+              related={cercanos(software, sw, x => x.category === sw.category).map(x => ({ id: x.id, name: x.name, code: x.category, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
+              relatedTitle="Otros programas"
+              onClose={() => setSelectedSw(null)} />
           );
         })()}
 
@@ -1427,178 +1298,35 @@ export default function PortalPage() {
       {/* Equipment Detail Modal with Carousel */}
       {selectedEq && (() => {
         const eq = selectedEq;
-        const imgs = parseEqImages(eq.image);
+        const open = abrir(setSelectedEq);
         const cond = EQ_CONDITIONS[eq.condition] || EQ_CONDITIONS.disponible;
-        const dName = getEqDisplayName(eq);
-        const currentImg = imgs[carouselIdx] || null;
-        const prev = () => setCarouselIdx(i => (imgs.length === 0 ? 0 : (i - 1 + imgs.length) % imgs.length));
-        const next = () => setCarouselIdx(i => (imgs.length === 0 ? 0 : (i + 1) % imgs.length));
+        const name = getEqDisplayName(eq);
+        const laptop = eq.type === "laptop";
         return (
-          <div role="dialog" aria-modal="true" aria-label="Detalle del equipo"
-            onClick={() => setSelectedEq(null)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 250, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, animation: "fadeUp 0.25s ease-out" }}
-          >
-            <div
-              onClick={e => e.stopPropagation()}
-              className="eq-modal"
-              style={{ width: "100%", maxWidth: 680, maxHeight: "92vh", overflow: "auto", background: "var(--bg-card)", borderRadius: 12, border: "1px solid rgba(99,102,241,0.18)", boxShadow: "0 24px 60px rgba(26,29,46,0.45)" }}
-            >
-              {/* Header */}
-              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, position: "sticky", top: 0, background: "var(--bg-card)", zIndex: 3 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                  <span style={{ fontSize: 22 }}>{eq.type === "laptop" ? <Laptop size={22} strokeWidth={STROKE} aria-hidden="true" /> : <Monitor size={22} strokeWidth={STROKE} aria-hidden="true" />}</span>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{dName}</h3>
-                      {eq.code && <span style={{ fontSize: 11, fontWeight: 600, color: "#0e7490", padding: "2px 8px", borderRadius: 6, background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", fontFamily: "monospace" }}>{eq.code}</span>}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{eq.type === "laptop" ? "Laptop" : "PC de Escritorio"} · Bs. {Math.round(eq.price).toLocaleString()}</div>
-                  </div>
-                </div>
-                <button onClick={() => setSelectedEq(null)} style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--danger-bright)", fontSize: 13, cursor: "pointer", flexShrink: 0 }}><X size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
-              </div>
-
-              {/* Carousel */}
-              {imgs.length > 0 ? (
-                <div style={{ padding: "16px 20px 8px" }}>
-                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/10", borderRadius: 14, overflow: "hidden", background: "var(--bg-tertiary)", border: "1px solid var(--border)" }}>
-                    <img role="button" tabIndex={0} onKeyDown={pressKey}
-                      key={carouselIdx}
-                      src={thumb(currentImg, 800)}
-                      alt={`${dName} ${carouselIdx + 1}`}
-                      onClick={() => setViewImage(currentImg)}
-                      style={{ width: "100%", height: "100%", objectFit: "contain", background: "#0a0a10", cursor: "zoom-in", animation: "fadeUp 0.3s ease-out" }}
-                    />
-
-                    {/* Counter */}
-                    {imgs.length > 1 && (
-                      <div style={{ position: "absolute", top: 12, right: 12, padding: "5px 12px", background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 12, fontWeight: 700, borderRadius: 12 }}>
-                        <Camera size={14} strokeWidth={STROKE} aria-hidden="true" /> {carouselIdx + 1} / {imgs.length}
-                      </div>
-                    )}
-
-                    {/* Zoom hint */}
-                    <div style={{ position: "absolute", bottom: 12, right: 12, padding: "4px 10px", background: "rgba(26,29,46,0.45)", color: "#1a1d2e", fontSize: 11, fontWeight: 600, borderRadius: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                      <Search size={14} strokeWidth={STROKE} aria-hidden="true" /> Click para ampliar
-                    </div>
-
-                    {/* Arrows */}
-                    {imgs.length > 1 && (
-                      <>
-                        <button
-                          onClick={prev}
-                          aria-label="Imagen anterior"
-                          style={{ position: "absolute", top: "50%", left: 10, transform: "translateY(-50%)", width: 40, height: 40, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transitionProperty: "var(--tr-ui)", transitionDuration: "0.15s" }}
-                          onPointerEnter={mouseOnly((e) => { e.currentTarget.style.background = "rgba(99,102,241,0.85)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; })}
-                          onPointerLeave={mouseOnly((e) => { e.currentTarget.style.background = "rgba(17,17,24,0.85)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; })}
-                        >‹</button>
-                        <button
-                          onClick={next}
-                          aria-label="Imagen siguiente"
-                          style={{ position: "absolute", top: "50%", right: 10, transform: "translateY(-50%)", width: 40, height: 40, borderRadius: "50%", background: "rgba(17,17,24,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#1a1d2e", fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transitionProperty: "var(--tr-ui)", transitionDuration: "0.15s" }}
-                          onPointerEnter={mouseOnly((e) => { e.currentTarget.style.background = "rgba(99,102,241,0.85)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; })}
-                          onPointerLeave={mouseOnly((e) => { e.currentTarget.style.background = "rgba(17,17,24,0.85)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; })}
-                        >›</button>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Thumbnails */}
-                  {imgs.length > 1 && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 12, overflowX: "auto", paddingBottom: 4 }}>
-                      {(imgs || []).map((img, idx) => (
-                        <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Ver foto"
-                          key={idx}
-                          onClick={() => setCarouselIdx(idx)}
-                          style={{ width: 76, height: 56, borderRadius: 8, overflow: "hidden", cursor: "pointer", flexShrink: 0, border: idx === carouselIdx ? "2px solid var(--accent)" : "2px solid transparent", opacity: idx === carouselIdx ? 1 : 0.6, transitionProperty: "var(--tr-ui)", transitionDuration: "0.15s", position: "relative" }}
-                        >
-                          <img src={thumb(img, 200)} loading="lazy" decoding="async" alt={`thumb ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ padding: "16px 20px 8px" }}>
-                  <div style={{ width: "100%", aspectRatio: "16/10", borderRadius: 14, background: "rgba(6,182,212,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)" }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 56, opacity: 0.3, marginBottom: 4 }}>{eq.type === "laptop" ? <Laptop size={56} strokeWidth={1.5} aria-hidden="true" /> : <Monitor size={56} strokeWidth={1.5} aria-hidden="true" />}</div>
-                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Sin imágenes disponibles</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Body */}
-              <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-
-                {/* Badges row */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: eq.type === "laptop" ? "rgba(37,99,235,0.12)" : "rgba(6,182,212,0.12)", color: eq.type === "laptop" ? "var(--info)" : "#0891b2", border: `1px solid ${eq.type === "laptop" ? "rgba(37,99,235,0.25)" : "rgba(6,182,212,0.25)"}` }}>
-                    {eq.type === "laptop" ? "Laptop" : "PC Escritorio"}
-                  </span>
-                  <span style={{ padding: "5px 12px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: `${cond.color}15`, color: cond.color, border: `1.5px solid ${cond.color}40` }}>
-                    <StatusDot color={cond.color} /> {cond.label}
-                  </span>
-                  {eq.branch && (
-                    <span style={{ padding: "5px 14px", borderRadius: 12, fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", background: "rgba(var(--accent-bright-rgb), 0.06)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)" }}>
-                      <Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {eq.branch.name}
-                    </span>
-                  )}
-                </div>
-
-                {/* Price */}
-                <div style={{ padding: "18px 20px", background: "rgba(var(--accent-bright-rgb), 0.12)", borderRadius: 12, border: "2px solid rgba(var(--accent-bright-rgb), 0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", textAlign: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.06)" }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginBottom: 6, textAlign: "center" }}>Precio</div>
-                    <div style={{ fontSize: 32, fontWeight: 600, color: "var(--accent)", lineHeight: 1, letterSpacing: "-1.5px" }}>Bs. {Math.round(eq.price).toLocaleString()}</div>
-                  </div>
-                  
-                </div>
-
-                {/* Specifications */}
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "0.6px", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><span style={{ color: "var(--accent)" }}>◆</span> Especificaciones</div>
-                  <div className="eq-specs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {eq.brand && <SpecRow icon={<Tag size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Marca" value={eq.brand} color="#14a3ad" />}
-                    {eq.model && <SpecRow icon={<Package size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Modelo" value={eq.model} color="#14a3ad" />}
-                    {eq.processor && <SpecRow icon={<Cpu size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Procesador" value={eq.processor} color="#14a3ad" />}
-                    {eq.ram && <SpecRow icon={<MemoryStick size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Memoria RAM" value={eq.ram} color="#10b981" />}
-                    {eq.storage && <SpecRow icon={<HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Disco Principal" value={eq.storage} color="#f59e0b" />}
-                    {eq.storage2 && <SpecRow icon={<HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Disco Secundario" value={eq.storage2} color="#f59e0b" />}
-                    {eq.graphicsCard && <SpecRow icon={<CircuitBoard size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Tarjeta Gráfica" value={eq.graphicsCard} color="#be185d" />}
-                    {eq.screenSize && <SpecRow icon={<Ruler size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Pantalla" value={eq.screenSize} color="#0369a1" />}
-                    {eq.os && <SpecRow icon={<Monitor size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Sistema Operativo" value={eq.os} color="#0891b2" />}
-                    {eq.cabinet && <SpecRow icon={<Box size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Gabinete" value={eq.cabinet} color="#dc2626" />}
-                    {eq.motherboard && <SpecRow icon={<CircuitBoard size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Placa Madre" value={eq.motherboard} color="#14b8a6" />}
-                    {eq.powerSupply && <SpecRow icon={<Zap size={14} strokeWidth={STROKE} aria-hidden="true" />} label="Fuente de Poder" value={eq.powerSupply} color="#ea580c" />}
-                  </div>
-                </div>
-
-                {/* Accessories */}
-                {eq.accessories && (
-                  <div style={{ padding: "14px 16px", background: "#ffffff", borderRadius: 12, border: "1.5px solid var(--border-soft)", boxShadow: "var(--shadow-sm)" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.5px", marginBottom: 6 }}>Accesorios incluidos</div>
-                    <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>{eq.accessories}</div>
-                  </div>
-                )}
-
-                {/* Notes */}
-                {eq.notes && (
-                  <div style={{ padding: "14px 16px", background: "var(--warn-bg)", borderRadius: 12, border: "1.5px solid var(--warn-line)" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#c9952a", letterSpacing: "0.5px", marginBottom: 6 }}>NOTAS adicionales</div>
-                    <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>{eq.notes}</div>
-                  </div>
-                )}
-
-                {/* Contact CTA */}
-                {eq.condition === "disponible" && eq.branch && holds.branches[eq.branch.id] && (holds.equipment.includes(eq.id)
-                  ? <WaitlistButton kind="equipment" id={eq.id} name={getEqDisplayName(eq)} />
-                  : <ReserveButton target={{ kind: "equipment", id: eq.id, name: getEqDisplayName(eq), price: eq.price, image: parseEqImages(eq.image)[0] || null, branch: eq.branch, available: 1, hours: holds.branches[eq.branch.id] }} maxQty={1} onChanged={() => loadData(true)} />)}
-                <WhatsAppCta what="este equipo" product={getEqDisplayName(eq)} code={eq.code} price={eq.price} branch={eq.branch} branches={contactBranches} companyPhone={settings.phone} />
-              </div>
-            </div>
-          </div>
+          <PortalSheet ariaLabel="Detalle del equipo"
+            icon={laptop ? <Laptop size={22} strokeWidth={STROKE} aria-hidden="true" /> : <Monitor size={22} strokeWidth={STROKE} aria-hidden="true" />}
+            fallbackIcon={laptop ? <Laptop size={56} strokeWidth={1.5} aria-hidden="true" /> : <Monitor size={56} strokeWidth={1.5} aria-hidden="true" />}
+            title={name} code={eq.code} kindLabel={laptop ? "Laptop" : "PC de escritorio"}
+            images={parseEqImages(eq.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
+            summary={[eq.processor && cortoCpu(eq.processor), eq.ram && cortoRam(eq.ram), eq.graphicsCard && cortoGpu(eq.graphicsCard), eq.storage]}
+            price={eq.price}
+            chips={[{ label: laptop ? "Laptop" : "PC escritorio" }, { label: cond.label, color: cond.color, dot: true }, ...(eq.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {eq.branch.name}</> }] : [])]}
+            warrantyDays={settings.warrantyDays}
+            shareUrl={`${portalUrl}?eq=${eq.id}`}
+            groups={[
+              { title: "Rendimiento", items: [...spec(icon(Cpu), "Procesador", eq.processor), ...spec(icon(MemoryStick), "Memoria RAM", eq.ram), ...spec(icon(CircuitBoard), "Tarjeta gráfica", eq.graphicsCard)] },
+              { title: "Almacenamiento", items: [...spec(icon(HardDrive), "Disco principal", eq.storage), ...spec(icon(HardDrive), "Disco secundario", eq.storage2)] },
+              { title: "Otros", items: [...spec(icon(Tag), "Marca", eq.brand), ...spec(icon(Package), "Modelo", eq.model), ...spec(icon(Ruler), "Pantalla", eq.screenSize), ...spec(icon(Monitor), "Sistema operativo", eq.os), ...spec(icon(Box), "Gabinete", eq.cabinet), ...spec(icon(CircuitBoard), "Placa madre", eq.motherboard), ...spec(icon(Zap), "Fuente de poder", eq.powerSupply)] },
+            ]}
+            accessories={eq.accessories} notes={eq.notes}
+            actions={eq.condition === "disponible" && eq.branch && holds.branches[eq.branch.id] ? (holds.equipment.includes(eq.id)
+              ? <WaitlistButton kind="equipment" id={eq.id} name={name} />
+              : <ReserveButton target={{ kind: "equipment", id: eq.id, name, price: eq.price, image: parseEqImages(eq.image)[0] || null, branch: eq.branch, available: 1, hours: holds.branches[eq.branch.id] }} maxQty={1} onChanged={() => loadData(true)} />) : null}
+            wa={{ product: name, code: eq.code, price: eq.price, branch: eq.branch, branches: contactBranches, companyPhone: settings.phone }}
+            nav={navOf(filteredEquipment, eq, open)}
+            related={cercanos(equipment.filter(x => x.condition === "disponible"), eq, x => x.type === eq.type).map(x => ({ id: x.id, code: x.code, name: getEqDisplayName(x), price: x.price, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
+            relatedTitle="También te puede interesar"
+            onClose={() => setSelectedEq(null)} />
         );
       })()}
 
@@ -1606,17 +1334,6 @@ export default function PortalPage() {
       {!selectedEq && !selectedCn && !selectedSw && !selectedVg && !viewImage && (
         <WhatsAppFab branches={contactBranches} companyPhone={settings.phone} companyName={settings.companyName} />
       )}
-    </div>
-  );
-}
-
-function SpecRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string; color?: string }) {
-  return (
-    <div className="spec-card" style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0, background: "#ffffff", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px" }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 5 }}>
-        <span style={{ display: "flex" }}>{icon}</span> {label}
-      </div>
-      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text-primary)", overflowWrap: "anywhere" }}>{value}</div>
     </div>
   );
 }

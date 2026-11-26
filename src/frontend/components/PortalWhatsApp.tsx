@@ -120,34 +120,26 @@ const fabStyle: React.CSSProperties = {
 };
 
 /**
- * Recuadro "¿Te interesa…?" de las fichas: botón que abre WhatsApp con la sucursal del producto
- * (o la línea principal) y el mensaje ya escrito con el producto, código y precio.
+ * Botón de WhatsApp de la ficha del portal (PortalSheet): abre el chat de la sucursal del producto
+ * (o la línea principal) con el mensaje ya escrito. Sin precio (programas y videojuegos) pregunta el precio.
  */
-export function WhatsAppCta({ what, product, code, price, branch, branches, companyPhone }: {
-  what: string; product: string; code?: string | null; price?: number | null;
+export function WhatsAppBuy({ product, code, price, branch, branches, companyPhone }: {
+  product: string; code?: string | null; price?: number | null;
   branch?: { id: string; name: string } | null; branches: PortalBranch[]; companyPhone: string | null;
 }) {
   const branchPhone = branch ? branches.find((b) => b.id === branch.id)?.phone : null;
   const phone = waNumber(branchPhone) ? branchPhone : companyPhone;
-  const parts = [`Hola, me interesa ${product}`];
-  if (code) parts[0] += ` (${code})`;
-  if (typeof price === "number" && price > 0) parts[0] += ` de Bs. ${Math.round(price).toLocaleString("es-BO")}`;
-  if (branch) parts[0] += ` en ${branchLabel(branch.name)}`;
-  parts.push("¿Sigue disponible?");
-  const href = waLink(phone, parts.join(". "));
-
+  const hasPrice = typeof price === "number" && price > 0;
+  let text = `Hola, me interesa ${product}`;
+  if (code) text += ` (${code})`;
+  if (hasPrice) text += ` de Bs. ${Math.round(price).toLocaleString("es-BO")}`;
+  if (branch) text += ` en ${branchLabel(branch.name)}`;
+  const href = waLink(phone, `${text}. ${hasPrice ? "¿Sigue disponible?" : "¿Qué precio tiene?"}`);
+  if (!href) return null;
   return (
-    <div style={{ padding: "16px 18px", background: "rgba(var(--accent-bright-rgb), 0.06)", borderRadius: 12, border: "1.5px solid rgba(var(--accent-bright-rgb), 0.25)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, fontWeight: 500 }}>
-        ¿Te interesa {what}? {href ? "Escríbenos y te respondemos" : "Contáctanos"} {branch ? <>desde <strong style={{ color: "var(--accent-dim)" }}>{branch.name}</strong></> : "en nuestra tienda"}{href ? "." : " para más información."}
-      </div>
-      {href && (
-        <a href={href} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, background: WA_GREEN, color: "#fff", fontSize: 14, fontWeight: 800, textDecoration: "none", boxShadow: "0 1px 2px rgba(15,23,42,0.06)" }}>
-          <WaIcon size={18} /> Consultar por WhatsApp
-        </a>
-      )}
-    </div>
+    <a href={href} target="_blank" rel="noopener noreferrer" className="ps-wa" onClick={(e) => e.stopPropagation()}>
+      <WaIcon size={18} /> {hasPrice ? "Consultar por WhatsApp" : "Consultar precio por WhatsApp"}
+    </a>
   );
 }
 

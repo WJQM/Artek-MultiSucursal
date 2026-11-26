@@ -23,7 +23,7 @@ import {
   PencilSimple as PhPencilSimple, Phone as PhPhone, Plug as PhPlug, Plugs as PhPlugs, Plus as PhPlus, Printer as PhPrinter,
   Prohibit as PhProhibit, Pulse as PhPulse, PushPin as PhPushPin, QrCode as PhQrCode, Radio as PhRadio, Receipt as PhReceipt,
   Robot as PhRobot, Ruler as PhRuler, Scales as PhScales, Scan as PhScan, Scissors as PhScissors, SealCheck as PhSealCheck,
-  Shapes as PhShapes, Shield as PhShield, ShieldCheck as PhShieldCheck, ShoppingBag as PhShoppingBag, ShoppingCart as PhShoppingCart, SignOut as PhSignOut,
+  Shapes as PhShapes, ShareNetwork as PhShareNetwork, Shield as PhShield, ShieldCheck as PhShieldCheck, ShoppingBag as PhShoppingBag, ShoppingCart as PhShoppingCart, SignOut as PhSignOut,
   Square as PhSquare, SquaresFour as PhSquaresFour, Stack as PhStack, Star as PhStar, Stethoscope as PhStethoscope, Storefront as PhStorefront,
   Tag as PhTag, Target as PhTarget, Thermometer as PhThermometer, Trash as PhTrash, Tray as PhTray, TrendUp as PhTrendUp,
   Trophy as PhTrophy, UploadSimple as PhUploadSimple, User as PhUser, UserGear as PhUserGear, Users as PhUsers, Wallet as PhWallet,
@@ -155,6 +155,7 @@ export const Send = duo(PhPaperPlaneTilt, "Send");
 export const Server = duo(PhHardDrives, "Server");
 export const Settings = duo(PhGearSix, "Settings");
 export const Shapes = duo(PhShapes, "Shapes");
+export const Share2 = duo(PhShareNetwork, "Share2");
 export const Shield = duo(PhShield, "Shield");
 export const ShieldCheck = duo(PhShieldCheck, "ShieldCheck");
 export const ShoppingBag = duo(PhShoppingBag, "ShoppingBag");
