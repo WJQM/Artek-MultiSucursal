@@ -123,7 +123,7 @@ export default function InventoryPrintPage() {
                       <td className="n muted">{rxNum(item.minStock)}</td>
                       <td className="n">{rxBs(item.price)}</td>
                       <td className="n" style={{ fontWeight: 700 }}>{rxBs(item.price * item.quantity)}</td>
-                      <td className="c"><span className="rx-pill" style={isLow ? { background: "#fef2f2", color: "#b91c1c" } : { background: "#f0fdf4", color: "#047857" }}>{isLow ? "BAJO" : "OK"}</span></td>
+                      <td className="c">{isLow && <span className="rx-pill" style={{ color: "#b91c1c" }}>{item.quantity <= 0 ? "Agotado" : "Stock bajo"}</span>}</td>
                     </tr>
                   );
                 })}

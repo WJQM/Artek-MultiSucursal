@@ -6,13 +6,13 @@ import { Suspense, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { apiFetch, getStoredAuth } from "@/frontend/lib/api";
-import { RX_CSS, rxPageCss, RxHero, rxStatus, rxNum, type RxCompany } from "@/frontend/components/ReportSheet";
+import { RX_CSS, rxPageCss, RxHero, rxStatus, rxNum, rxBs, type RxCompany } from "@/frontend/components/ReportSheet";
 import { EXTRACTO_MAX, extractoApiParams, extractoHojas, type ExtractoFiltros } from "@/shared/extracto";
 
 // Extracto general para imprimir, con dirección propia (antes se escribía en una pestaña "about:blank").
 // Primero cuenta los equipos: si son demasiados no los descarga, así el navegador no se queda sin memoria.
 
-interface Row { id: string; code: string; device: string; brand: string | null; model: string | null; issue: string; status: string; clientName: string | null; clientPhone: string | null; createdAt: string }
+interface Row { id: string; code: string; device: string; brand: string | null; model: string | null; issue: string; status: string; clientName: string | null; clientPhone: string | null; createdAt: string; estimatedCost?: number }
 type Estado =
   | { kind: "cargando" } | { kind: "sesion" } | { kind: "permiso" } | { kind: "red" }
   | { kind: "muchos"; total: number } | { kind: "listo"; rows: Row[] };
@@ -119,7 +119,7 @@ function ExtractoHoja() {
               <div className="rx-sect">Listado general de equipos <em>{rxNum(rows.length)}</em></div>
               {rows.length === 0 ? <p className="rx-empty">No hay equipos con estos filtros</p> : (
                 <div className="rx-tw as-cards"><table className="rx-t">
-                  <thead><tr><th className="c">#</th><th>OT</th><th>Equipo</th><th>Cliente</th><th>Celular</th><th>Problema</th><th>Estado</th><th>Fecha</th></tr></thead>
+                  <thead><tr><th className="c">#</th><th>OT</th><th>Equipo</th><th>Cliente</th><th>Celular</th><th>Problema</th><th>Estado</th><th>Fecha</th><th className="n">Monto</th></tr></thead>
                   <tbody>{rows.map((r, i) => (
                     <tr key={r.id}>
                       <td className="c muted">{i + 1}</td>
@@ -128,10 +128,12 @@ function ExtractoHoja() {
                       <td>{r.clientName || "—"}</td>
                       <td className="muted">{r.clientPhone || "—"}</td>
                       <td className="muted">{r.issue}</td>
-                      <td><span className="rx-pill">{rxStatus(r.status).label}</span></td>
+                      <td><span className="rx-pill" style={{ color: rxStatus(r.status).fg }}>{rxStatus(r.status).label}</span></td>
                       <td>{fmtCorta(r.createdAt)}</td>
+                      <td className="n">{rxBs(r.estimatedCost || 0)}</td>
                     </tr>
                   ))}</tbody>
+                  <tfoot><tr><td colSpan={8}>Total</td><td className="n">{rxBs(rows.reduce((t, r) => t + (r.estimatedCost || 0), 0))}</td></tr></tfoot>
                 </table></div>
               )}
             </div>
