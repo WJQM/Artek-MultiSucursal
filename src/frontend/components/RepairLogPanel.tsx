@@ -140,11 +140,11 @@ export function RepairLogPanel({ repairId, compact = false }: { repairId: string
   const publicCount = entries.filter((e) => e.visibleToClient && !e.hidden).length;
 
   return (
-    <div onClick={(ev) => ev.stopPropagation()} style={{ background: "#ffffff", borderRadius: 12, overflow: "hidden", border: "1.5px solid var(--text-primary)", boxShadow: "var(--shadow-card)", cursor: "default" }}>
-      <div style={{ padding: "8px 14px", background: "var(--brand-dark)", display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ color: "var(--border-soft)", display: "flex" }}><ClipboardList size={15} strokeWidth={STROKE} aria-hidden="true" /></span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>Bitácora técnica</span>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
+    <div onClick={(ev) => ev.stopPropagation()} style={{ background: "#ffffff", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)", cursor: "default" }}>
+      <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ color: "var(--text-secondary)", display: "flex" }}><ClipboardList size={15} strokeWidth={STROKE} aria-hidden="true" /></span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Bitácora técnica</span>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>
           {entries.length} {entries.length === 1 ? "entrada" : "entradas"}{publicCount > 0 && ` · ${publicCount} visible${publicCount > 1 ? "s" : ""} al cliente`}
         </span>
       </div>
@@ -173,7 +173,7 @@ export function RepairLogPanel({ repairId, compact = false }: { repairId: string
                       <span style={{ fontSize: 11, fontWeight: 700, color: t.color }}>{t.label}</span>
                       <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600 }}>· {e.authorName}</span>
                       <span style={{ fontSize: 11, color: "var(--text-muted)" }}>({ROLE_LABEL[e.authorRole] || e.authorRole}) · {timeAgo(e.createdAt)}{e.status && STAGE_LABEL[e.status] ? ` · en ${STAGE_LABEL[e.status]}` : ""}</span>
-                      <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: e.visibleToClient ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.12)", color: e.visibleToClient ? "var(--ok)" : "var(--text-secondary)" }}>
+                      <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: "var(--bg-hover)", color: "var(--text-secondary)" }}>
                         {e.visibleToClient ? <><Eye size={12} strokeWidth={STROKE} aria-hidden="true" /> Cliente</> : <><Lock size={12} strokeWidth={STROKE} aria-hidden="true" /> Interno</>}
                       </span>
                       {e.hidden && <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: "rgba(239,68,68,0.12)", color: "var(--danger)" }}>Oculta</span>}
@@ -198,6 +198,9 @@ export function RepairLogPanel({ repairId, compact = false }: { repairId: string
                       </div>
                     )}
                     {(e.canEdit || data?.isManager) && !isEditing && (
+                      // Acciones poco usadas (corregir, hacer interna, ocultar, borrar) dentro de "Opciones" para no llenar cada entrada de botones
+                      <details className="rl-more">
+                      <summary>Opciones</summary>
                       <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                         {e.canEdit && <button onClick={() => setEditing({ id: e.id, text: e.text === "(solo fotos)" ? "" : e.text })} style={smallBtn("var(--accent)")}><Pencil size={13} strokeWidth={STROKE} aria-hidden="true" /> Corregir</button>}
                         {e.type !== "comentario" && (e.canEdit || data?.isManager) && !e.hidden && (
@@ -209,6 +212,7 @@ export function RepairLogPanel({ repairId, compact = false }: { repairId: string
                         )}
                         {e.canEdit && <span style={{ fontSize: 11, color: "var(--text-muted)", alignSelf: "center" }}>Puedes corregirla durante {data?.editWindowMin ?? 15} min</span>}
                       </div>
+                      </details>
                     )}
                   </div>
                 </div>

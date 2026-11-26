@@ -24,7 +24,7 @@ import { DEVICE_TYPES, ACCESSORIES_LIST, ACCESSORIES_HINTS, PRIORITIES, TECH_COL
 import { CountUp, SaveButton } from "@/frontend/components/Motion";
 import { askConfirm } from "@/frontend/lib/dialog";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
-import { Award, Backpack, Banknote, Bell, CalendarDays, Camera, CircleCheck, ClipboardList, Disc3, FileText, Flag, Gamepad2, Handshake, History, ImagePlus, ListChecks, MessageCircle, MessageSquare, Pencil, Plus, Printer, QrCode, Receipt, Search, Smartphone, Stethoscope, Trash2, TriangleAlert, User, UserCog, Wrench, X } from "@/frontend/components/icons";
+import { Award, Backpack, Banknote, Bell, CalendarDays, Camera, CircleCheck, ClipboardList, Disc3, FileText, Flag, Gamepad2, Handshake, History, ImagePlus, MessageCircle, MessageSquare, Pencil, Plus, Printer, QrCode, Receipt, Search, Smartphone, Stethoscope, Trash2, TriangleAlert, User, UserCog, Wrench, X } from "@/frontend/components/icons";
 import { AccessoryIcon, DeviceIcon, NotifIcon, OrderTag, STROKE, ServiceIcon, StatusDot, StatusIcon } from "@/frontend/components/UiIcons";
 import { PageSkeleton } from "@/frontend/components/Skeletons";
 
@@ -1237,60 +1237,59 @@ return (
                           )}
 
                           {/* Izquierda: Cliente | Equipo y Detalles (se estira hasta la altura del Seguimiento: no queda hueco). Derecha: Seguimiento */}
-                          <div className="oxd-top">
-                            <div className="oxd-left">
-                              <div className="oxd-two">
-                                {card(<User size={15} strokeWidth={STROKE} />, "Cliente", <>
-                                  <div className="oxd-kv"><span>Nombre</span><b>{repair.clientName || "—"}</b></div>
-                                  <div className="oxd-kv"><span>Celular</span><b>{repair.clientPhone || "—"}</b></div>
-                                  <div className="oxd-kv"><span>Técnico asignado</span>
-                                    <select value={repair.technicianId || ""} onChange={(e) => assignTechnician(repair.id, e.target.value)} aria-label="Técnico asignado">
-                                      <option value="">— Sin asignar —</option>{techniciansList.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
-                                    </select></div>
-                                </>)}
-                                {card(<DeviceIcon device={repair.device} size={15} />, "Equipo", <>
-                                  <div className="oxd-kv"><span>Dispositivo</span><b>{repair.device || "—"}</b></div>
-                                  <div className="oxd-kv2"><div className="oxd-kv"><span>Marca</span><b>{repair.brand || "—"}</b></div><div className="oxd-kv"><span>Modelo</span><b>{repair.model || "—"}</b></div></div>
-                                  <ImeiInfo key={`${repair.id}:${repair.imei || ""}`} repair={repair} />
-                                  <div className="oxd-cost"><span>Costo estimado</span><b>Bs. {Math.round(repair.estimatedCost || 0).toLocaleString("es-BO")}</b></div>
-                                </>)}
-                              </div>
-                              {card(<ClipboardList size={15} strokeWidth={STROKE} />, "Detalles", <div className="oxd-boxes">
-                                {repair.issue && <div className="oxd-box warn"><span>Problema</span>{repair.issue}</div>}
-                                <div className="oxd-box"><span>Observaciones</span>{repairNotes || "Ninguna observación"}</div>
-                                {repairServices.length > 0 && <div className="oxd-box"><span>Servicios</span>{chips(repairServices)}</div>}
-                                {repairRepuestos.length > 0 && <div className="oxd-box"><span>Repuestos</span>{chips(repairRepuestos)}</div>}
-                                {repairSoftware.length > 0 && <div className="oxd-box"><span>Programas</span>{chips(repairSoftware)}</div>}
-                                {repairVideogames.length > 0 && <div className="oxd-box"><span>Videojuegos</span>{chips(repairVideogames)}</div>}
-                                {isDelivered && repairDeliveryNotes && <div className="oxd-box"><span>Notas de entrega</span>{repairDeliveryNotes}</div>}
-                                {isDelivered && Number(repairDiscount) > 0 && <div className="oxd-box bad"><span>Descuento</span>- Bs. {repairDiscount}</div>}
-                              </div>, undefined, "grow")}
+                          {/* Resumen: lo importante de la orden sin bajar (código, equipo, estado, cliente, total, técnico) */}
+                          <div className="oxd-sum">
+                            <div className="oxd-sum-main">
+                              <div className="oxd-sum-t"><b>{repair.code} · {[repair.device, repair.brand, repair.model].filter(Boolean).join(" ")}</b><span className="oxd-st" style={{ color: st.color, background: `${st.color}14` }}><StatusIcon status={repair.status} size={13} /> {st.label}</span></div>
+                              <div className="oxd-sum-s">{[repair.clientName, repair.clientPhone, `ingresó ${new Date(repair.createdAt).toLocaleDateString("es-BO", { day: "numeric", month: "short" }).replace(/\./g, "")}`].filter(Boolean).join(" · ")}</div>
                             </div>
-                            {card(<ListChecks size={15} strokeWidth={STROKE} />, "Seguimiento", <>
-                              <div className="oxd-donut" aria-hidden="true">
-                                <svg viewBox="0 0 100 100">
-                                  {steps.map((key, idx) => {
-                                    const gap = 5, seg = (360 - gap * steps.length) / steps.length, r = 42, circ = 2 * Math.PI * r;
-                                    const len = (seg / 360) * circ; const off = -((idx * (seg + gap)) / 360) * circ;
-                                    const done = isDelivered || idx <= curStep; const cur = !isDelivered && idx === curStep;
-                                    return <circle key={key} cx={50} cy={50} r={r} fill="none" stroke={done ? (STATUS[key] || st).color : "#e8ebf2"} strokeWidth={cur ? 8 : 5} strokeDasharray={`${len} ${circ - len}`} strokeDashoffset={off} strokeLinecap="round" />;
-                                  })}
-                                </svg>
-                                <div><i style={{ color: st.color }}><StatusIcon status={repair.status} size={26} /></i><b style={{ color: st.color }}>{st.label}</b><small>etapa {curStep + 1} de {steps.length}</small></div>
-                              </div>
-                              <ol className="oxd-steps">
-                                {steps.map((k, idx) => {
-                                  const done = isDelivered || idx < curStep; const cur = !isDelivered && idx === curStep;
-                                  return <li key={k} className={done ? "d" : cur ? "c" : ""}><i>{done ? "✓" : idx + 1}</i>{(STATUS[k] || st).label}{cur && <small>actual</small>}</li>;
-                                })}
-                              </ol>
-                            </>, new Date(repair.updatedAt).toLocaleDateString("es-BO", { hourCycle: "h23", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(/\./g, ""), "track")}
+                            <div className="oxd-sum-total"><span>{isDelivered ? "Total" : "Costo estimado"}</span><b>Bs. {Math.round(repair.estimatedCost || 0).toLocaleString("es-BO")}</b></div>
+                            <label className="oxd-sum-tech"><span>Técnico</span>
+                              <select value={repair.technicianId || ""} onChange={(e) => assignTechnician(repair.id, e.target.value)} aria-label="Técnico asignado">
+                                <option value="">— Sin asignar —</option>{techniciansList.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                              </select>
+                            </label>
                           </div>
 
-                          <div className={`oxd-bottom${repairAcc.length ? "" : " solo"}`}>
-                            {repairAcc.length > 0 && card(<Backpack size={15} strokeWidth={STROKE} />, "Accesorios", chips(repairAcc, () => "✓"), repairAcc.length, "acc")}
-                            <div className="oxd-log"><RepairLogPanel repairId={repair.id} compact={repairAcc.length > 0} /></div>
+                          {/* Etapas en una línea: hechas en oscuro, la actual con el color de su estado */}
+                          <ol className="oxd-flow" aria-label={`Etapa ${curStep + 1} de ${steps.length}: ${st.label}`}>
+                            {steps.map((k, idx) => {
+                              const done = isDelivered || idx < curStep; const cur = !isDelivered && idx === curStep;
+                              return <li key={k} className={done ? "d" : cur ? "c" : ""} style={cur ? { ["--c" as string]: st.color } as React.CSSProperties : undefined}><i>{done ? "✓" : idx + 1}</i>{(STATUS[k] || st).label}{(cur || (isDelivered && idx === steps.length - 1)) && <small>{new Date(repair.updatedAt).toLocaleDateString("es-BO", { hourCycle: "h23", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(/\./g, "")}</small>}</li>;
+                            })}
+                          </ol>
+
+                          <div className="oxd-grid">
+                            {card(<DeviceIcon device={repair.device} size={15} />, "Equipo y recepción", <>
+                              <dl className="oxd-dl">
+                                <dt>Equipo</dt><dd>{[repair.device, repair.brand, repair.model].filter(Boolean).join(" ") || "—"}</dd>
+                                <dt>Problema</dt><dd>{repair.issue || "—"}</dd>
+                                <dt>Observaciones</dt><dd>{repairNotes || "Ninguna"}</dd>
+                                {isDelivered && repairDeliveryNotes && <><dt>Notas de entrega</dt><dd>{repairDeliveryNotes}</dd></>}
+                              </dl>
+                              <ImeiInfo key={`${repair.id}:${repair.imei || ""}`} repair={repair} />
+                              {repairAcc.length > 0 && <><div className="oxd-sub">Accesorios ({repairAcc.length})</div>{chips(repairAcc)}</>}
+                            </>)}
+                            {/* Trabajo y costo: servicios, repuestos e instalaciones; con descuento muestra subtotal, descuento y total */}
+                            {card(<Wrench size={15} strokeWidth={STROKE} />, "Trabajo y costo", (() => {
+                              const rows: [string, string][] = [...repairServices.map((n): [string, string] => [n, "Servicio"]), ...repairRepuestos.map((n): [string, string] => [n, "Repuesto"]), ...repairSoftware.map((n): [string, string] => [n, "Instalación"]), ...repairVideogames.map((n): [string, string] => [n, "Instalación"])];
+                              const disc = isDelivered ? Number(repairDiscount) || 0 : 0;
+                              const total = Math.round(repair.estimatedCost || 0);
+                              return (
+                                <table className="oxd-ct">
+                                  <tbody>
+                                    {rows.length === 0 && <tr><td className="oxd-empty" colSpan={2}>Sin servicios ni repuestos registrados</td></tr>}
+                                    {rows.map(([n, k], i) => <tr key={i}><td>{n}</td><td className="k">{k}</td></tr>)}
+                                    {disc > 0 && <tr><td>Subtotal</td><td className="k">Bs. {(total + disc).toLocaleString("es-BO")}</td></tr>}
+                                    {disc > 0 && <tr className="disc"><td>Descuento</td><td className="k">− Bs. {disc.toLocaleString("es-BO")}</td></tr>}
+                                    <tr className="tot"><td>{isDelivered ? "Total cobrado" : "Costo estimado"}</td><td className="k">Bs. {total.toLocaleString("es-BO")}</td></tr>
+                                  </tbody>
+                                </table>
+                              );
+                            })())}
                           </div>
+
+                          <div className="oxd-log"><RepairLogPanel repairId={repair.id} /></div>
 
                           <div className="oxd-actions" translate="no">
                             {nextStatus && <button type="button" className="go" onClick={() => { if (needsAdvanceDialog(nextStatus)) setAdvancing({ repair, to: nextStatus }); else updateStatus(repair.id, nextStatus); }}><StatusIcon status={nextStatus} /> Pasar a {STATUS[nextStatus].label}</button>}
@@ -1300,7 +1299,7 @@ return (
                             {isDelivered && <button type="button" onClick={() => setPrintModal({ code: repair.code, type: "delivery" })}><Printer size={16} strokeWidth={STROKE} aria-hidden="true" /> Entrega</button>}
                             <button type="button" onClick={() => openChat({ repairId: repair.id })}><MessageSquare size={16} strokeWidth={STROKE} aria-hidden="true" /> Chat</button>
                             <button type="button" onClick={() => setHistoryModal({ id: repair.id, code: repair.code })}><History size={16} strokeWidth={STROKE} aria-hidden="true" /> Historial</button>
-                            <button type="button" className="del" onClick={async () => { if (await askConfirm(`¿Eliminar ${repair.code}?`)) deleteRepair(repair.id); }} aria-label={`Eliminar ${repair.code}`}><Trash2 size={16} strokeWidth={STROKE} aria-hidden="true" /></button>
+                            <button type="button" className="del" onClick={async () => { if (await askConfirm(`¿Eliminar ${repair.code}?`)) deleteRepair(repair.id); }} aria-label={`Eliminar ${repair.code}`}><Trash2 size={16} strokeWidth={STROKE} aria-hidden="true" /> Eliminar</button>
                           </div>
                         </div>
                       );

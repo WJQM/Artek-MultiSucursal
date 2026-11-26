@@ -2323,3 +2323,50 @@ a, button, summary, select, label, [role="button"] { touch-action: manipulation;
   .qd-head, .qd-body, .qd-actions { padding-left: 14px; padding-right: 14px; }
   .qd-row:not(.qd-foot) .qd-btn { flex: 1 1 calc(50% - 8px); justify-content: center; }
 }
+
+/* Detalle de la orden (panel principal y asignaciones): resumen, etapas en línea, tabla de costo, encabezados claros */
+.oxc { border-color: var(--border); }
+.oxc-h { background: transparent; color: var(--text-primary); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
+.oxc-h .ic { background: var(--bg-tertiary); color: var(--text-secondary); }
+.oxc-h .r { color: var(--text-muted); }
+.oxd-sum { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; }
+.oxd-sum-main { flex: 1; min-width: 220px; }
+.oxd-sum-t { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.oxd-sum-t b { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.oxd-st { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+.oxd-sum-s { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+.oxd-sum-total { text-align: right; }
+.oxd-sum-total span, .oxd-sum-tech span { display: block; font-size: 11px; color: var(--text-muted); }
+.oxd-sum-total b { font-size: 20px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.oxd-sum-tech { display: flex; flex-direction: column; gap: 2px; min-width: 170px; }
+.oxd-sum-tech select { height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; font: inherit; font-size: 13px; background: #fff; color: var(--text-primary); }
+.oxd-flow { list-style: none; display: flex; gap: 4px; padding: 12px 14px; margin: 0; border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+.oxd-flow li { flex: 1; min-width: 84px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; color: var(--text-muted); text-align: center; position: relative; }
+.oxd-flow li::before { content: ""; position: absolute; top: 10px; left: -50%; right: 50%; height: 2px; background: var(--border); }
+.oxd-flow li:first-child::before { display: none; }
+.oxd-flow li.d::before, .oxd-flow li.c::before { background: var(--text-primary); }
+.oxd-flow i { position: relative; z-index: 1; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 700; background: #fff; border: 2px solid var(--border); color: var(--text-muted); }
+.oxd-flow li.d { color: var(--text-secondary); }
+.oxd-flow li.d i { background: var(--text-primary); border-color: var(--text-primary); color: #fff; }
+.oxd-flow li.c { color: var(--text-primary); font-weight: 700; }
+.oxd-flow li.c i { border-color: var(--c, var(--text-primary)); color: var(--c, var(--text-primary)); }
+.oxd-flow small { font-size: 10.5px; color: var(--text-muted); font-weight: 400; }
+.oxd-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.oxd-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
+.oxd-dl dt { color: var(--text-muted); font-size: 12px; }
+.oxd-dl dd { margin: 0; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
+.oxd-sub { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.oxd-ct { width: 100%; border-collapse: collapse; font-size: 13px; }
+.oxd-ct td { padding: 7px 0; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-primary); }
+.oxd-ct td.k { color: var(--text-muted); font-size: 12px; text-align: right; white-space: nowrap; padding-left: 10px; }
+.oxd-ct tr.disc td { color: var(--danger); }
+.oxd-ct tr.tot td { border-bottom: 0; font-weight: 700; padding-top: 10px; }
+.oxd-ct tr.tot td.k { color: var(--text-primary); font-size: 16px; }
+.oxd-empty { font-size: 12px; color: var(--text-muted) !important; }
+.oxd-actions button.del { width: auto; padding: 0 10px; border-color: transparent; background: none; color: var(--danger); }
+.rl-more { margin-top: 6px; }
+.rl-more > summary { display: inline-block; list-style: none; cursor: pointer; font-size: 11.5px; font-weight: 600; color: var(--text-muted); padding: 2px 0; }
+.rl-more > summary::-webkit-details-marker { display: none; }
+.rl-more > summary::after { content: " ⋯"; }
+.rl-more[open] > summary { color: var(--text-primary); }
+@media (max-width: 900px) { .oxd-grid { grid-template-columns: 1fr; } .oxd-sum-total { text-align: left; } }
