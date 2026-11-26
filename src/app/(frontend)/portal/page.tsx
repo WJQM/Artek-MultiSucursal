@@ -1,5 +1,5 @@
 "use client";
-import { Box, Camera, CircuitBoard, Clock, Cog, Cpu, Disc3, Gamepad2, Globe, HardDrive, Image as ImageIcon, Joystick, Laptop, MemoryStick, Monitor, Package, Palette, RefreshCw, Ruler, Search, Store, Tag, TriangleAlert, X, Zap } from "@/frontend/components/icons";
+import { Box, Camera, CircuitBoard, Clock, Cog, Cpu, Disc3, Gamepad2, HardDrive, Image as ImageIcon, Joystick, Laptop, MemoryStick, Monitor, Package, Palette, RefreshCw, Ruler, Search, Store, Tag, TriangleAlert, X, Zap } from "@/frontend/components/icons";
 import { STROKE } from "@/frontend/components/UiIcons";
 import { errMsg, errOf } from "@/shared/errors";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -11,6 +11,7 @@ import { PortalBranches } from "@/frontend/components/PortalBranches";
 import { PortalSide } from "@/frontend/components/PortalSide";
 import { ReserveButton, WaitlistButton, EMPTY_HOLDS, type Holds } from "@/frontend/components/PortalReserve";
 import { PortalSheet, type SheetSpec } from "@/frontend/components/PortalSheet";
+import { PortalCard } from "@/frontend/components/PortalCard";
 import { thumb } from "@/shared/thumb";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
 import { coverVars, type CoverFit, type PortalNav } from "@/shared/portal-cover";
@@ -65,6 +66,9 @@ function parseEqImages(img: string | null): string[] {
 const cortoCpu = (t: string) => t.replace(/^(intel|amd)\s+/i, "").replace(/^(core|ryzen)\s+/i, (m) => (/ryzen/i.test(m) ? m : "")).replace(/\s*\(.*?\)/g, "").trim();
 const cortoRam = (t: string) => t.match(/\d+\s*GB/i)?.[0].replace(/\s+/, " ") || t;
 const cortoGpu = (t: string) => t.replace(/^(nvidia|amd|intel)\s+(geforce\s+|radeon\s+)?/i, "").trim();
+// Filtros rápidos: tarjeta gráfica dedicada (no integrada) y RAM en GB
+const conGpu = (g: string | null) => !!g && !/intel\s*(uhd|iris|hd)|integrad|radeon\s*(graphics|vega)|apple|\bm[123]\b/i.test(g);
+const ramGb = (r: string | null) => Number((r || "").match(/(\d+)\s*GB/i)?.[1] || 0);
 // Ícono pequeño y fila de especificación (se omite si el dato está vacío)
 const icon = (C: typeof Cpu) => <C size={14} strokeWidth={STROKE} aria-hidden="true" />;
 const spec = (ic: React.ReactNode, label: string, value: string | null | undefined): SheetSpec[] => (value && value.trim() ? [{ icon: ic, label, value }] : []);
@@ -149,6 +153,9 @@ export default function PortalPage() {
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  // Orden del catálogo y filtros rápidos (equipos: tarjeta gráfica, 16 GB, SSD; consolas: nuevas o usadas)
+  const [orden, setOrden] = useState<"nombre" | "menor" | "mayor" | "recientes">("nombre");
+  const [rapidos, setRapidos] = useState<string[]>([]);
   const [branchFilter, setBranchFilter] = useState("all");
   const [mounted, setMounted] = useState(false);
   const [pageInv, setPageInv] = useState(1);
@@ -157,9 +164,9 @@ export default function PortalPage() {
   const [pageCn, setPageCn] = useState(1);
   const [pageEq, setPageEq] = useState(1);
   // Columnas de la rejilla del catálogo (igual que el CSS de .portal-grid) y 4 filas por página (no llena toda la pantalla)
-  const [gridCols, setGridCols] = useState(5);
+  const [gridCols, setGridCols] = useState(4);
   useEffect(() => {
-    const calc = () => { const w = window.innerWidth; setGridCols(w <= 768 ? 2 : w <= 960 ? 3 : w <= 1180 ? 4 : w < 1440 ? 5 : 6); };
+    const calc = () => { const w = window.innerWidth; setGridCols(w <= 768 ? 2 : w <= 1180 ? 3 : 4); };
     calc();
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
@@ -575,11 +582,18 @@ export default function PortalPage() {
     (categoryFilter === "all" || i.category === categoryFilter) &&
     (branchFilter === "all" || i.branch?.name === branchFilter)
   ).sort((a, b) => Number(a.quantity <= 0) - Number(b.quantity <= 0) || byName(a.name, b.name));
+  const ordenarPor = (pa?: number | null, pb?: number | null, ca?: string, cb?: string) =>
+    orden === "menor" ? (pa || 0) - (pb || 0) : orden === "mayor" ? (pb || 0) - (pa || 0) : orden === "recientes" ? (cb || "").localeCompare(ca || "") : 0;
+  const pasaEq = (e: Equipment) =>
+    (!rapidos.includes("gpu") || conGpu(e.graphicsCard)) &&
+    (!rapidos.includes("ram16") || ramGb(e.ram) >= 16) &&
+    (!rapidos.includes("ssd") || /ssd|nvme/i.test(`${e.storage || ""} ${e.storage2 || ""}`));
+  const pasaCn = (c: ConsoleItem) => (!rapidos.includes("nueva") || c.state === "Nueva") && (!rapidos.includes("usada") || (!!c.state && c.state !== "Nueva"));
   const filteredSoftware = software.filter(s =>
     (search === "" || s.name.toLowerCase().includes(search.toLowerCase()) || (s.category || "").toLowerCase().includes(search.toLowerCase())) &&
     (categoryFilter === "all" || s.category === categoryFilter) &&
     (branchFilter === "all" || s.branch?.name === branchFilter)
-  ).sort((a, b) => byName(a.name, b.name));
+  ).sort((a, b) => ordenarPor(0, 0, a.createdAt, b.createdAt) || byName(a.name, b.name));
   const filteredVideogames = videogames.filter(v =>
     (search === "" ||
       v.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -587,7 +601,7 @@ export default function PortalPage() {
       (v.genre || "").toLowerCase().includes(search.toLowerCase())) &&
     (categoryFilter === "all" || v.platform === categoryFilter) &&
     (branchFilter === "all" || v.branch?.name === branchFilter)
-  ).sort((a, b) => byName(a.name, b.name));
+  ).sort((a, b) => ordenarPor(0, 0, a.createdAt, b.createdAt) || byName(a.name, b.name));
   const filteredConsoles = consoles.filter(c =>
     c.condition === "disponible" &&
     (search === "" ||
@@ -597,8 +611,9 @@ export default function PortalPage() {
       (c.model || "").toLowerCase().includes(search.toLowerCase()) ||
       (c.category || "").toLowerCase().includes(search.toLowerCase())) &&
     (categoryFilter === "all" || c.category === categoryFilter) &&
-    (branchFilter === "all" || c.branch?.name === branchFilter)
-  ).sort((a, b) => byName(getConsoleDisplayName(a), getConsoleDisplayName(b)));
+    (branchFilter === "all" || c.branch?.name === branchFilter) &&
+    pasaCn(c)
+  ).sort((a, b) => ordenarPor(a.price, b.price, a.createdAt, b.createdAt) || byName(getConsoleDisplayName(a), getConsoleDisplayName(b)));
   const filteredEquipment = equipment.filter(e =>
     e.condition === "disponible" &&
     (search === "" ||
@@ -607,14 +622,15 @@ export default function PortalPage() {
       (e.brand || "").toLowerCase().includes(search.toLowerCase()) ||
       (e.model || "").toLowerCase().includes(search.toLowerCase())) &&
     (categoryFilter === "all" || e.type === categoryFilter) &&
-    (branchFilter === "all" || e.branch?.name === branchFilter)
-  ).sort((a, b) => byName(getEqDisplayName(a), getEqDisplayName(b)));
+    (branchFilter === "all" || e.branch?.name === branchFilter) &&
+    pasaEq(e)
+  ).sort((a, b) => ordenarPor(a.price, b.price, a.createdAt, b.createdAt) || byName(getEqDisplayName(a), getEqDisplayName(b)));
   const scrollToCatalog = () => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth", block: "start" });
   // WhatsApp de la barra superior: el del taller, o el de la primera sucursal que tenga
   const totalPagesInv = Math.ceil(filteredInventory.length / PAGE_SIZE);
   const pagedInventory = filteredInventory.slice((pageInv - 1) * PAGE_SIZE, pageInv * PAGE_SIZE);
-  // Programas usa una columna más (tarjetas compactas), igual que .sw-grid en el CSS
-  const SW_PAGE_SIZE = (gridCols <= 2 ? 2 : gridCols + 1) * 4;
+  // Programas usa el mismo tamaño de página que las demás pestañas
+  const SW_PAGE_SIZE = PAGE_SIZE;
   const totalPagesSw = Math.ceil(filteredSoftware.length / SW_PAGE_SIZE);
   const pagedSoftware = filteredSoftware.slice((pageSw - 1) * SW_PAGE_SIZE, pageSw * SW_PAGE_SIZE);
   const totalPagesVg = Math.ceil(filteredVideogames.length / PAGE_SIZE);
@@ -625,6 +641,7 @@ export default function PortalPage() {
   const pagedEquipment = filteredEquipment.slice((pageEq - 1) * PAGE_SIZE, pageEq * PAGE_SIZE);
   // Ficha del portal (PortalSheet): enlace para compartir, flechas anterior/siguiente sobre la lista filtrada
   // y "También te puede interesar" (mismo tipo primero, luego el precio más parecido)
+  const multiSuc = allBranches.length > 2;
   const portalUrl = typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal";
   const abrir = <T,>(set: (x: T | null) => void) => (x: T) => { set(x); setCarouselIdx(0); };
   const navOf = <T extends { id: string }>(list: T[], cur: T, open: (x: T) => void) => {
@@ -658,18 +675,10 @@ export default function PortalPage() {
         @media (hover: hover) and (pointer: fine) { .cat-chip:hover { border-color: rgba(var(--accent-bright-rgb), 0.14); color: var(--text-secondary); } }
         .cat-chip.active { background: var(--brand-dark); color: #fff; border-color: var(--text-primary); }
         .skeleton { background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 12px; }
-        .portal-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+        .portal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
         .portal-card .pc-img { background: #ffffff; }
         /* Programas: tarjeta compacta (logo cuadrado, título en 2 líneas) */
-        .portal-grid.sw-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
-        @media(min-width:1440px) { .portal-grid.sw-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
-        @media(max-width:1180px) { .portal-grid.sw-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-        @media(max-width:960px) { .portal-grid.sw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        @media(max-width:768px) { .portal-grid.sw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
-        .sw-card .sw-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .sw-card .sw-lang { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        @media(min-width:1440px) { .portal-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-        @media(max-width:1180px) { .portal-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        @media(max-width:1180px) { .portal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
         @media(max-width:960px) { .portal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
         @media(max-width:768px) {
           .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -832,7 +841,7 @@ export default function PortalPage() {
         <div id="catalogo" className="portal-top-bar" style={{ scrollMarginTop: 16,  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 20 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {portalTabs.filter(t => t.count > 0 || (t.key === "inventory" && !portalTabs.some(x => x.count > 0))).map(t => (
-              <button key={t.key} className={`tab-btn${tab === t.key ? " active" : ""}`} onClick={() => { setTab(t.key); setSearch(""); setCategoryFilter("all"); setBranchFilter("all"); setPageInv(1); setPageSw(1); setPageVg(1); setPageCn(1); setPageEq(1); }}>
+              <button key={t.key} className={`tab-btn${tab === t.key ? " active" : ""}`} onClick={() => { setTab(t.key); setSearch(""); setCategoryFilter("all"); setRapidos([]); setOrden("nombre"); setBranchFilter("all"); setPageInv(1); setPageSw(1); setPageVg(1); setPageCn(1); setPageEq(1); }}>
                 {t.icon} {t.label} <span className="ui-count" style={{ marginLeft: 6 }}>{t.count}</span>
               </button>
             ))}
@@ -861,6 +870,21 @@ export default function PortalPage() {
         )}
 
         {/* Branch filters */}
+        {(tab === "equipment" || tab === "consoles" || tab === "software" || tab === "videogames") && (
+          <div className="cat-scroll" style={{ display: "flex", gap: 8, marginBottom: 14, paddingBottom: 4, alignItems: "center" }}>
+            {(tab === "equipment" ? [["gpu", "Con tarjeta gráfica"], ["ram16", "16 GB o más"], ["ssd", "Con SSD"]] : tab === "consoles" ? [["nueva", "Nuevas"], ["usada", "Usadas"]] : []).map(([k, l]) => (
+              <button key={k} className={`cat-chip${rapidos.includes(k) ? " active" : ""}`} aria-pressed={rapidos.includes(k)}
+                onClick={() => { setRapidos(r => r.includes(k) ? r.filter(x => x !== k) : [...r.filter(x => !((k === "nueva" && x === "usada") || (k === "usada" && x === "nueva"))), k]); setPageCn(1); setPageEq(1); }}>{l}</button>
+            ))}
+            <select aria-label="Ordenar" className="cat-sort" value={orden} onChange={e => { setOrden(e.target.value as typeof orden); setPageSw(1); setPageVg(1); setPageCn(1); setPageEq(1); }}>
+              <option value="nombre">Nombre (A-Z)</option>
+              {(tab === "equipment" || tab === "consoles") && <option value="menor">Menor precio</option>}
+              {(tab === "equipment" || tab === "consoles") && <option value="mayor">Mayor precio</option>}
+              <option value="recientes">Más recientes</option>
+            </select>
+          </div>
+        )}
+
         {allBranches.length > 2 && (
           <div className="cat-scroll" style={{ display: "flex", gap: 8, marginBottom: 20, paddingBottom: 4 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", padding: "6px 0", whiteSpace: "nowrap" }}><Store size={14} strokeWidth={STROKE} aria-hidden="true" /></span>
@@ -949,39 +973,14 @@ export default function PortalPage() {
                 <p style={{ fontSize: 14, color: "var(--text-muted)" }}>{search ? "Intenta con otro término de búsqueda" : "No hay programas disponibles en este momento"}</p>
               </div>
             ) : (
-              <div className="portal-grid sw-grid">
-                {(pagedSoftware || []).map((sw, i) => {
-                  const imgs = parseEqImages(sw.image);
-                  const firstImg = imgs[0] || null;
-                  return (
-                    <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Ver foto" key={sw.id} onClick={() => { setSelectedSw(sw); setCarouselIdx(0); }} className="portal-card sw-card" style={{ background: "#ffffff", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "var(--shadow-card)", overflow: "hidden", animation: `fadeUp 0.4s ease-out ${i * 0.05}s both`, cursor: "pointer", position: "relative" }}>
-                      {sw.category && <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2, padding: "3px 10px", borderRadius: 6, background: "rgba(3,105,161,0.9)", color: "#fff", fontSize: 11, fontWeight: 700 }}><Disc3 size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.category}</div>}
-                      {sw.rating && <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, padding: "3px 8px", borderRadius: 6, background: "rgba(239,68,68,0.9)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{sw.rating}</div>}
-                      {firstImg ? (
-                        <div className="pc-img" style={{ width: "100%", aspectRatio: "1/1", overflow: "hidden", padding: 10 }}>
-                          <img src={thumb(firstImg)} loading="lazy" decoding="async" alt={sw.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }}
-                            onPointerEnter={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1.05)"))}
-                            onPointerLeave={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1)"))}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{ width: "100%", aspectRatio: "1/1", background: "rgba(3,105,161,0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 44, opacity: 0.3 }}><Disc3 size={44} strokeWidth={1.5} aria-hidden="true" /></span>
-                        </div>
-                      )}
-                      <div className="pc-body" style={{ padding: "10px 12px 12px" }}>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
-                          {sw.branch && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", padding: "2px 8px", borderRadius: 99, background: "rgba(var(--accent-bright-rgb), 0.08)", border: "1px solid rgba(var(--accent-bright-rgb), 0.20)" }}><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.branch.name}</span>}
-                        </div>
-                        <h3 className="sw-title" title={sw.name} style={{ fontSize: 13.5, fontWeight: 700, marginTop: 2, color: "var(--text-primary)", lineHeight: 1.3 }}>{sw.name}</h3>
-                        <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-                          {sw.size && <span style={{ fontSize: 10.5, padding: "2px 7px", borderRadius: 6, background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.08)", color: "var(--accent-dim)", fontWeight: 600 }}><HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.size}</span>}
-                          {sw.language && <span className="sw-lang" style={{ fontSize: 10.5, padding: "2px 7px", borderRadius: 6, background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.15)", color: "#0e7490", fontWeight: 600 }}><Globe size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.language}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="portal-grid">
+                {pagedSoftware.map(sw => (
+                  <PortalCard key={sw.id} name={sw.name} branch={multiSuc ? sw.branch?.name : null}
+                    summary={[sw.language, sw.size]} images={parseEqImages(sw.image)}
+                    tag={sw.category} badge={sw.rating ? { label: sw.rating, tone: "muted" } : null}
+                    fallbackIcon={<Disc3 size={40} strokeWidth={1.5} aria-hidden="true" />}
+                    onOpen={() => { setSelectedSw(sw); setCarouselIdx(0); }} />
+                ))}
               </div>
             )}
             <PortalPager page={pageSw} total={totalPagesSw} onChange={(p) => { setPageSw(p); scrollToCatalog(); }} />
@@ -999,40 +998,13 @@ export default function PortalPage() {
               </div>
             ) : (
               <div className="portal-grid">
-                {(pagedVideogames || []).map((vg, i) => {
-                  const imgs = parseEqImages(vg.image);
-                  const firstImg = imgs[0] || null;
-                  const platColor = getPlatformColor(vg.platform);
-                  return (
-                    <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Ver foto" key={vg.id} onClick={() => { setSelectedVg(vg); setCarouselIdx(0); }} className="portal-card" style={{ background: "#ffffff", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "var(--shadow-card)", overflow: "hidden", animation: `fadeUp 0.4s ease-out ${i * 0.05}s both`, cursor: "pointer", position: "relative" }}>
-                      {vg.platform && <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2, padding: "3px 10px", borderRadius: 6, background: `${platColor}dd`, color: "#fff", fontSize: 11, fontWeight: 700 }}><Gamepad2 size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.platform}</div>}
-                      {vg.rating && <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, padding: "3px 8px", borderRadius: 6, background: "rgba(239,68,68,0.9)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{vg.rating}</div>}
-                      {firstImg ? (
-                        <div className="pc-img" style={{ width: "100%", aspectRatio: "3/4", overflow: "hidden" }}>
-                          <img src={thumb(firstImg)} loading="lazy" decoding="async" alt={vg.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }}
-                            onPointerEnter={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1.05)"))}
-                            onPointerLeave={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1)"))}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{ width: "100%", aspectRatio: "3/4", background: `${platColor}14`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 56, opacity: 0.3 }}><Gamepad2 size={56} strokeWidth={1.5} aria-hidden="true" /></span>
-                        </div>
-                      )}
-                      <div className="pc-body" style={{ padding: "14px 16px" }}>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
-                          {vg.genre && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", letterSpacing: "0.5px" }}>{vg.genre}</span>}
-                          {vg.branch && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", padding: "2px 8px", borderRadius: 99, background: "rgba(var(--accent-bright-rgb), 0.08)", border: "1px solid rgba(var(--accent-bright-rgb), 0.20)" }}><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.branch.name}</span>}
-                        </div>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: "var(--text-primary)", lineHeight: 1.3 }}>{vg.name}</h3>
-                        <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                          {vg.size && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.08)", color: "var(--accent-dim)", fontWeight: 600 }}><HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.size}</span>}
-                          {vg.language && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.15)", color: "#0e7490", fontWeight: 600 }}><Globe size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.language}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {pagedVideogames.map(vg => (
+                  <PortalCard key={vg.id} name={vg.name} branch={multiSuc ? vg.branch?.name : null}
+                    summary={[vg.genre, vg.language, vg.size]} images={parseEqImages(vg.image)}
+                    tag={vg.platform} badge={vg.rating ? { label: vg.rating, tone: "muted" } : null}
+                    fallbackIcon={<Gamepad2 size={40} strokeWidth={1.5} aria-hidden="true" />}
+                    onOpen={() => { setSelectedVg(vg); setCarouselIdx(0); }} />
+                ))}
               </div>
             )}
             <PortalPager page={pageVg} total={totalPagesVg} onChange={(p) => { setPageVg(p); scrollToCatalog(); }} />
@@ -1078,41 +1050,14 @@ export default function PortalPage() {
               </div>
             ) : (
               <div className="portal-grid">
-                {(pagedConsoles || []).map((cn, i) => {
-                  const imgs = parseEqImages(cn.image);
-                  const firstImg = imgs[0] || null;
-                  const catColor = getConsoleCatColor(cn.category);
-                  const dName = getConsoleDisplayName(cn);
-                  return (
-                    <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Ver foto" key={cn.id} onClick={() => { setSelectedCn(cn); setCarouselIdx(0); }} className="portal-card" style={{ background: "#ffffff", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "var(--shadow-card)", overflow: "hidden", animation: `fadeUp 0.4s ease-out ${i * 0.05}s both`, cursor: "pointer", position: "relative" }}>
-                      {cn.category && <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2, padding: "3px 10px", borderRadius: 6, background: `${catColor}dd`, color: "#fff", fontSize: 11, fontWeight: 700 }}><Tag size={14} strokeWidth={STROKE} aria-hidden="true" /> {cn.category}</div>}
-                      {holds.consoles.includes(cn.id) && <div className="resv-held bl"><Clock size={14} strokeWidth={STROKE} aria-hidden="true" /> Apartado</div>}
-                      {cn.state && <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, padding: "3px 8px", borderRadius: 6, background: cn.state === "Nueva" ? "rgba(16,185,129,0.85)" : "rgba(245,158,11,0.85)", color: "#fff", fontSize: 11, fontWeight: 700 }}>{cn.state === "Nueva" ? null : null} {cn.state}</div>}
-                      {imgs.length > 1 && <div style={{ position: "absolute", ...(cn.state ? { top: 38 } : { top: 10 }), right: 10, zIndex: 2, padding: "2px 8px", borderRadius: 6, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, fontWeight: 700 }}><Camera size={14} strokeWidth={STROKE} aria-hidden="true" /> {imgs.length}</div>}
-                      {firstImg ? (
-                        <div style={{ width: "100%", aspectRatio: "1/1", overflow: "hidden", background: "var(--bg-tertiary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <img src={thumb(firstImg)} loading="lazy" decoding="async" alt={dName} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8, transition: "transform 0.3s" }}
-                            onPointerEnter={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1.05)"))}
-                            onPointerLeave={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1)"))}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{ width: "100%", aspectRatio: "1/1", background: `${catColor}14`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 56, opacity: 0.3 }}><Joystick size={56} strokeWidth={1.5} aria-hidden="true" /></span>
-                        </div>
-                      )}
-                      <div className="pc-body" style={{ padding: "14px 16px" }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.3, marginBottom: 6 }}>{dName}</h3>
-                        <div className="pc-price" style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>Bs. {Math.round(cn.price).toLocaleString()}</div>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                          {cn.storage && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.08)", color: "var(--accent-dim)", fontWeight: 600 }}><HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" /> {cn.storage}</span>}
-                          {cn.color && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(71,85,105,0.08)", border: "1px solid rgba(71,85,105,0.15)", color: "var(--text-secondary)", fontWeight: 600 }}><Palette size={14} strokeWidth={STROKE} aria-hidden="true" /> {cn.color}</span>}
-                          {cn.branch && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", padding: "2px 8px", borderRadius: 99, background: "rgba(var(--accent-bright-rgb), 0.08)", border: "1px solid rgba(var(--accent-bright-rgb), 0.20)" }}><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {cn.branch.name}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {pagedConsoles.map(cn => (
+                  <PortalCard key={cn.id} name={getConsoleDisplayName(cn)} code={cn.code} branch={multiSuc ? cn.branch?.name : null}
+                    summary={[cn.storage, cn.color, cn.generation]} price={cn.price} images={parseEqImages(cn.image)}
+                    tag={cn.category} badge={cn.state ? { label: cn.state, tone: cn.state === "Nueva" ? "ok" : "muted" } : null}
+                    held={holds.consoles.includes(cn.id)}
+                    fallbackIcon={<Joystick size={40} strokeWidth={1.5} aria-hidden="true" />}
+                    onOpen={() => { setSelectedCn(cn); setCarouselIdx(0); }} />
+                ))}
               </div>
             )}
             <PortalPager page={pageCn} total={totalPagesCn} onChange={(p) => { setPageCn(p); scrollToCatalog(); }} />
@@ -1188,64 +1133,14 @@ export default function PortalPage() {
               </div>
             ) : (
               <div className="portal-grid">
-                {(pagedEquipment || []).map((eq, i) => {
-                  const imgs = parseEqImages(eq.image);
-                  const firstImg = imgs[0] || null;
-                  const dName = getEqDisplayName(eq);
-                  const disks = [eq.storage, eq.storage2].filter(Boolean);
-                  return (
-                    <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label="Ver foto"
-                      key={eq.id}
-                      className="portal-card"
-                      onClick={() => { setSelectedEq(eq); setCarouselIdx(0); }}
-                      style={{ background: "#ffffff", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "var(--shadow-card)", overflow: "hidden", animation: `fadeUp 0.4s ease-out ${i * 0.05}s both`, cursor: "pointer", position: "relative" }}
-                    >
-                      {holds.equipment.includes(eq.id) && <div className="resv-held bl"><Clock size={14} strokeWidth={STROKE} aria-hidden="true" /> Apartado</div>}
-                      {/* Type badge */}
-                      <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, padding: "3px 10px", borderRadius: 8, background: eq.type === "laptop" ? "rgba(37,99,235,0.85)" : "rgba(6,182,212,0.85)", color: "#fff", fontSize: 11, fontWeight: 700 }}>
-                        {eq.type === "laptop" ? "Laptop" : "Desktop"}
-                      </div>
-                      {/* Photo count badge */}
-                      {imgs.length > 1 && (
-                        <div style={{ position: "absolute", top: 38, right: 10, zIndex: 2, padding: "2px 8px", borderRadius: 6, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, fontWeight: 700 }}>
-                          <Camera size={14} strokeWidth={STROKE} aria-hidden="true" /> {imgs.length}
-                        </div>
-                      )}
-                      {firstImg ? (
-                        <div style={{ width: "100%", aspectRatio: "1/1", overflow: "hidden", position: "relative", background: "var(--bg-tertiary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <img src={thumb(firstImg)} loading="lazy" decoding="async" alt={dName} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8, transition: "transform 0.3s" }}
-                            onPointerEnter={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1.05)"))}
-                            onPointerLeave={mouseOnly((e) => (e.currentTarget.style.transform = "scale(1)"))}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{ width: "100%", aspectRatio: "1/1", background: "rgba(6,182,212,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 48, opacity: 0.3 }}>{eq.type === "laptop" ? <Laptop size={48} strokeWidth={1.5} aria-hidden="true" /> : <Monitor size={48} strokeWidth={1.5} aria-hidden="true" />}</span>
-                        </div>
-                      )}
-                      <div className="pc-body" style={{ padding: "14px 16px" }}>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6, alignItems: "center" }}>
-                          {eq.code && <span style={{ fontSize: 11, fontWeight: 600, color: "#0e7490", padding: "2px 8px", borderRadius: 6, background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", fontFamily: "monospace", letterSpacing: "0.3px" }}>{eq.code}</span>}
-                          {eq.branch && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", padding: "2px 8px", borderRadius: 99, background: "rgba(var(--accent-bright-rgb), 0.08)", border: "1px solid rgba(var(--accent-bright-rgb), 0.20)" }}><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {eq.branch.name}</span>}
-                        </div>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.3, marginBottom: 8 }}>{dName}</h3>
-
-                        {/* Quick specs badges */}
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                          {eq.processor && <span style={{ padding: "3px 7px", borderRadius: 6, background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.07)", fontSize: 11, color: "var(--accent-dim)", fontWeight: 600 }}><Cpu size={14} strokeWidth={STROKE} aria-hidden="true" /> {eq.processor}</span>}
-                          {eq.ram && <span style={{ padding: "3px 7px", borderRadius: 6, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.12)", fontSize: 11, color: "var(--ok)", fontWeight: 600 }}><MemoryStick size={14} strokeWidth={STROKE} aria-hidden="true" /> {eq.ram}</span>}
-                          {disks.slice(0, 1).map((d, di) => <span key={di} style={{ padding: "3px 7px", borderRadius: 6, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", fontSize: 11, color: "var(--warn)", fontWeight: 600 }}><HardDrive size={14} strokeWidth={STROKE} aria-hidden="true" /> {d}</span>)}
-                          {eq.graphicsCard && <span style={{ padding: "3px 7px", borderRadius: 6, background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.12)", fontSize: 11, color: "#be185d", fontWeight: 600 }}><CircuitBoard size={14} strokeWidth={STROKE} aria-hidden="true" /> {eq.graphicsCard.length > 18 ? eq.graphicsCard.slice(0, 18) + "…" : eq.graphicsCard}</span>}
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 10 }}>
-                          <span className="pc-price" style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)" }}>Bs. {Math.round(eq.price).toLocaleString()}</span>
-                          <span style={{ fontSize: 11, color: "var(--accent-dim)", fontWeight: 600 }}>Ver detalles →</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {pagedEquipment.map(eq => (
+                  <PortalCard key={eq.id} name={getEqDisplayName(eq)} code={eq.code} branch={multiSuc ? eq.branch?.name : null}
+                    summary={[eq.processor && cortoCpu(eq.processor), eq.ram && cortoRam(eq.ram), eq.graphicsCard && cortoGpu(eq.graphicsCard), eq.storage]}
+                    price={eq.price} images={parseEqImages(eq.image)}
+                    tag={eq.type === "laptop" ? "Laptop" : "Escritorio"} held={holds.equipment.includes(eq.id)}
+                    fallbackIcon={eq.type === "laptop" ? <Laptop size={40} strokeWidth={1.5} aria-hidden="true" /> : <Monitor size={40} strokeWidth={1.5} aria-hidden="true" />}
+                    onOpen={() => { setSelectedEq(eq); setCarouselIdx(0); }} />
+                ))}
               </div>
             )}
             <PortalPager page={pageEq} total={totalPagesEq} onChange={(p) => { setPageEq(p); scrollToCatalog(); }} />
