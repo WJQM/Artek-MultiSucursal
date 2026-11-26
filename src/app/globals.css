@@ -2370,3 +2370,15 @@ a, button, summary, select, label, [role="button"] { touch-action: manipulation;
 .rl-more > summary::after { content: " ⋯"; }
 .rl-more[open] > summary { color: var(--text-primary); }
 @media (max-width: 900px) { .oxd-grid { grid-template-columns: 1fr; } .oxd-sum-total { text-align: left; } }
+
+/* Detalle de la orden: encabezados con el color Oscuro de la marca y etapas con ícono y color de cada estado */
+.oxc-h { background: var(--brand-dark); color: #fff; border-bottom: 0; }
+.oxc-h .ic { background: rgba(255,255,255,.12); color: #fff; }
+.oxc-h .r { color: rgba(255,255,255,.7); }
+.oxd-flow li::before { top: 15px; background: var(--border); height: 3px; }
+.oxd-flow li.d::before, .oxd-flow li.c::before { background: var(--c); }
+.oxd-flow i { width: 32px; height: 32px; border-width: 2px; color: var(--text-faint); }
+.oxd-flow li.d i { background: var(--c); border-color: var(--c); color: #fff; }
+.oxd-flow li.c i { background: #fff; border-color: var(--c); color: var(--c); box-shadow: 0 0 0 4px rgba(15,23,42,.06); }
+.oxd-flow li.c { color: var(--c); }
+.oxd-sum-tech b { font-size: 14px; color: var(--text-primary); }

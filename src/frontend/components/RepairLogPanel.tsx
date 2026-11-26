@@ -141,10 +141,10 @@ export function RepairLogPanel({ repairId, compact = false }: { repairId: string
 
   return (
     <div onClick={(ev) => ev.stopPropagation()} style={{ background: "#ffffff", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)", cursor: "default" }}>
-      <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ color: "var(--text-secondary)", display: "flex" }}><ClipboardList size={15} strokeWidth={STROKE} aria-hidden="true" /></span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Bitácora técnica</span>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>
+      <div style={{ padding: "9px 14px", background: "var(--brand-dark)", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ color: "#fff", display: "flex" }}><ClipboardList size={15} strokeWidth={STROKE} aria-hidden="true" /></span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Bitácora técnica</span>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
           {entries.length} {entries.length === 1 ? "entrada" : "entradas"}{publicCount > 0 && ` · ${publicCount} visible${publicCount > 1 ? "s" : ""} al cliente`}
         </span>
       </div>

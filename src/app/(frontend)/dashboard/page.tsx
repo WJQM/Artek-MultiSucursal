@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { GlobalSearch } from "@/frontend/components/GlobalSearch";
 import { StatusTimeline } from "@/frontend/components/StatusTimeline";
 import { RepairLogPanel } from "@/frontend/components/RepairLogPanel";
+import { OrderCost, OrderFlow } from "@/frontend/components/AssignmentDetail";
 import { AdvanceDialog, needsAdvanceDialog } from "@/frontend/components/AdvanceDialog";
 import { openChat } from "@/frontend/components/ChatBubble";
 import { AppSidebar } from "@/frontend/components/AppSidebar";
@@ -1218,9 +1219,7 @@ return (
                       const nextStatus = !isDelivered && currentTrackingIndex >= 0 && currentTrackingIndex < TRACKING_KEYS.length - 1 ? TRACKING_KEYS[currentTrackingIndex + 1] : undefined;
                       const repairAcc = parseAccessoriesDisplay(repair.accessories);
                       const parsedAll = parseNotesAll(repair.notes, servicesList);
-                      const repairNotes = parsedAll.notes; const repairServices = parsedAll.services; const repairSoftware = parsedAll.software; const repairVideogames = parsedAll.videogames; const repairRepuestos = parsedAll.repuestos; const repairDeliveryNotes = parsedAll.deliveryNotes; const repairDiscount = parsedAll.discount;
-                      const steps = [...TRACKING_KEYS, "delivered"];
-                      const curStep = isDelivered ? steps.length - 1 : currentTrackingIndex;
+                      const repairNotes = parsedAll.notes; const repairDeliveryNotes = parsedAll.deliveryNotes;
                       const sendWa = async () => { const link = await personalLink(repair.id); const msg = `Estimado/a${repair.clientName ? ` *${repair.clientName}*` : ""},\n\nNos comunicamos de *${settings.companyName}* respecto a su equipo *${repair.device}${repair.brand ? ` ${repair.brand || "—"}` : ""}* (${repair.code}).\n\nPuede ver el estado de su equipo aquí:\n🔗 ${link}${link.endsWith("/portal") ? "" : `\n\n🛍️ Conozca nuestros productos y servicios:\n🔗 ${getBaseUrl()}/portal`}\n\nAtentamente,\n*${settings.companyName}*`; sendWhatsApp(repair.clientPhone, msg); };
                       const card = (icon: React.ReactNode, title: string, body: React.ReactNode, right?: React.ReactNode, cls = "") => (
                         <div className={`oxc ${cls}`}><div className="oxc-h"><span className="ic" aria-hidden="true">{icon}</span>{title}{right != null && <span className="r">{right}</span>}</div><div className="oxc-b">{body}</div></div>
@@ -1252,12 +1251,7 @@ return (
                           </div>
 
                           {/* Etapas en una línea: hechas en oscuro, la actual con el color de su estado */}
-                          <ol className="oxd-flow" aria-label={`Etapa ${curStep + 1} de ${steps.length}: ${st.label}`}>
-                            {steps.map((k, idx) => {
-                              const done = isDelivered || idx < curStep; const cur = !isDelivered && idx === curStep;
-                              return <li key={k} className={done ? "d" : cur ? "c" : ""} style={cur ? { ["--c" as string]: st.color } as React.CSSProperties : undefined}><i>{done ? "✓" : idx + 1}</i>{(STATUS[k] || st).label}{(cur || (isDelivered && idx === steps.length - 1)) && <small>{new Date(repair.updatedAt).toLocaleDateString("es-BO", { hourCycle: "h23", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(/\./g, "")}</small>}</li>;
-                            })}
-                          </ol>
+                          <OrderFlow status={repair.status} statuses={STATUS} stepKeys={TRACKING_KEYS} updatedAt={repair.updatedAt} />
 
                           <div className="oxd-grid">
                             {card(<DeviceIcon device={repair.device} size={15} />, "Equipo y recepción", <>
@@ -1271,22 +1265,7 @@ return (
                               {repairAcc.length > 0 && <><div className="oxd-sub">Accesorios ({repairAcc.length})</div>{chips(repairAcc)}</>}
                             </>)}
                             {/* Trabajo y costo: servicios, repuestos e instalaciones; con descuento muestra subtotal, descuento y total */}
-                            {card(<Wrench size={15} strokeWidth={STROKE} />, "Trabajo y costo", (() => {
-                              const rows: [string, string][] = [...repairServices.map((n): [string, string] => [n, "Servicio"]), ...repairRepuestos.map((n): [string, string] => [n, "Repuesto"]), ...repairSoftware.map((n): [string, string] => [n, "Instalación"]), ...repairVideogames.map((n): [string, string] => [n, "Instalación"])];
-                              const disc = isDelivered ? Number(repairDiscount) || 0 : 0;
-                              const total = Math.round(repair.estimatedCost || 0);
-                              return (
-                                <table className="oxd-ct">
-                                  <tbody>
-                                    {rows.length === 0 && <tr><td className="oxd-empty" colSpan={2}>Sin servicios ni repuestos registrados</td></tr>}
-                                    {rows.map(([n, k], i) => <tr key={i}><td>{n}</td><td className="k">{k}</td></tr>)}
-                                    {disc > 0 && <tr><td>Subtotal</td><td className="k">Bs. {(total + disc).toLocaleString("es-BO")}</td></tr>}
-                                    {disc > 0 && <tr className="disc"><td>Descuento</td><td className="k">− Bs. {disc.toLocaleString("es-BO")}</td></tr>}
-                                    <tr className="tot"><td>{isDelivered ? "Total cobrado" : "Costo estimado"}</td><td className="k">Bs. {total.toLocaleString("es-BO")}</td></tr>
-                                  </tbody>
-                                </table>
-                              );
-                            })())}
+                            {card(<Wrench size={15} strokeWidth={STROKE} />, "Trabajo y costo", <OrderCost parsed={parsedAll} isDelivered={isDelivered} estimatedCost={repair.estimatedCost} />)}
                           </div>
 
                           <div className="oxd-log"><RepairLogPanel repairId={repair.id} /></div>
