@@ -58,3 +58,27 @@ export function PortalCard(p: PortalCardProps) {
     </div>
   );
 }
+
+/** Tarjeta de portada vertical (3:4) para programas y videojuegos: portada completa, nombre y dos líneas de datos */
+export interface PortalCoverProps {
+  name: string;
+  line1?: string | null;
+  line2?: string | null;
+  images: string[];
+  fallbackIcon: ReactNode;
+  onOpen: () => void;
+}
+
+export function PortalCover(p: PortalCoverProps) {
+  const img = p.images[0] || null;
+  return (
+    <div role="button" tabIndex={0} onKeyDown={pressKey} aria-label={`Ver ${p.name}`} onClick={p.onOpen} className="pcov">
+      <div className={`pcov-img${img ? "" : " none"}`}>
+        {img ? <img src={thumb(img, 400)} alt={p.name} loading="lazy" decoding="async" /> : <>{p.fallbackIcon}<small>Portada pronto</small></>}
+      </div>
+      <h3 className="pcov-n">{p.name}</h3>
+      {p.line1 && <div className="pcov-l1">{p.line1}</div>}
+      {p.line2 && <div className="pcov-l2">{p.line2}</div>}
+    </div>
+  );
+}

@@ -11,7 +11,7 @@ import { PortalBranches } from "@/frontend/components/PortalBranches";
 import { PortalSide } from "@/frontend/components/PortalSide";
 import { ReserveButton, WaitlistButton, EMPTY_HOLDS, type Holds } from "@/frontend/components/PortalReserve";
 import { PortalSheet, type SheetSpec } from "@/frontend/components/PortalSheet";
-import { PortalCard } from "@/frontend/components/PortalCard";
+import { PortalCard, PortalCover } from "@/frontend/components/PortalCard";
 import { cortoCpu, cortoRam, cortoGpu } from "@/shared/resumen-equipo";
 import { thumb } from "@/shared/thumb";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
@@ -83,22 +83,6 @@ const EQ_CONDITIONS: Record<string, { label: string; color: string }> = {
   vendido: { label: "Vendido", color: "#0e7c86" },
   en_reparacion: { label: "En reparación", color: "#b45309" },
 };
-
-const PLATFORM_COLORS: Record<string, string> = {
-  "PC": "#3b82f6",
-  "Nintendo Switch": "#ef4444",
-  "Nintendo Wii": "#f59e0b",
-  "PSP": "#0891b2",
-  "PS Vita": "#8b5cf6",
-  "PlayStation 4": "#0ea5e9",
-  "PlayStation 5": "#2563eb",
-  "Xbox 360": "#10b981",
-  "Xbox One": "#16a34a",
-  "Xbox Series X": "#16a34a",
-  "Nintendo 3DS": "#f97316",
-  "Nintendo DS": "#ea580c",
-};
-const getPlatformColor = (p: string | null) => (p && PLATFORM_COLORS[p]) || "#0e7c86";
 
 const CONSOLE_CAT_COLORS: Record<string, string> = {
   "Nintendo": "#ef4444",
@@ -626,12 +610,12 @@ export default function PortalPage() {
   // WhatsApp de la barra superior: el del taller, o el de la primera sucursal que tenga
   const totalPagesInv = Math.ceil(filteredInventory.length / PAGE_SIZE);
   const pagedInventory = filteredInventory.slice((pageInv - 1) * PAGE_SIZE, pageInv * PAGE_SIZE);
-  // Programas usa el mismo tamaño de página que las demás pestañas
-  const SW_PAGE_SIZE = PAGE_SIZE;
+  // Programas y videojuegos van en portadas verticales: una columna más que el resto (6 en computadora, 3 en celular)
+  const SW_PAGE_SIZE = (gridCols <= 2 ? 3 : gridCols + 1) * 4;
   const totalPagesSw = Math.ceil(filteredSoftware.length / SW_PAGE_SIZE);
   const pagedSoftware = filteredSoftware.slice((pageSw - 1) * SW_PAGE_SIZE, pageSw * SW_PAGE_SIZE);
-  const totalPagesVg = Math.ceil(filteredVideogames.length / PAGE_SIZE);
-  const pagedVideogames = filteredVideogames.slice((pageVg - 1) * PAGE_SIZE, pageVg * PAGE_SIZE);
+  const totalPagesVg = Math.ceil(filteredVideogames.length / SW_PAGE_SIZE);
+  const pagedVideogames = filteredVideogames.slice((pageVg - 1) * SW_PAGE_SIZE, pageVg * SW_PAGE_SIZE);
   const totalPagesCn = Math.ceil(filteredConsoles.length / PAGE_SIZE);
   const pagedConsoles = filteredConsoles.slice((pageCn - 1) * PAGE_SIZE, pageCn * PAGE_SIZE);
   const totalPagesEq = Math.ceil(filteredEquipment.length / PAGE_SIZE);
@@ -970,12 +954,11 @@ export default function PortalPage() {
                 <p style={{ fontSize: 14, color: "var(--text-muted)" }}>{search ? "Intenta con otro término de búsqueda" : "No hay programas disponibles en este momento"}</p>
               </div>
             ) : (
-              <div className="portal-grid">
+              <div className="portal-grid covers">
                 {pagedSoftware.map(sw => (
-                  <PortalCard key={sw.id} name={sw.name} branch={multiSuc ? sw.branch?.name : null}
-                    summary={[sw.language, sw.size]} images={parseEqImages(sw.image)}
-                    tag={sw.category}
-                    fallbackIcon={<Disc3 size={40} strokeWidth={1.5} aria-hidden="true" />}
+                  <PortalCover key={sw.id} name={sw.name} images={parseEqImages(sw.image)}
+                    line1={sw.category} line2={[sw.language, sw.size].filter(Boolean).join(" · ") || null}
+                    fallbackIcon={<Disc3 size={36} strokeWidth={1.5} aria-hidden="true" />}
                     onOpen={() => { setSelectedSw(sw); setCarouselIdx(0); }} />
                 ))}
               </div>
@@ -994,12 +977,11 @@ export default function PortalPage() {
                 <p style={{ fontSize: 14, color: "var(--text-muted)" }}>{search ? "Intenta con otro término de búsqueda" : "No hay videojuegos disponibles en este momento"}</p>
               </div>
             ) : (
-              <div className="portal-grid">
+              <div className="portal-grid covers">
                 {pagedVideogames.map(vg => (
-                  <PortalCard key={vg.id} name={vg.name} branch={multiSuc ? vg.branch?.name : null}
-                    summary={[vg.genre, vg.language, vg.size]} images={parseEqImages(vg.image)}
-                    tag={vg.platform}
-                    fallbackIcon={<Gamepad2 size={40} strokeWidth={1.5} aria-hidden="true" />}
+                  <PortalCover key={vg.id} name={vg.name} images={parseEqImages(vg.image)}
+                    line1={vg.genre} line2={vg.platform}
+                    fallbackIcon={<Gamepad2 size={36} strokeWidth={1.5} aria-hidden="true" />}
                     onOpen={() => { setSelectedVg(vg); setCarouselIdx(0); }} />
                 ))}
               </div>
@@ -1012,26 +994,22 @@ export default function PortalPage() {
         {selectedVg && (() => {
           const vg = selectedVg;
           const open = abrir(setSelectedVg);
-          const platColor = getPlatformColor(vg.platform);
           return (
-            <PortalSheet ariaLabel="Detalle del videojuego"
+            <PortalSheet ariaLabel="Detalle del videojuego" cover
               icon={<Gamepad2 size={22} strokeWidth={STROKE} aria-hidden="true" />}
-              fallbackIcon={<Gamepad2 size={56} strokeWidth={1.5} aria-hidden="true" />}
-              title={vg.name} kindLabel="Videojuego"
+              fallbackIcon={<Gamepad2 size={40} strokeWidth={1.5} aria-hidden="true" />}
+              title={vg.name} kindLabel="Videojuego" subtitle={vg.genre}
               images={parseEqImages(vg.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
-              summary={[vg.platform, vg.genre, vg.language, vg.size]}
-              chips={[...(vg.platform ? [{ label: vg.platform, color: platColor }] : []), ...(vg.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {vg.branch.name}</> }] : [])]}
+              summary={[]}
+              chips={[...(vg.platform ? [{ label: vg.platform }] : []), ...(vg.language ? [{ label: vg.language }] : []), ...(vg.size ? [{ label: vg.size }] : []), ...(vg.branch ? [{ label: vg.branch.name }] : [])]}
               shareUrl={`${portalUrl}?vg=${vg.id}`}
               groups={[]}
-              blocks={<>
-                {vg.description && <div className="ps-block"><b>Descripción</b><p>{vg.description}</p></div>}
-                {vg.platform === "PC" && vg.minRequirements && <div className="ps-block"><b>Requisitos mínimos</b><p>{vg.minRequirements}</p></div>}
-                {vg.platform === "PC" && vg.recRequirements && <div className="ps-block"><b>Requisitos recomendados</b><p>{vg.recRequirements}</p></div>}
-              </>}
+              description={vg.description}
+              reqMin={vg.platform === "PC" ? vg.minRequirements : null} reqRec={vg.platform === "PC" ? vg.recRequirements : null}
               wa={{ product: vg.name, branch: vg.branch, branches: contactBranches, companyPhone: settings.phone }}
               nav={navOf(filteredVideogames, vg, open)}
-              related={cercanos(videogames, vg, x => x.platform === vg.platform).map(x => ({ id: x.id, name: x.name, code: x.platform, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
-              relatedTitle="Otros videojuegos"
+              related={cercanos(videogames, vg, x => x.platform === vg.platform).map(x => ({ id: x.id, name: x.name, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
+              relatedTitle={vg.platform ? `Más para ${vg.platform}` : "Otros videojuegos"}
               onClose={() => setSelectedVg(null)} />
           );
         })()}
@@ -1097,24 +1075,21 @@ export default function PortalPage() {
           const sw = selectedSw;
           const open = abrir(setSelectedSw);
           return (
-            <PortalSheet ariaLabel="Detalle del programa"
+            <PortalSheet ariaLabel="Detalle del programa" cover
               icon={<Disc3 size={22} strokeWidth={STROKE} aria-hidden="true" />}
-              fallbackIcon={<Disc3 size={56} strokeWidth={1.5} aria-hidden="true" />}
-              title={sw.name} kindLabel="Programa"
+              fallbackIcon={<Disc3 size={40} strokeWidth={1.5} aria-hidden="true" />}
+              title={sw.name} kindLabel="Programa" subtitle={sw.category}
               images={parseEqImages(sw.image)} imageIdx={carouselIdx} setImageIdx={setCarouselIdx} onZoom={setViewImage}
-              summary={[sw.category, sw.language, sw.size]}
-              chips={[...(sw.category ? [{ label: sw.category, color: "#0369a1" }] : []), ...(sw.branch ? [{ label: <><Store size={14} strokeWidth={STROKE} aria-hidden="true" /> {sw.branch.name}</> }] : [])]}
+              summary={[]}
+              chips={[...(sw.language ? [{ label: sw.language }] : []), ...(sw.size ? [{ label: sw.size }] : []), ...(sw.branch ? [{ label: sw.branch.name }] : [])]}
               shareUrl={`${portalUrl}?sw=${sw.id}`}
               groups={[]}
-              blocks={<>
-                {sw.description && <div className="ps-block"><b>Descripción</b><p>{sw.description}</p></div>}
-                {sw.minRequirements && <div className="ps-block"><b>Requisitos mínimos</b><p>{sw.minRequirements}</p></div>}
-                {sw.recRequirements && <div className="ps-block"><b>Requisitos recomendados</b><p>{sw.recRequirements}</p></div>}
-              </>}
+              description={sw.description}
+              reqMin={sw.minRequirements} reqRec={sw.recRequirements}
               wa={{ product: sw.name, branch: sw.branch, branches: contactBranches, companyPhone: settings.phone }}
               nav={navOf(filteredSoftware, sw, open)}
-              related={cercanos(software, sw, x => x.category === sw.category).map(x => ({ id: x.id, name: x.name, code: x.category, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
-              relatedTitle="Otros programas"
+              related={cercanos(software, sw, x => x.category === sw.category).map(x => ({ id: x.id, name: x.name, image: parseEqImages(x.image)[0] || null, onOpen: () => open(x) }))}
+              relatedTitle={sw.category ? `Más de ${sw.category}` : "Otros programas"}
               onClose={() => setSelectedSw(null)} />
           );
         })()}

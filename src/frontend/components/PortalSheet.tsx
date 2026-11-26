@@ -9,7 +9,7 @@ import { WhatsAppBuy, type PortalBranch } from "@/frontend/components/PortalWhat
 import { thumb } from "@/shared/thumb";
 import { pressKey } from "@/frontend/lib/a11y";
 import { sileo } from "@/frontend/lib/toast";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 export interface SheetSpec { icon: ReactNode; label: string; value: string }
@@ -43,6 +43,12 @@ export interface PortalSheetProps {
   related: SheetRelated[];
   relatedTitle: string;
   onClose: () => void;
+  /** Programas y videojuegos: portada vertical, descripción con «Leer más», requisitos lado a lado y portadas relacionadas */
+  cover?: boolean;
+  subtitle?: string | null;
+  description?: string | null;
+  reqMin?: string | null;
+  reqRec?: string | null;
 }
 
 const bs = (n: number) => `Bs. ${Math.round(n).toLocaleString("es-BO")}`;
@@ -75,6 +81,8 @@ export function PortalSheet(p: PortalSheetProps) {
   const accessories = splitAccessories(p.accessories);
   const hasPrice = typeof p.price === "number" && p.price > 0;
   const go = (d: number) => p.setImageIdx((idx + d + imgs.length) % imgs.length);
+  const [moreFor, setMoreFor] = useState<string | null>(null);
+  const more = moreFor === p.title;
 
   const buy = (
     <>
@@ -86,6 +94,87 @@ export function PortalSheet(p: PortalSheetProps) {
   );
 
   if (typeof document === "undefined") return null;
+
+  const navBtns = p.nav && p.nav.total > 1 && (
+    <div className="ps-nav">
+      <button type="button" onClick={p.nav.onPrev} aria-label="Anterior"><ChevronLeft size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
+      <span>{p.nav.index + 1} de {p.nav.total}</span>
+      <button type="button" onClick={p.nav.onNext} aria-label="Siguiente"><ChevronRight size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
+    </div>
+  );
+
+  if (p.cover) {
+    const desc = (p.description || "").trim();
+    const long = desc.length > 260;
+    return createPortal(
+      <div role="dialog" aria-modal="true" aria-label={p.ariaLabel} data-esc className="ps-back" onClick={p.onClose}>
+        <div className="ps ps-cov" onClick={(e) => e.stopPropagation()}>
+          <div className="ps-head">
+            <span className="ps-head-ic">{p.icon}</span>
+            <div className="ps-head-t"><div className="ps-sum" style={{ marginTop: 0 }}>{p.kindLabel}</div></div>
+            {navBtns}
+            <button type="button" className="ps-close" onClick={p.onClose} aria-label="Cerrar"><X size={18} strokeWidth={STROKE} aria-hidden="true" /></button>
+          </div>
+          <div className="ps-scroll">
+            <div className="pc-hero">
+              {current && <img className="pc-hero-bg" src={thumb(current, 200)} alt="" aria-hidden="true" />}
+              <div className="pc-hero-in">
+                <button type="button" className="pc-cover" onClick={() => current && p.onZoom(current)} aria-label={current ? "Ampliar portada" : "Sin portada"}>
+                  {current ? <img src={thumb(current, 400)} alt={p.title} /> : <span className="pc-none">{p.fallbackIcon}<small>Portada pronto</small></span>}
+                </button>
+                <div className="pc-hero-t">
+                  <h3>{p.title}</h3>
+                  {p.subtitle && <div className="pc-sub">{p.subtitle}</div>}
+                  <div className="pc-tags">{p.chips.map((c, i) => <span key={i}>{c.label}</span>)}</div>
+                </div>
+              </div>
+            </div>
+            {imgs.length > 1 && (
+              <div className="ps-thumbs pc-thumbs">
+                {imgs.map((img, i) => (
+                  <button type="button" key={i} onClick={() => p.setImageIdx(i)} aria-label={`Ver imagen ${i + 1}`} className={i === idx ? "on" : ""}><img src={thumb(img, 200)} loading="lazy" decoding="async" alt="" /></button>
+                ))}
+              </div>
+            )}
+            <div className="pc-body">
+              <div className="ps-buy ps-desk">{buy}</div>
+              {desc && (
+                <div className="pc-desc">
+                  <p className={long && !more ? "clamp" : ""}>{desc}</p>
+                  {long && <button type="button" onClick={() => setMoreFor(more ? null : p.title)}>{more ? "Leer menos" : "Leer más"}</button>}
+                </div>
+              )}
+              {(p.reqMin || p.reqRec) && (
+                <>
+                  <div className="ps-h">Requisitos</div>
+                  <div className="pc-req">
+                    {p.reqMin && <div className="ps-block" style={{ marginTop: 0 }}><b>Mínimos</b><p>{p.reqMin}</p></div>}
+                    {p.reqRec && <div className="ps-block" style={{ marginTop: 0 }}><b>Recomendados</b><p>{p.reqRec}</p></div>}
+                  </div>
+                </>
+              )}
+              {p.related.length > 0 && (
+                <>
+                  <div className="ps-h">{p.relatedTitle}</div>
+                  <div className="pc-rel">
+                    {p.related.map((r) => (
+                      <button type="button" key={r.id} onClick={r.onOpen}>
+                        <span className="pc-rel-img">{r.image ? <img src={thumb(r.image, 200)} loading="lazy" decoding="async" alt="" /> : p.fallbackIcon}</span>
+                        <span className="pc-rel-n">{r.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="ps-bar ps-mob">{buy}</div>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={p.ariaLabel} data-esc className="ps-back" onClick={p.onClose}>
       <div className="ps" onClick={(e) => e.stopPropagation()}>
