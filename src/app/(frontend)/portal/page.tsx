@@ -164,9 +164,9 @@ export default function PortalPage() {
   const [pageCn, setPageCn] = useState(1);
   const [pageEq, setPageEq] = useState(1);
   // Columnas de la rejilla del catálogo (igual que el CSS de .portal-grid) y 4 filas por página (no llena toda la pantalla)
-  const [gridCols, setGridCols] = useState(4);
+  const [gridCols, setGridCols] = useState(5);
   useEffect(() => {
-    const calc = () => { const w = window.innerWidth; setGridCols(w <= 768 ? 2 : w <= 1180 ? 3 : 4); };
+    const calc = () => { const w = window.innerWidth; setGridCols(w <= 768 ? 2 : w <= 960 ? 3 : w <= 1180 ? 4 : 5); };
     calc();
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
@@ -675,10 +675,10 @@ export default function PortalPage() {
         @media (hover: hover) and (pointer: fine) { .cat-chip:hover { border-color: rgba(var(--accent-bright-rgb), 0.14); color: var(--text-secondary); } }
         .cat-chip.active { background: var(--brand-dark); color: #fff; border-color: var(--text-primary); }
         .skeleton { background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 12px; }
-        .portal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+        .portal-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
         .portal-card .pc-img { background: #ffffff; }
         /* Programas: tarjeta compacta (logo cuadrado, título en 2 líneas) */
-        @media(max-width:1180px) { .portal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media(max-width:1180px) { .portal-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
         @media(max-width:960px) { .portal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
         @media(max-width:768px) {
           .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
