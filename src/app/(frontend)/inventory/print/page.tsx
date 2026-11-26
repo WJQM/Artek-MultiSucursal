@@ -81,7 +81,7 @@ export default function InventoryPrintPage() {
         <div className="rx-kpis">
           <div className="rx-kpi" style={{ ["--c" as string]: "var(--accent)" }}><span><Package size={14} strokeWidth={STROKE} aria-hidden="true" /> Productos</span><b>{rxNum(totalItems)}</b><small>en la lista</small></div>
           <div className="rx-kpi" style={{ ["--c" as string]: "var(--ok)" }}><span>Unidades</span><b>{rxNum(totalUnits)}</b><small>en stock</small></div>
-          <div className="rx-kpi" style={{ ["--c" as string]: "var(--warn-bright)" }}><span><Banknote size={14} strokeWidth={STROKE} aria-hidden="true" /> Valor total</span><b>{rxBs(totalValue)}</b><small>precio × stock</small></div>
+          <div className="rx-kpi money" style={{ ["--c" as string]: "var(--warn-bright)" }}><span><Banknote size={14} strokeWidth={STROKE} aria-hidden="true" /> Valor total</span><b>{rxBs(totalValue)}</b><small>precio × stock</small></div>
           <div className="rx-kpi" style={{ ["--c" as string]: "var(--danger-bright)" }}><span><TriangleAlert size={14} strokeWidth={STROKE} aria-hidden="true" /> Stock bajo</span><b>{rxNum(lowStock)}</b><small>en el mínimo o debajo</small></div>
         </div>
 
@@ -123,7 +123,7 @@ export default function InventoryPrintPage() {
                       <td className="n muted">{rxNum(item.minStock)}</td>
                       <td className="n">{rxBs(item.price)}</td>
                       <td className="n" style={{ fontWeight: 700 }}>{rxBs(item.price * item.quantity)}</td>
-                      <td className="c"><span className="rx-pill" style={isLow ? { background: "#fef2f2", color: "#b91c1c" } : { background: "#f0fdf4", color: "#047857" }}>{isLow ? "BAJO" : "OK"}</span></td>
+                      <td className="c">{isLow && <span className="rx-pill" style={{ color: "#b91c1c" }}>{item.quantity <= 0 ? "Agotado" : "Stock bajo"}</span>}</td>
                     </tr>
                   );
                 })}

@@ -94,7 +94,7 @@ export default function EquipmentPrintPage() {
           <div className="rx-kpi" style={{ ["--c" as string]: "var(--accent)" }}><span><Laptop size={14} strokeWidth={STROKE} aria-hidden="true" /> Equipos</span><b>{rxNum(filtered.length)}</b><small>{rxNum(available)} disponibles</small></div>
           <div className="rx-kpi" style={{ ["--c" as string]: "var(--info)" }}><span><Laptop size={14} strokeWidth={STROKE} aria-hidden="true" /> Laptops</span><b>{rxNum(laptops)}</b><small>portátiles</small></div>
           <div className="rx-kpi" style={{ ["--c" as string]: "#0891b2" }}><span><Monitor size={14} strokeWidth={STROKE} aria-hidden="true" /> Escritorio</span><b>{rxNum(desks)}</b><small>PC de escritorio</small></div>
-          <div className="rx-kpi" style={{ ["--c" as string]: "var(--warn-bright)" }}><span><Banknote size={14} strokeWidth={STROKE} aria-hidden="true" /> Valor total</span><b>{rxBs(totalValue)}</b><small>promedio {rxBs(filtered.length ? totalValue / filtered.length : 0)}</small></div>
+          <div className="rx-kpi money" style={{ ["--c" as string]: "var(--warn-bright)" }}><span><Banknote size={14} strokeWidth={STROKE} aria-hidden="true" /> Valor total</span><b>{rxBs(totalValue)}</b><small>promedio {rxBs(filtered.length ? totalValue / filtered.length : 0)}</small></div>
         </div>
 
         {/* CELULAR: una tarjeta por equipo (no se imprime) */}

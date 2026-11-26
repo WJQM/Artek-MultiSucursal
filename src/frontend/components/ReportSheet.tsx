@@ -1,8 +1,9 @@
 "use client";
 // Diseño común de los reportes y extractos imprimibles (reporte mensual, extractos de órdenes,
 // inventario, catálogo de equipos y lista de compra). Mismo estilo que la cotización y la nota
-// de venta (DocKit): membrete con banda, tablas con líneas finas. Sigue la opción de impresión
-// de Ajustes: blanco y negro, o a color (banda Oscura y detalles en el color Principal).
+// de venta (DocKit): membrete con banda; resumen y tablas en recuadros enmarcados, con el
+// encabezado de la tabla del color de la banda. Sigue la opción de impresión de Ajustes:
+// blanco y negro, o a color (banda y encabezados con el Oscuro, montos con el Principal).
 // Hoja carta. Sirve para páginas React (<RxHero/>, RX_CSS) y para las
 // ventanas que se escriben con document.write (rxHeroHtml, rxDocument).
 import type { ReactNode } from "react";
@@ -108,14 +109,36 @@ table.rx-t { width:100%; border-collapse:collapse; font-size:11px; }
 .rx-t tbody tr:nth-child(even) td { background:#fff; }
 .rx-t tfoot td { background:#fff !important; color:#000; border-top:1.5px solid #000; border-bottom:0; }
 .rx-code { color:#000; }
-.rx-pill { background:#fff !important; color:#000 !important; border:.5px solid #000; border-radius:0; font-weight:400; }
+.rx-pill { background:#fff !important; border:.5px solid #000; border-radius:0; font-weight:400; }
 .rx-client { border:0; border-top:1px solid #000; border-bottom:.5px solid #000; border-radius:0; padding:12px 0; }
 .rx-av { background:#fff; border:.5px solid #000; color:#000; }
 .rx-client .tot b { color:#000; }
 .rx-check { border-color:#000; border-radius:0; }
 /* Colores que vienen escritos en cada reporte (estados, montos, etiquetas): también en negro. */
-.rx-page *:not(.no-print, .no-print *, .rx-hero, .rx-hero *, .rx-kpi b, .rx-sect) { color:#000 !important; }
+.rx-page *:not(.no-print, .no-print *, .rx-hero, .rx-hero *, .rx-kpi b, .rx-sect, .rx-pill, .rx-t th, .rx-t th *, .rx-t tfoot td.money) { color:#000 !important; }
 .rx-page [style*="background"]:not(i):not(.no-print, .no-print *) { background:#fff !important; }
+/* Opción C con recuadros enmarcados: la banda del membrete se queda; resumen, cliente e ingresos en
+   recuadros blancos con borde; tabla enmarcada con encabezado del color Oscuro (--doc-band, negro en
+   blanco y negro); el color Principal (--doc-accent) solo en el monto. Estados con punto de color. */
+.rx { --rx-frame:#cfd5dd; --rx-rule:#eceff3; --rx-ink2:#4b5563; }
+.rx-kpis { gap:10px; }
+.rx-kpi { border:1px solid var(--rx-frame); border-radius:10px; padding:10px 12px; background:#fff; }
+.rx-kpi span, .rx-kpi small { color:var(--rx-ink2); }
+.rx-kpi b { color:#111827 !important; }
+.rx-kpi.money { border-color:var(--doc-accent, #111827); }
+.rx-kpi.money b { color:var(--doc-accent, #111827) !important; }
+.rx-income, .rx-client { border:1px solid var(--rx-frame); border-radius:10px; padding:12px 14px; background:#fff; }
+.rx-sect { border-bottom:0; color:#111827; padding-bottom:0; margin-bottom:8px; }
+.rx-sect em { color:#6b7280; }
+.rx-tw { border:1px solid var(--rx-frame); border-radius:10px; overflow:hidden; }
+.rx-t th { background:var(--doc-band, #000); color:#fff; font-weight:600; border-bottom:0; }
+.rx-t td { border-bottom:1px solid var(--rx-rule); }
+.rx-t tbody tr:last-child td { border-bottom:0; }
+.rx-t tbody tr:nth-child(even) td { background:#f7f8fa; }
+.rx-t tfoot td { background:#fff !important; border-top:1px solid var(--rx-frame); color:#111827; }
+.rx-t tfoot td.money { color:var(--doc-accent, #111827) !important; }
+.rx-pill { border:0; border-radius:0; padding:0; font-weight:600; -webkit-text-fill-color:#1f2937; }
+.rx-pill::before { content:""; display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:1px; background:currentColor; filter:var(--doc-logo-filter, grayscale(1)); }
 @media print {
   .rx-bar, .no-print { display:none !important; }
   .rx { min-height:0; }
