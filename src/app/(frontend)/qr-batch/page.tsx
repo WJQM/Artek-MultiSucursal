@@ -84,8 +84,9 @@ export default function QrBatchPage() {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.items || data.results || []);
         const mapped: Item[] = list.map((it: CatalogRow) => {
-          // El QR abre la ficha del equipo o consola (/equipment/print/… o /consoles/print/…)
-          const qrUrl = `${origin}/${kind}/print/${it.id}`;
+          // El QR abre la ficha del equipo o consola en el portal (igual que las fichas sueltas):
+          // es lo que ve el cliente al escanearlo con la cámara del celular
+          const qrUrl = `${origin}/portal?${kind === "equipment" ? "eq" : "cn"}=${it.id}`;
           const subtitle = `${it.code || ""} · Bs. ${it.price || 0}`;
           return { id: it.id, code: it.code, name: it.name, brand: it.brand, model: it.model, price: it.price ?? undefined, image: it.image, kind, qrUrl, subtitle };
         });

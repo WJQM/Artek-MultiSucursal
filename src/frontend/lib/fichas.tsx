@@ -96,3 +96,16 @@ export function consoleFicha(cn: ConsoleLike, baseUrl: string): FichaData {
     accessories: cn.accessories, notes: cn.notes, branch: cn.branch?.name,
   };
 }
+
+/**
+ * Las etiquetas QR viejas apuntaban a la hoja para imprimir (/equipment/print/… o /consoles/print/…).
+ * Quien la abre sin haber iniciado sesión (un cliente que escaneó con la cámara) va a la ficha del
+ * portal. El personal, que entra desde el sistema, sigue viendo la hoja. Devuelve true si redirige.
+ */
+export function irAlPortalSiNoEsPersonal(param: "eq" | "cn", id: string): boolean {
+  let personal = false;
+  try { personal = !!sessionStorage.getItem("token"); } catch {}
+  if (personal) return false;
+  window.location.replace(`/portal?${param}=${encodeURIComponent(id)}`);
+  return true;
+}

@@ -4,7 +4,7 @@ import { publicBase } from "@/frontend/lib/public-base";
 import { useParams } from "next/navigation";
 import { apiFetch } from "@/frontend/lib/api";
 import { ProductPrint } from "@/frontend/components/ProductPrint";
-import { equipmentFicha, type EquipmentLike } from "@/frontend/lib/fichas";
+import { equipmentFicha, irAlPortalSiNoEsPersonal, type EquipmentLike } from "@/frontend/lib/fichas";
 
 type Equipment = EquipmentLike;
 
@@ -25,7 +25,7 @@ export default function EquipmentFichaPrintPage() {
   }, []);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || irAlPortalSiNoEsPersonal("eq", id)) return;
     apiFetch("/api/equipment").then(r => r.ok ? r.json() : []).then((items: Equipment[]) => {
       if (Array.isArray(items)) {
         const found = items.find(it => it.id === id);

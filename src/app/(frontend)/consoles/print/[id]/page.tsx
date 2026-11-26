@@ -4,7 +4,7 @@ import { publicBase } from "@/frontend/lib/public-base";
 import { useParams } from "next/navigation";
 import { apiFetch } from "@/frontend/lib/api";
 import { ProductPrint } from "@/frontend/components/ProductPrint";
-import { consoleFicha, type ConsoleLike } from "@/frontend/lib/fichas";
+import { consoleFicha, irAlPortalSiNoEsPersonal, type ConsoleLike } from "@/frontend/lib/fichas";
 
 type ConsoleItem = ConsoleLike;
 
@@ -25,7 +25,7 @@ export default function ConsoleFichaPrintPage() {
   }, []);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || irAlPortalSiNoEsPersonal("cn", id)) return;
     apiFetch("/api/consoles").then(r => r.ok ? r.json() : []).then((items: ConsoleItem[]) => {
       if (Array.isArray(items)) {
         const found = items.find(it => it.id === id);
