@@ -12,6 +12,7 @@ import { useLiveRefresh } from "@/frontend/lib/live";
 import { sileo } from "@/frontend/lib/toast";
 import { ChatBubble } from "@/frontend/components/ChatBubble";
 import { useCanInstall } from "@/frontend/components/PwaSetup";
+import { useBrand } from "@/frontend/components/BrandProvider";
 import { promptInstall } from "@/frontend/lib/pwa";
 import { askConfirm, showNotice } from "@/frontend/lib/dialog";
 
@@ -142,7 +143,8 @@ export function AppSidebar({ user }: Props) {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const [branches, setBranches] = useState<Branch[]>([]);
   const [activeBranch, setActiveBranch] = useState<string>("");
-  const [settings, setSettings] = useState<{ companyName: string; logo: string | null; city?: string | null }>({ companyName: "", logo: null });
+  // Nombre, logo y ciudad vienen del servidor con la página (BrandProvider en layout.tsx)
+  const settings = useBrand();
 
   useEffect(() => {
     const initial: Record<string, boolean> = {};
@@ -170,7 +172,6 @@ export function AppSidebar({ user }: Props) {
   }).catch(() => {});
   useLiveRefresh(["Branch"], loadBranches, { enabled: user?.role === "superadmin" });
   useEffect(() => {
-    fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setSettings({ companyName: d.companyName, logo: d.logo, city: d.city }); }).catch(() => {});
     if (user?.role === "superadmin") loadBranches();
     else { setActiveBranch(user?.branchId || ""); } // eslint-disable-line react-hooks/set-state-in-effect -- datos del navegador (sesión, dirección o servidor) al abrir la pantalla
   }, [user]);

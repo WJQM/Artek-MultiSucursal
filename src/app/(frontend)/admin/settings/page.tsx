@@ -223,7 +223,8 @@ export default function AdminSettingsPage() {
           publicUrl: publicUrl.trim() || null,
         }),
       });
-      if (res.ok) { sileo.success({ title: "Configuración guardada correctamente" }); }
+      // router.refresh(): vuelve a armar el layout para que el menú muestre el nombre y logo nuevos
+      if (res.ok) { sileo.success({ title: "Configuración guardada correctamente" }); router.refresh(); }
       else { const d = await res.json(); sileo.error({ title: `${d.error}` }); }
     } catch { sileo.error({ title: "Error al guardar" }); }
     finally { setSaving(false); }

@@ -50,6 +50,7 @@ import ToastProvider from "./providers";
 import { PwaSetup } from "@/frontend/components/PwaSetup";
 import { GlobalSearchProvider } from "@/frontend/components/GlobalSearchProvider";
 import { MotionGlobal } from "@/frontend/components/MotionGlobal";
+import { BrandProvider } from "@/frontend/components/BrandProvider";
 import Script from "next/script";
 
 const PWA_EARLY_CAPTURE = `window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__pwaDeferred=e;window.dispatchEvent(new Event("pwa-deferred"));});`;
@@ -57,6 +58,14 @@ const PWA_EARLY_CAPTURE = `window.addEventListener("beforeinstallprompt",functio
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Colores de Configuración › Colores: reemplazan los de globals.css (vacío si son los originales)
   const marca = brandCss(await getBrandColors());
+  // Nombre, logo y ciudad para el menú lateral (BrandProvider): llegan con la página, sin esperar a /api/settings.
+  // El logo va como el ícono generado (unos KB) y no como el logo original guardado en la base.
+  const s = await getSettings();
+  const brand = {
+    companyName: s?.companyName?.trim() || DEFAULT_COMPANY_NAME,
+    logo: s?.logo ? iconUrl(192, s.updatedAt ? s.updatedAt.getTime() : 0, "portal") : null,
+    city: s?.city ?? null,
+  };
   return (
     <html lang="es" suppressHydrationWarning className="h-full antialiased">
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
@@ -64,11 +73,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* Captura el aviso de "app instalable" aunque llegue antes de que cargue React.
             Con next/script (no <script> a mano en <head>): React 19 no ejecuta ni hidrata bien un <script> escrito en JSX */}
         <Script id="pwa-early-capture" strategy="beforeInteractive">{PWA_EARLY_CAPTURE}</Script>
-        <ToastProvider />
-        <PwaSetup />
-        <GlobalSearchProvider />
-        <MotionGlobal />
-        {children}
+        <BrandProvider value={brand}>
+          <ToastProvider />
+          <PwaSetup />
+          <GlobalSearchProvider />
+          <MotionGlobal />
+          {children}
+        </BrandProvider>
       </body>
     </html>
   );
