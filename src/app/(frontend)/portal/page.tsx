@@ -12,6 +12,7 @@ import { PortalSide } from "@/frontend/components/PortalSide";
 import { ReserveButton, WaitlistButton, EMPTY_HOLDS, type Holds } from "@/frontend/components/PortalReserve";
 import { PortalSheet, type SheetSpec } from "@/frontend/components/PortalSheet";
 import { PortalCard } from "@/frontend/components/PortalCard";
+import { cortoCpu, cortoRam, cortoGpu } from "@/shared/resumen-equipo";
 import { thumb } from "@/shared/thumb";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
 import { coverVars, type CoverFit, type PortalNav } from "@/shared/portal-cover";
@@ -62,10 +63,6 @@ function parseEqImages(img: string | null): string[] {
   return img.trim() ? [img] : [];
 }
 
-// Resumen corto bajo el título de la ficha: "i7-12700F · 32 GB · RTX 4060 · 1 TB SSD"
-const cortoCpu = (t: string) => t.replace(/^(intel|amd)\s+/i, "").replace(/^(core|ryzen)\s+/i, (m) => (/ryzen/i.test(m) ? m : "")).replace(/\s*\(.*?\)/g, "").trim();
-const cortoRam = (t: string) => t.match(/\d+\s*GB/i)?.[0].replace(/\s+/, " ") || t;
-const cortoGpu = (t: string) => t.replace(/^(nvidia|amd|intel)\s+(geforce\s+|radeon\s+)?/i, "").trim();
 // Filtros rápidos: tarjeta gráfica dedicada (no integrada) y RAM en GB
 const conGpu = (g: string | null) => !!g && !/intel\s*(uhd|iris|hd)|integrad|radeon\s*(graphics|vega)|apple|\bm[123]\b/i.test(g);
 const ramGb = (r: string | null) => Number((r || "").match(/(\d+)\s*GB/i)?.[1] || 0);

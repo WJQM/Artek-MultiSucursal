@@ -5,6 +5,7 @@ import { sileo } from "@/frontend/lib/toast";
 import { Pagination, usePaged, useCatalogGrid, byName } from "@/frontend/components/Pagination";
 import { CatalogSkeleton } from "@/frontend/components/CatalogSkeleton";
 import { PortalToggle, HiddenBadge, togglePortalVisibility } from "@/frontend/components/PortalToggle";
+import { resumenEquipo } from "@/shared/resumen-equipo";
 import { apiFetch, setActiveBranchId, type SessionUser } from "@/frontend/lib/api";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -435,9 +436,8 @@ export default function EquipmentPage() {
               const firstImg = imgs[0] || null;
               const cond = getCondition(item.condition);
               const dName = getDisplayName(item);
-              const disks = [item.storage, item.storage2].filter(Boolean);
               return (
-                <div tabIndex={0} onKeyDown={pressKey} key={item.id} onClick={() => setViewDetail(item)} style={{ background: "var(--bg-card)", borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", animation: `fadeIn 0.3s ease-out ${i * 0.04}s both`, cursor: "pointer", transitionProperty: "var(--tr-ui)", transitionDuration: "0.25s", position: "relative" }}>
+                <div tabIndex={0} onKeyDown={pressKey} key={item.id} onClick={() => setViewDetail(item)} style={{ display: "flex", flexDirection: "column", background: "var(--bg-card)", borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", animation: `fadeIn 0.3s ease-out ${i * 0.04}s both`, cursor: "pointer", transitionProperty: "var(--tr-ui)", transitionDuration: "0.25s", position: "relative" }}>
                   <div className="cat-badges">
                     <div className="cat-badges-row">
                       <div style={{ padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, background: `${cond.color}20`, color: cond.color }}>{cond.label}</div>
@@ -450,25 +450,16 @@ export default function EquipmentPage() {
                     {firstImg ? (<img loading="lazy" decoding="async" src={firstImg} alt={dName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />) : (<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}><span style={{ fontSize: 48, opacity: 0.15 }}>{item.type === "laptop" ? <Laptop size={48} strokeWidth={1.5} aria-hidden="true" /> : <Monitor size={48} strokeWidth={1.5} aria-hidden="true" />}</span><span className="cat-noimg-txt" style={{ fontSize: 11, color: "var(--text-muted)", opacity: 0.5 }}>Sin imagen</span></div>)}
                     <div className="cat-pricebar" style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 14px 10px", background: "linear-gradient(transparent, rgba(0,0,0,0.8))" }}><div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Bs. {Math.round(item.price || 0).toLocaleString()}</div></div>
                   </div>
-                  <div style={{ padding: "14px 16px" }}>
+                  <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
                     {item.code && <div style={{ marginBottom: 6 }}><span style={{ fontSize: 11, fontWeight: 700, color: "#0e7490", padding: "2px 8px", borderRadius: 6, background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", fontFamily: "monospace", letterSpacing: "0.3px" }}>{item.code}</span></div>}
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8, lineHeight: 1.3 }}>{dName}</h3>
+                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6, lineHeight: 1.3 }}>{dName}</h3>
                     
                     {/* Specs badges */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
-                      {item.processor && <span className="spec-chip">{item.processor}</span>}
-                      {item.ram && <span className="spec-chip">{item.ram}</span>}
-                      {(disks || []).map((d, di) => <span key={di} className="spec-chip">{d}</span>)}
-                      {item.graphicsCard && <span className="spec-chip">{item.graphicsCard}</span>}
-                      {item.os && <span className="spec-chip">{item.os}</span>}
-                      {item.screenSize && <span className="spec-chip">{item.screenSize}</span>}
-                      {item.cabinet && <span className="spec-chip">{item.cabinet}</span>}
-                      {item.motherboard && <span className="spec-chip">{item.motherboard}</span>}
-                      {item.powerSupply && <span className="spec-chip">{item.powerSupply}</span>}
-                      {item.accessories && <span className="spec-chip">{item.accessories.length > 35 ? item.accessories.slice(0, 35) + "..." : item.accessories}</span>}
-                    </div>
+                    {/* Resumen en dos líneas (el detalle completo está en "Ver" y en la ficha) */}
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={resumenEquipo(item)}>{resumenEquipo(item) || "Sin especificaciones"}</div>
+                    {(() => { const extra = [item.os, item.type === "laptop" ? item.screenSize : item.cabinet].filter(Boolean).join(" · "); return extra ? <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={extra}>{extra}</div> : null; })()}
 
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 6, marginTop: "auto", paddingTop: 12 }}>
                       <button onClick={(e) => { e.stopPropagation(); editItem(item); }} style={{ flex: 1, padding: "8px", background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.08)", borderRadius: 8, color: "var(--accent)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}><Pencil size={14} strokeWidth={STROKE} aria-hidden="true" /><span className="cat-lbl"> Editar</span></button>
                       <PortalToggle visible={item.showInPortal !== false} onToggle={() => togglePortalVisibility(item, "/api/equipment", setItems, apiFetch, sileo)} />
                       <button onClick={(e) => { e.stopPropagation(); window.open(`/equipment/print/${item.id}`, "_blank"); }} title="Ficha técnica" style={{ padding: "8px 10px", background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.15)", borderRadius: 8, color: "#0e7490", fontSize: 11, fontWeight: 600, cursor: "pointer" }}><Tag size={14} strokeWidth={STROKE} aria-hidden="true" /></button>
