@@ -517,32 +517,37 @@ export default function QuotationsPage() {
       )}
 
       {/* ═══ MODAL VER DETALLE ═══ */}
-      {viewQuotation && (
-        <div role="dialog" aria-modal="true" aria-label="Detalle del documento" data-esc style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 150, padding: 20 }}>
-          <div style={{ width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto", background: "var(--bg-card)", borderRadius: 12, border: `1px solid ${viewQuotation.type === "quotation" ? "rgba(245,158,11,0.2)" : "rgba(16,185,129,0.2)"}`, boxShadow: "0 20px 60px rgba(26,29,46,0.40)", animation: "fadeScale 0.3s ease-out" }}>
-            <div style={{ padding: 28 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: viewQuotation.type === "quotation" ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>{viewQuotation.type === "quotation" ? <ClipboardList size={17} strokeWidth={STROKE} aria-hidden="true" /> : <Banknote size={17} strokeWidth={STROKE} aria-hidden="true" />}</div>
-                  <div><h3 style={{ fontSize: 16, fontWeight: 700 }}>{viewQuotation.type === "quotation" ? "Cotización" : "Nota de Venta"}</h3><span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>{viewQuotation.code}</span></div>
-                </div>
-                <button onClick={() => setViewQuotation(null)} style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--danger-bright)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} strokeWidth={STROKE} aria-hidden="true" /></button>
+      {viewQuotation && (() => {
+        const vq = viewQuotation;
+        const isQuot = vq.type === "quotation";
+        const docName = isQuot ? "la cotización" : "la nota de venta";
+        return (
+        <div role="dialog" aria-modal="true" aria-label="Detalle del documento" data-esc className="qd-back" onClick={() => setViewQuotation(null)}>
+          <div className="qd" onClick={(e) => e.stopPropagation()}>
+            {/* Encabezado: código, tipo y en una línea cliente · celular · fecha */}
+            <div className="qd-head">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="qd-title"><h3>{isQuot ? "Cotización" : "Nota de venta"} {vq.code}</h3><span className={`qd-type ${isQuot ? "quot" : "sale"}`}>{isQuot ? "Cotización" : "Nota de venta"}</span></div>
+                <div className="qd-sub">{[vq.clientName, vq.clientPhone, new Date(vq.createdAt).toLocaleString("es-BO", { hourCycle: "h23", dateStyle: "short", timeStyle: "short" })].filter(Boolean).join(" · ")}</div>
               </div>
-              <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                <div style={{ padding: "12px 16px", background: "var(--bg-tertiary)", borderRadius: 10, border: "1px solid var(--border)" }}><div style={{ fontSize: 11, color: "var(--accent-dim)", fontWeight: 700 }}>Cliente</div><div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>{viewQuotation.clientName}</div></div>
-                <div style={{ padding: "12px 16px", background: "var(--bg-tertiary)", borderRadius: 10, border: "1px solid var(--border)" }}><div style={{ fontSize: 11, color: "var(--accent-dim)", fontWeight: 700 }}>Celular</div><div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>{viewQuotation.clientPhone || "—"}</div></div>
-              </div>
-              <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                <div style={{ padding: "12px 16px", background: "var(--bg-tertiary)", borderRadius: 10, border: "1px solid var(--border)" }}><div style={{ fontSize: 11, color: "var(--accent-dim)", fontWeight: 700 }}>Fecha</div><div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{new Date(viewQuotation.createdAt).toLocaleString("es-BO", { hourCycle: "h23" })}</div></div>
-                <div style={{ padding: "12px 16px", background: viewQuotation.type === "quotation" ? "rgba(245,158,11,0.06)" : "rgba(37,99,235,0.06)", borderRadius: 10, border: `1px solid ${viewQuotation.type === "quotation" ? "rgba(245,158,11,0.15)" : "rgba(37,99,235,0.15)"}` }}><div style={{ fontSize: 11, color: viewQuotation.type === "quotation" ? "var(--warn-bright)" : "var(--info-bright)", fontWeight: 700 }}>Tipo</div><div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, color: viewQuotation.type === "quotation" ? "var(--warn-bright)" : "var(--info-bright)" }}>{viewQuotation.type === "quotation" ? "Cotización" : "Nota de Venta"}</div></div>
-              </div>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", marginBottom: 8 }}><ShoppingCart size={14} strokeWidth={STROKE} aria-hidden="true" /> Detalle</div>
-                {viewQuotation.items.map((item, idx) => { const k = lineKind(item); const m = LINE_META[k]; const isEq = isUniqueLine(item); return (<div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: idx % 2 === 0 ? "var(--bg-tertiary)" : "transparent", borderRadius: 8, marginBottom: 2 }}><div><span style={{ fontSize: 12, fontWeight: 600 }}><LineIcon kind={k} size={13} /> {item.name}</span>{m.tag && <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: m.tint, color: m.color, fontWeight: 700, marginLeft: 6 }}>{m.tag}</span>}<span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 8 }}>{isEq ? `Bs.${item.price}` : `×${item.qty} · Bs.${item.price} c/u`}</span></div><span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>Bs. {(item.price * item.qty)}</span></div>); })}
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "2px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 15, fontWeight: 700 }}>Total:</span><span style={{ fontSize: 22, fontWeight: 700, color: "var(--warn)" }}>Bs. {Math.round(viewQuotation.total || 0).toLocaleString()}</span></div>
-              </div>
-              {viewQuotation.notes && (<div style={{ padding: "10px 14px", background: "rgba(245,158,11,0.05)", borderRadius: 10, border: "1px solid rgba(245,158,11,0.3)", marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--warn)", fontWeight: 700, marginBottom: 4 }}>Notas</div><div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{viewQuotation.notes}</div></div>)}
-
+              <button type="button" className="qd-x" onClick={() => setViewQuotation(null)} aria-label="Cerrar"><X size={16} strokeWidth={STROKE} aria-hidden="true" /></button>
+            </div>
+            <div className="qd-body">
+              {/* Detalle como tabla: todos los montos del mismo color, alineados a la derecha */}
+              <table className="qd-t">
+                <thead><tr><th>Concepto</th><th>Cant. × precio</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                  {vq.items.map((item, idx) => { const k = lineKind(item); const m = LINE_META[k]; const isEq = isUniqueLine(item); return (
+                    <tr key={idx}>
+                      <td><LineIcon kind={k} size={13} /> {item.name}{m.tag && <span className="qd-tag">{m.tag}</span>}</td>
+                      <td className="n q">{isEq ? `Bs. ${item.price}` : `${item.qty} × Bs. ${item.price}`}</td>
+                      <td className="n">Bs. {item.price * item.qty}</td>
+                    </tr>
+                  ); })}
+                </tbody>
+              </table>
+              <div className="qd-total"><span>Total</span><b>Bs. {Math.round(vq.total || 0).toLocaleString("es-BO")}</b></div>
+              {vq.notes && <div className="qd-notes"><b>Notas</b><p>{vq.notes}</p></div>}
               {viewQuotation.type === "sale" && (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", marginBottom: 8 }}>Cobro {viewQuotation.paidWith ? "" : "· sin indicar"}</div>
@@ -555,37 +560,41 @@ export default function QuotationsPage() {
                   }} />
                 </div>
               )}
-
-              {/* ═══ BOTONES DE ACCIÓN ACTUALIZADOS ═══ */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button onClick={() => openEditModal(viewQuotation)} style={{ padding: "10px 18px", background: "rgba(var(--accent-bright-rgb), 0.06)", border: "1px solid rgba(var(--accent-bright-rgb), 0.10)", borderRadius: 10, color: "var(--accent)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Pencil size={14} strokeWidth={STROKE} aria-hidden="true" /> Editar</button>
-                {viewQuotation.type === "quotation" && <button onClick={() => convertToSale(viewQuotation)} style={{ padding: "10px 18px", background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: 10, color: "var(--info)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Banknote size={14} strokeWidth={STROKE} aria-hidden="true" /> Convertir a Venta</button>}
-                <button onClick={() => printDocument(viewQuotation)} style={{ padding: "10px 18px", background: "rgba(var(--accent-bright-rgb), 0.05)", border: "1px solid rgba(var(--accent-bright-rgb), 0.08)", borderRadius: 10, color: "var(--accent-dim)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Printer size={14} strokeWidth={STROKE} aria-hidden="true" /> Documento</button>
-                <button onClick={() => { setWaFor(waFor === viewQuotation.id ? null : viewQuotation.id); setMailFor(null); }} style={{ padding: "10px 18px", background: "rgba(37,211,102,0.10)", border: "1px solid rgba(22,163,74,0.30)", borderRadius: 10, color: "var(--ok)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><MessageCircle size={14} strokeWidth={STROKE} aria-hidden="true" /> WhatsApp</button>
-                <button onClick={() => { setMailFor(mailFor === viewQuotation.id ? null : viewQuotation.id); setWaFor(null); }} style={{ padding: "10px 18px", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 10, color: "var(--info-bright)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Mail size={14} strokeWidth={STROKE} aria-hidden="true" /> Correo</button>
-                <button onClick={() => printQROnly(viewQuotation)} style={{ padding: "10px 18px", background: viewQuotation.type === "quotation" ? "rgba(217,119,6,0.08)" : "rgba(37,99,235,0.08)", border: `1px solid ${viewQuotation.type === "quotation" ? "rgba(217,119,6,0.2)" : "rgba(37,99,235,0.2)"}`, borderRadius: 10, color: viewQuotation.type === "quotation" ? "var(--warn-bright)" : "var(--info-bright)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><QrCode size={14} strokeWidth={STROKE} aria-hidden="true" /> QR</button>
-                {waFor === viewQuotation.id && (
-                  <div style={{ flexBasis: "100%", order: 10, padding: 12, background: "rgba(37,211,102,0.07)", border: "1px solid rgba(22,163,74,0.30)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ok)", marginBottom: 8 }}><MessageCircle size={14} strokeWidth={STROKE} aria-hidden="true" /> Enviar {viewQuotation.type === "quotation" ? "la cotización" : "la nota de venta"} {viewQuotation.code} por WhatsApp</div>
-                    <QuotationWhatsApp key={viewQuotation.id} id={viewQuotation.id} code={viewQuotation.code} isQuot={viewQuotation.type === "quotation"} defaultPhone={viewQuotation.clientPhone} />
-                  </div>
-                )}
-                {mailFor === viewQuotation.id && (
-                  <div style={{ flexBasis: "100%", order: 10, padding: 12, background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--info)", marginBottom: 8 }}><Mail size={14} strokeWidth={STROKE} aria-hidden="true" /> Enviar {viewQuotation.type === "quotation" ? "la cotización" : "la nota de venta"} {viewQuotation.code} por correo</div>
-                    <EmailSend autoFocus send={async (email) => {
-                      const r = await apiFetch("/api/quotations/email", { method: "POST", body: JSON.stringify({ id: viewQuotation.id, email }) });
-                      const d = await r.json().catch(() => ({}));
-                      return { ok: !!d.sent, error: d.error };
-                    }} />
-                  </div>
-                )}
-                <button onClick={() => deleteQuotation(viewQuotation)} style={{ padding: "10px 18px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 10, color: "var(--danger-bright)", fontSize: 12, fontWeight: 600, cursor: "pointer", marginLeft: "auto" }}><Trash2 size={14} strokeWidth={STROKE} aria-hidden="true" /> Eliminar</button>
+            </div>
+            {/* Un solo botón principal (convertir a venta); enviar y documentos en botones neutros; eliminar aparte */}
+            <div className="qd-actions">
+              {isQuot && <button type="button" className="qd-main" onClick={() => convertToSale(vq)}><Banknote size={16} strokeWidth={STROKE} aria-hidden="true" /> Convertir a venta</button>}
+              <div className="qd-row">
+                <button type="button" className="qd-btn" onClick={() => printDocument(vq)}><Printer size={15} strokeWidth={STROKE} aria-hidden="true" /> Documento</button>
+                <button type="button" className="qd-btn" aria-pressed={waFor === vq.id} onClick={() => { setWaFor(waFor === vq.id ? null : vq.id); setMailFor(null); }}><MessageCircle size={15} strokeWidth={STROKE} aria-hidden="true" /> WhatsApp</button>
+                {<button type="button" className="qd-btn" aria-pressed={mailFor === vq.id} onClick={() => { setMailFor(mailFor === vq.id ? null : vq.id); setWaFor(null); }}><Mail size={15} strokeWidth={STROKE} aria-hidden="true" /> Correo</button>}
+                <button type="button" className="qd-btn" onClick={() => printQROnly(vq)}><QrCode size={15} strokeWidth={STROKE} aria-hidden="true" /> QR</button>
+              </div>
+              {waFor === vq.id && (
+                <div className="qd-panel">
+                  <div className="qd-panel-t"><MessageCircle size={14} strokeWidth={STROKE} aria-hidden="true" /> Enviar {docName} {vq.code} por WhatsApp</div>
+                  <QuotationWhatsApp key={vq.id} id={vq.id} code={vq.code} isQuot={isQuot} defaultPhone={vq.clientPhone} />
+                </div>
+              )}
+              {mailFor === vq.id && (
+                <div className="qd-panel">
+                  <div className="qd-panel-t"><Mail size={14} strokeWidth={STROKE} aria-hidden="true" /> Enviar {docName} {vq.code} por correo</div>
+                  <EmailSend autoFocus send={async (email) => {
+                    const r = await apiFetch("/api/quotations/email", { method: "POST", body: JSON.stringify({ id: vq.id, email }) });
+                    const d = await r.json().catch(() => ({}));
+                    return { ok: !!d.sent, error: d.error };
+                  }} />
+                </div>
+              )}
+              <div className="qd-row qd-foot">
+                <button type="button" className="qd-btn" onClick={() => openEditModal(vq)}><Pencil size={15} strokeWidth={STROKE} aria-hidden="true" /> Editar</button>
+                <button type="button" className="qd-del" onClick={() => deleteQuotation(vq)}><Trash2 size={15} strokeWidth={STROKE} aria-hidden="true" /> Eliminar</button>
               </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       <style>{`
         @keyframes slideIn { from { opacity: 0; transform: translateX(80px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
