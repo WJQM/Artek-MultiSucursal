@@ -1,11 +1,14 @@
 // Ícono de la app (pestaña del navegador, app instalada en el celular).
-// Si la empresa subió un logo en Configuración se usa ese, centrado en un cuadrado blanco;
+// Si la empresa subió un logo en Configuración se usa ese: si es opaco llena todo el ícono
+// (sin borde, como los íconos de las apps); si tiene partes transparentes va centrado sobre
+// el color Oscuro de la marca;
 // si no, el ícono por defecto de /public. Todos los tamaños salen con esquinas redondeadas y
 // transparentes, como los íconos de Windows 11 y del celular, menos el de iPhone (180).
 import { readFile } from "fs/promises";
 import path from "path";
 import { getSettings } from "@/backend/company";
 import { uploadPath } from "@/backend/uploads";
+import { brandThemeColor } from "@/backend/brand-colors";
 
 export const dynamic = "force-dynamic";
 
@@ -54,13 +57,13 @@ async function roundedCached(icon: Buffer, size: number, t: number): Promise<Buf
 /** Llave pequeña en la esquina: marca el ícono de la app del sistema (personal) */
 async function withBadge(icon: Buffer, size: number): Promise<Buffer> {
   const sharp = (await import("sharp")).default;
-  const d = Math.round(size * 0.4);
+  const d = Math.round(size * 0.34);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}" viewBox="0 0 40 40">
     <circle cx="20" cy="20" r="19" fill="#149aa5" stroke="#fff" stroke-width="2.5"/>
     <g transform="translate(9 9) scale(0.92)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
       <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
     </g></svg>`;
-  const off = Math.round(size * 0.94) - d; // dentro del margen para que Android no lo recorte
+  const off = size - d; // pegada a la esquina, encima del borde redondeado
   return sharp(icon).resize(size, size).composite([{ input: Buffer.from(svg), left: off, top: off }]).png().toBuffer();
 }
 
@@ -95,7 +98,8 @@ export async function GET(request: Request) {
 async function baseIcon(s: Awaited<ReturnType<typeof getSettings>>, size: number): Promise<Buffer> {
   if (!s?.logo) return defaultIcon(size);
 
-  const key = `${s.updatedAt?.getTime?.() ?? 0}:${size}`;
+  const dark = await brandThemeColor(); // fondo de los logos con partes transparentes
+  const key = `${s.updatedAt?.getTime?.() ?? 0}:${size}:${dark}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -103,12 +107,20 @@ async function baseIcon(s: Awaited<ReturnType<typeof getSettings>>, size: number
     const src = await logoBytes(s.logo);
     if (!src) return defaultIcon(size);
     const sharp = (await import("sharp")).default;
-    const inner = Math.round(size * 0.8); // margen para que Android no recorte el logo
-    const logo = await sharp(src).resize(inner, inner, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } }).png().toBuffer();
-    const out = await sharp({ create: { width: size, height: size, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } } })
-      .composite([{ input: logo, gravity: "center" }])
-      .png()
-      .toBuffer();
+    const { isOpaque } = await sharp(src).stats();
+    let out: Buffer;
+    if (isOpaque) {
+      // Logo con fondo propio: llena todo el ícono (si no es cuadrado se recortan los costados)
+      out = await sharp(src).resize(size, size, { fit: "cover" }).png().toBuffer();
+    } else {
+      // Logo sin fondo: al 80 % sobre el Oscuro, para que no quede pegado a los bordes
+      const inner = Math.round(size * 0.8);
+      const logo = await sharp(src).resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+      out = await sharp({ create: { width: size, height: size, channels: 4, background: dark } })
+        .composite([{ input: logo, gravity: "center" }])
+        .png()
+        .toBuffer();
+    }
     if (cache.size > 20) cache.clear();
     cache.set(key, out);
     return out;
