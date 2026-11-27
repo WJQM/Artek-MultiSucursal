@@ -267,11 +267,11 @@ export default function AdminUsersPage() {
               {formImagePreview && <button type="button" className="ox-ghost" onClick={() => { setFormImage(""); setFormImagePreview(""); }} style={{ width: "auto", height: 42, padding: "0 14px", marginTop: 0, color: "var(--danger)" }}>Quitar</button>}
             </div>
             <div className="ox-row">
-              <Field label="Nombre" required><input className="ox-input" value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nombre completo" /></Field>
-              <Field label="Celular" hint={formRole === "tech" ? "Opcional" : "Recibe el código de ingreso"}><input className="ox-input" value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="70012345" inputMode="tel" /></Field>
-              <Field label="Correo" required><input className="ox-input" type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="correo@ejemplo.com" /></Field>
+              <Field label="Nombre" required><input className="ox-input" value={formName} onChange={e => setFormName(e.target.value)} /></Field>
+              <Field label="Celular" hint={formRole === "tech" ? "Opcional" : "Recibe el código de ingreso"}><input className="ox-input" value={formPhone} onChange={e => setFormPhone(e.target.value)} inputMode="tel" /></Field>
+              <Field label="Correo" required><input className="ox-input" type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} /></Field>
               <Field label={editId ? "Nueva contraseña" : "Contraseña"} hint={editId ? "Déjalo vacío para mantener la actual" : undefined}>
-                <PasswordInput className="ox-input" value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="••••••••" />
+                <PasswordInput className="ox-input" value={formPassword} onChange={e => setFormPassword(e.target.value)} />
               </Field>
             </div>
           </FormSection>

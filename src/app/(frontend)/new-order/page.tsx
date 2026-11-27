@@ -180,10 +180,10 @@ export default function NewOrderPage() {
             <FormSection card icon={<User size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Cliente">
               <div className="ox-row">
                 <Field label="Nombre" required>
-                  <input className="ox-input" value={clientName} onChange={(e) => { setClientName(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} placeholder="Ej: Juan Pérez" required />
+                  <input className="ox-input" value={clientName} onChange={(e) => { setClientName(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} required />
                 </Field>
                 <Field label="Celular con WhatsApp" required>
-                  <input className="ox-input tabular" inputMode="tel" value={clientPhone} onChange={(e) => { setClientPhone(e.target.value); setShowSuggestions(true); if (warrantyOf) setWarrantyOf(null); }} onFocus={() => setShowSuggestions(true)} placeholder="Ej: 70012345" required />
+                  <input className="ox-input tabular" inputMode="tel" value={clientPhone} onChange={(e) => { setClientPhone(e.target.value); setShowSuggestions(true); if (warrantyOf) setWarrantyOf(null); }} onFocus={() => setShowSuggestions(true)} required />
                 </Field>
               </div>
               <WarrantyNotice phone={clientPhone} picked={warrantyOf} onPick={(h) => {
@@ -227,13 +227,13 @@ export default function NewOrderPage() {
               </div>
               <div className="ox-row3">
                 <Field label="Tipo de equipo" required>
-                  <input className="ox-input" value={device} onChange={(e) => setDevice(e.target.value)} placeholder="Celular, Laptop, PC..." required />
+                  <input className="ox-input" value={device} onChange={(e) => setDevice(e.target.value)} required />
                 </Field>
                 <Field label="Marca" required>
-                  <input className="ox-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Samsung, HP, Apple..." required />
+                  <input className="ox-input" value={brand} onChange={(e) => setBrand(e.target.value)} required />
                 </Field>
                 <Field label="Modelo">
-                  <input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Galaxy A52, Pavilion 15..." />
+                  <input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} />
                 </Field>
               </div>
               <div style={{ marginTop: 14 }}><ImeiField value={imei} onChange={setImei} labelStyle={oxLabelStyle} fieldStyle={oxFieldStyle} /></div>
@@ -242,10 +242,10 @@ export default function NewOrderPage() {
             {/* PROBLEMA Y FOTOS */}
             <FormSection card icon={<Stethoscope size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Problema y estado del equipo">
               <Field label="¿Qué le pasa?" required>
-                <textarea className="ox-input" value={issue} onChange={(e) => setIssue(e.target.value)} placeholder="Describe el problema que presenta el equipo..." required rows={3} />
+                <textarea className="ox-input" value={issue} onChange={(e) => setIssue(e.target.value)} required rows={3} />
               </Field>
               <Field label="Cómo llega (rayones, golpes, piezas sueltas)" style={{ marginTop: 12 }}>
-                <textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: rayones en la tapa, tecla F5 suelta, bisagra floja..." rows={2} />
+                <textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
               </Field>
               <div className="ox-photos" style={{ marginTop: 14 }}>
                 {imagePreviews.map((preview, idx) => (
@@ -274,7 +274,7 @@ export default function NewOrderPage() {
                 <div className="ox-acc-details">
                   {selectedAccessories.filter(acc => ACCESSORIES_HINTS[acc]).map(acc => (
                     <Field key={acc} label={acc}>
-                      <input className="ox-input" value={accessoryDetails[acc] || ""} onChange={(e) => updateDetail(acc, e.target.value)} placeholder={ACCESSORIES_HINTS[acc]} />
+                      <input className="ox-input" value={accessoryDetails[acc] || ""} onChange={(e) => updateDetail(acc, e.target.value)} />
                     </Field>
                   ))}
                 </div>
@@ -363,7 +363,7 @@ export default function NewOrderPage() {
                 </div>
               )}
               <Field label="Costo estimado (Bs.)" hint={selectedServices.length > 0 ? `Sugerido por ${selectedServices.length} servicio${selectedServices.length > 1 ? "s" : ""} (Bs. ${svcTotal}). Puedes cambiarlo.` : undefined} style={{ marginTop: 12 }}>
-                <input className="ox-input tabular" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="0" type="number" min="0" inputMode="decimal" />
+                <input className="ox-input tabular" value={cost} onChange={(e) => setCost(e.target.value)} type="number" min="0" inputMode="decimal" />
               </Field>
               <div className="ox-prio" role="group" aria-label="Prioridad">
                 {PRIORITIES.map(p => <button key={p.value} type="button" aria-pressed={priority === p.value} onClick={() => setPriority(p.value)}><StatusDot color={p.color} />{p.label}</button>)}

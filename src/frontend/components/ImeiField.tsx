@@ -74,7 +74,7 @@ export function ImeiField({ value, onChange, repairId, labelStyle, fieldStyle }:
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <label htmlFor="f-imeifield-1" style={labelStyle}>IMEI / N° de serie <span style={{ fontWeight: 500, textTransform: "none" }}>(opcional)</span></label>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <input id="f-imeifield-1" value={value} onChange={(e) => onChange(e.target.value.slice(0, 40))} inputMode="text" autoComplete="off" placeholder="35 123456 789012 3"
+        <input id="f-imeifield-1" value={value} onChange={(e) => onChange(e.target.value.slice(0, 40))} inputMode="text" autoComplete="off"
           style={{ ...fieldStyle, flex: "1 1 200px", fontFamily: "ui-monospace, monospace", letterSpacing: 0.5, borderColor: st === "bad" ? "var(--danger-bright)" : st === "ok" ? "var(--ok-bright)" : (fieldStyle?.borderColor as string | undefined) }} />
         {st === "ok" && res?.paidAvailable && !res.check && (
           <button type="button" onClick={paid} disabled={busy} style={btn}>{busy ? "Consultando…" : "Consultar robo/bloqueo"}</button>

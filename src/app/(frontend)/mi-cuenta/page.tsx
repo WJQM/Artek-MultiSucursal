@@ -168,7 +168,7 @@ export default function MiCuentaPage() {
               <p style={p}>{acc.phone ? `Registrado: ${acc.phone}. ` : "No tienes celular registrado. "}Se usa para el PIN de inicio de sesión y para recuperar tu contraseña.</p>
               {!phoneSent ? (
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <input aria-label="Número de celular" style={{ ...input, flex: "1 1 200px", minWidth: 0 }} type="tel" inputMode="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder={acc.phone ? "Nuevo número, ej: 71234567" : "Ej: 71234567"} required />
+                  <input aria-label="Número de celular" style={{ ...input, flex: "1 1 200px", minWidth: 0 }} type="tel" inputMode="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder={acc.phone ? "Nuevo número" : "Número de celular"} required />
                   <button disabled={busy} style={btn()}>{acc.phone ? "Cambiar" : "Registrar"}</button>
                 </div>
               ) : (
@@ -215,7 +215,7 @@ export default function MiCuentaPage() {
                     <div style={{ flex: 1, minWidth: 180 }}>
                       <label style={label}>Clave manual</label>
                       <code style={{ display: "block", fontSize: 12, wordBreak: "break-all", background: "#f5f7fc", padding: 10, borderRadius: 8, marginBottom: 10 }}>{totpSecret.match(/.{1,4}/g)?.join(" ")}</code>
-                      <input aria-label="Código de la app autenticadora" style={{ ...input, letterSpacing: 6, textAlign: "center", fontWeight: 700 }} value={totpCode} onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="123456" required />
+                      <input aria-label="Código de la app autenticadora" style={{ ...input, letterSpacing: 6, textAlign: "center", fontWeight: 700 }} value={totpCode} onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" required />
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>

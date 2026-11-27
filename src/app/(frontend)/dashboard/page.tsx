@@ -553,8 +553,8 @@ return (
 
             <FormSection icon={<User size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Cliente">
               <div className="ox-row">
-                <Field label="Nombre"><input className="ox-input" value={editClientName} onChange={(e) => setEditClientName(e.target.value)} placeholder="Juan Pérez" /></Field>
-                <Field label="Celular"><input className="ox-input" value={editClientPhone} onChange={(e) => setEditClientPhone(e.target.value)} placeholder="70012345" inputMode="tel" /></Field>
+                <Field label="Nombre"><input className="ox-input" value={editClientName} onChange={(e) => setEditClientName(e.target.value)} /></Field>
+                <Field label="Celular"><input className="ox-input" value={editClientPhone} onChange={(e) => setEditClientPhone(e.target.value)} inputMode="tel" /></Field>
               </div>
             </FormSection>
 
@@ -567,17 +567,17 @@ return (
                 ))}
               </div>
               <div className="ox-row3">
-                <Field label="Tipo de equipo"><input className="ox-input" value={editDevice} onChange={(e) => setEditDevice(e.target.value)} placeholder="Celular, Laptop, PC..." /></Field>
-                <Field label="Marca"><input className="ox-input" value={editBrand} onChange={(e) => setEditBrand(e.target.value)} placeholder="Samsung, HP, Apple..." /></Field>
-                <Field label="Modelo"><input className="ox-input" value={editModel} onChange={(e) => setEditModel(e.target.value)} placeholder="Galaxy A52, Pavilion 15..." /></Field>
+                <Field label="Tipo de equipo"><input className="ox-input" value={editDevice} onChange={(e) => setEditDevice(e.target.value)} /></Field>
+                <Field label="Marca"><input className="ox-input" value={editBrand} onChange={(e) => setEditBrand(e.target.value)} /></Field>
+                <Field label="Modelo"><input className="ox-input" value={editModel} onChange={(e) => setEditModel(e.target.value)} /></Field>
               </div>
               <div style={{ marginTop: 12 }}><ImeiField value={editImei} onChange={setEditImei} repairId={editingRepair.id} labelStyle={oxLabelStyle} fieldStyle={oxFieldStyle} /></div>
             </FormSection>
 
             <FormSection icon={<Stethoscope size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Problema y estado del equipo">
               <div className="ox-row">
-                <Field label="¿Qué le pasa?"><textarea className="ox-input" value={editIssue} onChange={(e) => setEditIssue(e.target.value)} placeholder="Describe el problema..." rows={3} /></Field>
-                <Field label="Cómo llegó (rayones, golpes...)"><textarea className="ox-input" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} placeholder="Estado físico, detalles visibles..." rows={3} /></Field>
+                <Field label="¿Qué le pasa?"><textarea className="ox-input" value={editIssue} onChange={(e) => setEditIssue(e.target.value)} rows={3} /></Field>
+                <Field label="Cómo llegó (rayones, golpes...)"><textarea className="ox-input" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} rows={3} /></Field>
               </div>
               <div className="ox-photos" style={{ marginTop: 12 }}>
                 {editImagePreviews.map((preview, idx) => (
@@ -605,7 +605,7 @@ return (
                 <div className="ox-acc-details">
                   {editSelectedAccessories.filter(acc => ACCESSORIES_HINTS[acc]).map(acc => (
                     <Field key={acc} label={acc}>
-                      <input className="ox-input" value={editAccessoryDetails[acc] || ""} onChange={(e) => updateEditDetail(acc, e.target.value)} placeholder={ACCESSORIES_HINTS[acc]} />
+                      <input className="ox-input" value={editAccessoryDetails[acc] || ""} onChange={(e) => updateEditDetail(acc, e.target.value)} />
                     </Field>
                   ))}
                 </div>
@@ -674,7 +674,7 @@ return (
 
             <FormSection icon={<Banknote size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Costo y prioridad">
               <div className="ox-row">
-                <Field label="Costo total (Bs.)"><input className="ox-input tabular" value={editCost} onChange={(e) => setEditCost(e.target.value)} placeholder="0" type="number" min="0" inputMode="decimal" /></Field>
+                <Field label="Costo total (Bs.)"><input className="ox-input tabular" value={editCost} onChange={(e) => setEditCost(e.target.value)} type="number" min="0" inputMode="decimal" /></Field>
                 <div>
                   <span className="ox-label">Prioridad</span>
                   <div className="ox-prio" role="group" aria-label="Prioridad" style={{ marginTop: 0 }}>
@@ -781,7 +781,7 @@ return (
                         {dvShowMissing ? (
                           <div className="dv-missing">
                             <label htmlFor="dv-missing">Falta {dvMissing.join(", ").toLowerCase()}. ¿Por qué?</label>
-                            <textarea id="dv-missing" rows={2} value={deliveryMissingWhy} onChange={(e) => setDeliveryMissingWhy(e.target.value)} placeholder="Ej.: el cliente dice que no lo dejó con el equipo" />
+                            <textarea id="dv-missing" rows={2} value={deliveryMissingWhy} onChange={(e) => setDeliveryMissingWhy(e.target.value)} />
                           </div>
                         ) : dvMissing.length > 0 && (
                           <button type="button" className="dv-link" onClick={() => setDeliveryMissingOpen(true)}>No se devuelve ningún accesorio</button>
@@ -843,7 +843,7 @@ return (
 
                         <div className="dv-field">
                           <label htmlFor="dv-discount">Descuento (Bs.)</label>
-                          <input id="dv-discount" className="dv-num" inputMode="decimal" value={deliveryDiscount} onChange={(e) => setDeliveryDiscount(e.target.value)} placeholder="0" aria-describedby="dv-discount-help" style={{ maxWidth: 160 }} />
+                          <input id="dv-discount" className="dv-num" inputMode="decimal" value={deliveryDiscount} onChange={(e) => setDeliveryDiscount(e.target.value)} aria-describedby="dv-discount-help" style={{ maxWidth: 160 }} />
                           <span className="help" id="dv-discount-help">Queda anotado en la orden.</span>
                         </div>
                         <div className="dv-field">

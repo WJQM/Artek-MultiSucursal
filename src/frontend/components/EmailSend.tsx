@@ -27,7 +27,7 @@ export default function EmailSend({ defaultEmail, send, label = "Enviar", accent
 
   return (
     <form onSubmit={submit} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-      <input aria-label="Correo del cliente" type="email" inputMode="email" autoComplete="email" autoFocus={autoFocus} value={email} onChange={(e) => { setEmail(e.target.value); setDone(null); }} placeholder="cliente@gmail.com"
+      <input aria-label="Correo del cliente" type="email" inputMode="email" autoComplete="email" autoFocus={autoFocus} value={email} onChange={(e) => { setEmail(e.target.value); setDone(null); }} placeholder="Correo del cliente"
         style={{ flex: "1 1 200px", minWidth: 0, padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 10, fontSize: 14, fontFamily: "inherit", outline: "none", background: "#fff", color: "var(--text-primary)" }} />
       <button type="submit" disabled={busy} style={{ padding: "10px 16px", background: done === email.trim() ? "var(--ok)" : accent, border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 700, cursor: busy ? "wait" : "pointer", whiteSpace: "nowrap" }}>
         {busy ? "Enviando…" : done === email.trim() ? "✓ Enviado" : label}

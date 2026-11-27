@@ -152,7 +152,7 @@ export function CashClosing({ onClose, onDone }: { onClose: () => void; onDone?:
                     {data!.denominations.map((v) => (
                       <label key={v} style={{ flex: "1 1 175px", display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700 }}>
                         <span style={{ width: 58, flexShrink: 0 }}>{v >= 1 ? `Bs ${v}` : `${Math.round(v * 100)} ctv`} ×</span>
-                        <input inputMode="numeric" value={bills[String(v)] || ""} onChange={(e) => setBills({ ...bills, [String(v)]: e.target.value.replace(/\D/g, "").slice(0, 5) })} placeholder="0" style={{ ...inp, width: 58, flexShrink: 0, textAlign: "center", padding: "7px" }} />
+                        <input inputMode="numeric" value={bills[String(v)] || ""} onChange={(e) => setBills({ ...bills, [String(v)]: e.target.value.replace(/\D/g, "").slice(0, 5) })} style={{ ...inp, width: 58, flexShrink: 0, textAlign: "center", padding: "7px" }} />
                         <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{(parseInt(bills[String(v)] || "0") || 0) ? bs(v * (parseInt(bills[String(v)]) || 0)) : ""}</span>
                       </label>
                     ))}
@@ -174,9 +174,9 @@ export function CashClosing({ onClose, onDone }: { onClose: () => void; onDone?:
               <div style={card}>
                 <div style={lbl}>Al cerrar</div>
                 <label htmlFor="f-cashclosing-1" style={{ fontSize: 12, color: "var(--text-secondary)" }}>Dejar en caja para mañana (fondo)</label>
-                <input id="f-cashclosing-1" inputMode="decimal" value={left} onChange={(e) => setLeft(e.target.value)} placeholder="0" style={{ ...inp, marginTop: 4 }} />
+                <input id="f-cashclosing-1" inputMode="decimal" value={left} onChange={(e) => setLeft(e.target.value)} style={{ ...inp, marginTop: 4 }} />
                 <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 4 }}>Se retira: <b>{bs(Math.max(0, counted - leftN))}</b></div>
-                <textarea aria-label="Nota del cierre" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={diff !== 0 ? "Nota: ¿por qué no cuadra? (ej. se dio cambio de más)" : "Nota (opcional)"} rows={2} maxLength={300} style={{ ...inp, marginTop: 10, resize: "vertical" }} />
+                <textarea aria-label="Nota del cierre" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={diff !== 0 ? "Nota: ¿por qué no cuadra?" : "Nota (opcional)"} rows={2} maxLength={300} style={{ ...inp, marginTop: 10, resize: "vertical" }} />
                 {c.qrTotal > 0 && (
                   <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, fontWeight: 700, marginTop: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={qrOk} onChange={(e) => setQrOk(e.target.checked)} /> Revisé en el banco los pagos por QR ({bs(c.qrTotal)})

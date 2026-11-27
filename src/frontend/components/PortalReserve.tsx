@@ -95,7 +95,7 @@ export function ReserveButton({ target, maxQty, onChanged }: { target: Target; m
                 <div><b>{target.name}</b><div className="resv-mut">{money(target.price)}{target.branch ? ` · ${target.branch.name}` : ""}</div></div>
               </div>
               <label className="resv-lbl">Tu nombre<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Nombre y apellido" autoComplete="name" maxLength={80} /></label>
-              <label className="resv-lbl">Tu celular (WhatsApp)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="7XXXXXXX" inputMode="tel" autoComplete="tel" maxLength={20} /></label>
+              <label className="resv-lbl">Tu celular (WhatsApp)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="Celular" inputMode="tel" autoComplete="tel" maxLength={20} /></label>
               {target.kind === "inventory" && top > 1 && (
                 <div className="resv-lbl">Cantidad
                   <div className="resv-qty">
@@ -164,7 +164,7 @@ export function WaitlistButton({ kind, id, name }: { kind: ResvKind; id: string;
               <h3 className="resv-h"><BellRing size={14} strokeWidth={STROKE} aria-hidden="true" /> Avisarme si se libera</h3>
               <p className="resv-mut"><b>{name}</b> está apartado por otra persona. Si no lo recoge, te avisamos por WhatsApp para que lo apartes tú.</p>
               <label className="resv-lbl">Tu nombre (opcional)<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Nombre" autoComplete="name" maxLength={80} /></label>
-              <label className="resv-lbl">Tu celular (WhatsApp)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="7XXXXXXX" inputMode="tel" autoComplete="tel" maxLength={20} /></label>
+              <label className="resv-lbl">Tu celular (WhatsApp)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="Celular" inputMode="tel" autoComplete="tel" maxLength={20} /></label>
               <Turnstile onToken={setCaptcha} onEnabled={setCaptchaOn} resetKey={captchaKey} />
               {error && <div role="alert" className="resv-err">{error}</div>}
               <button type="button" className="resv-go" disabled={busy} onClick={submit}>{busy ? "Guardando…" : "Avisarme por WhatsApp"}</button>

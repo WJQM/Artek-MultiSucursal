@@ -252,9 +252,9 @@ export default function CashPage() {
             </div>
           </FormSection>
           <FormSection icon={<Banknote size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Monto y detalle">
-            <Field label="Monto (Bs.)" required><input className="ox-input tabular" type="number" step="0.01" min="0" inputMode="decimal" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="0" style={{ fontSize: 22, fontWeight: 700, height: 56 }} /></Field>
-            <Field label="Descripción" style={{ marginTop: 12 }}><input className="ox-input" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Ej: Compra de RAM DDR4 8GB" /></Field>
-            <Field label="Notas" hint="Opcional" style={{ marginTop: 12 }}><textarea className="ox-input" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Detalles adicionales..." rows={2} /></Field>
+            <Field label="Monto (Bs.)" required><input className="ox-input tabular" type="number" step="0.01" min="0" inputMode="decimal" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} style={{ fontSize: 22, fontWeight: 700, height: 56 }} /></Field>
+            <Field label="Descripción" style={{ marginTop: 12 }}><input className="ox-input" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} /></Field>
+            <Field label="Notas" hint="Opcional" style={{ marginTop: 12 }}><textarea className="ox-input" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} rows={2} /></Field>
           </FormSection>
         </FormModal>
       )}

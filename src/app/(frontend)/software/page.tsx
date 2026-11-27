@@ -343,15 +343,15 @@ export default function SoftwarePage() {
               <SaveButton onClick={saveItem} disabled={uploading}>{editingId ? "Guardar cambios" : "Agregar programa"}</SaveButton>
             </>}>
             <FormSection icon={<Disc3 size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Programa">
-              <Field label="Nombre" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Windows 11 Pro, Adobe Photoshop..." /></Field>
+              <Field label="Nombre" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
               <span className="ox-label" style={{ marginTop: 12 }}>Categoría</span>
               <div className="ox-chips" role="group" aria-label="Categoría">
                 <button type="button" className="ox-chip" aria-pressed={!category} onClick={() => setCategory("")}>Sin categoría</button>
                 {[...categories, ...(category && !categories.includes(category) ? [category] : [])].map(cat => <button key={cat} type="button" className="ox-chip" aria-pressed={category === cat} onClick={() => setCategory(cat)}>{cat}</button>)}
               </div>
               <div className="ox-row" style={{ marginTop: 12 }}>
-                <Field label="Peso"><input className="ox-input" value={size} onChange={(e) => setSize(e.target.value)} placeholder="Ej: 50 GB, 1.2 GB..." /></Field>
-                <Field label="Idioma"><input className="ox-input" value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="Español, Inglés, Multi..." /></Field>
+                <Field label="Peso"><input className="ox-input" value={size} onChange={(e) => setSize(e.target.value)} /></Field>
+                <Field label="Idioma"><input className="ox-input" value={language} onChange={(e) => setLanguage(e.target.value)} /></Field>
               </div>
             </FormSection>
 
@@ -360,10 +360,10 @@ export default function SoftwarePage() {
             </FormSection>
 
             <FormSection icon={<FileText size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Descripción y requisitos">
-              <Field label="Descripción"><textarea className="ox-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descripción del programa..." rows={3} /></Field>
+              <Field label="Descripción"><textarea className="ox-input" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} /></Field>
               <div className="ox-row" style={{ marginTop: 12 }}>
-                <Field label="Requisitos mínimos"><textarea className="ox-input" value={minRequirements} onChange={(e) => setMinRequirements(e.target.value)} placeholder="CPU: Intel i3 | RAM: 4GB | GPU: GTX 650..." rows={2} /></Field>
-                <Field label="Requisitos recomendados"><textarea className="ox-input" value={recRequirements} onChange={(e) => setRecRequirements(e.target.value)} placeholder="CPU: Intel i5 | RAM: 8GB | GPU: GTX 1060..." rows={2} /></Field>
+                <Field label="Requisitos mínimos"><textarea className="ox-input" value={minRequirements} onChange={(e) => setMinRequirements(e.target.value)} rows={2} /></Field>
+                <Field label="Requisitos recomendados"><textarea className="ox-input" value={recRequirements} onChange={(e) => setRecRequirements(e.target.value)} rows={2} /></Field>
               </div>
             </FormSection>
           </FormModal>

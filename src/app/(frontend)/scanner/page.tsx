@@ -294,7 +294,7 @@ export default function ScannerPage() {
             <form onSubmit={handleManualSearch} style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", background: "var(--bg-tertiary)", borderRadius: 12, border: "1px solid var(--border)", padding: "0 14px" }}>
                 <span style={{ color: "var(--text-muted)", fontSize: 13, marginRight: 8 }}><Search size={14} strokeWidth={STROKE} aria-hidden="true" /></span>
-                <input aria-label="Código del documento" value={manualCode} onChange={(e) => setManualCode(e.target.value)} placeholder="Ej: OT-1, COT-1" style={{ flex: 1, minWidth: 0, width: "100%", border: "none", background: "none", padding: "13px 0", color: "var(--text-primary)", fontSize: 14, outline: "none", fontFamily: "monospace", fontWeight: 600 }} />
+                <input aria-label="Código del documento" value={manualCode} onChange={(e) => setManualCode(e.target.value)} style={{ flex: 1, minWidth: 0, width: "100%", border: "none", background: "none", padding: "13px 0", color: "var(--text-primary)", fontSize: 14, outline: "none", fontFamily: "monospace", fontWeight: 600 }} />
               </div>
               <button type="submit" disabled={loading} style={{ flexShrink: 0, whiteSpace: "nowrap", padding: "13px 22px", background: "var(--ok)", border: "none", borderRadius: 12, color: "#fff", fontWeight: 700, fontSize: 13, cursor: loading ? "wait" : "pointer", boxShadow: "0 1px 2px rgba(15,23,42,0.06)" }}>{loading ? "..." : "Buscar"}</button>
             </form>

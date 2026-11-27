@@ -374,31 +374,31 @@ export default function AdminSettingsPage() {
             <div className="settings-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label htmlFor="f-admin-settings-2" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Nombre de la Empresa *</label>
-                <input id="f-admin-settings-2" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Ej: TechFix Bolivia" style={inputStyle} />
+                <input id="f-admin-settings-2" value={companyName} onChange={e => setCompanyName(e.target.value)} style={inputStyle} />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label htmlFor="f-admin-settings-3" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Slogan / Descripción</label>
-                <input id="f-admin-settings-3" value={slogan} onChange={e => setSlogan(e.target.value)} placeholder="Ej: Servicio Técnico Especializado" style={inputStyle} />
+                <input id="f-admin-settings-3" value={slogan} onChange={e => setSlogan(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="f-admin-settings-4" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Teléfono</label>
-                <input id="f-admin-settings-4" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej: 71234567" style={inputStyle} />
+                <input id="f-admin-settings-4" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="f-admin-settings-5" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Email</label>
-                <input id="f-admin-settings-5" value={email} onChange={e => setEmail(e.target.value)} placeholder="Ej: info@techfix.com" style={inputStyle} />
+                <input id="f-admin-settings-5" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="f-admin-settings-6" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Dirección</label>
-                <input id="f-admin-settings-6" value={address} onChange={e => setAddress(e.target.value)} placeholder="Ej: Av. Principal #123" style={inputStyle} />
+                <input id="f-admin-settings-6" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="f-admin-settings-7" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Sitio Web (para impresiones)</label>
-                <input id="f-admin-settings-7" value={website} onChange={e => setWebsite(e.target.value)} placeholder="Ej: www.techfix.com" style={inputStyle} />
+                <input id="f-admin-settings-7" value={website} onChange={e => setWebsite(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="f-admin-settings-8" style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Ciudad (se muestra en el panel)</label>
-                <input id="f-admin-settings-8" value={city} onChange={e => setCity(e.target.value)} placeholder="Ej: La Paz, Bolivia" style={inputStyle} />
+                <input id="f-admin-settings-8" value={city} onChange={e => setCity(e.target.value)} style={inputStyle} />
               </div>
             </div>
           </div>
@@ -408,7 +408,7 @@ export default function AdminSettingsPage() {
           {/* ENLACE PÚBLICO */}
           <div style={{ padding: 20, background: "var(--bg-card)", borderRadius: 14, border: "1px solid var(--border)", marginBottom: 20 }}>
             <label htmlFor="f-admin-settings-9" style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-dim)", display: "block", marginBottom: 12 }}>Enlace público (WhatsApp y códigos QR)</label>
-            <input id="f-admin-settings-9" value={publicUrl} onChange={e => setPublicUrl(e.target.value)} placeholder="Ej: https://taller.midominio.com" inputMode="url" autoCapitalize="off" spellCheck={false} style={inputStyle} />
+            <input id="f-admin-settings-9" value={publicUrl} onChange={e => setPublicUrl(e.target.value)} inputMode="url" autoCapitalize="off" spellCheck={false} style={inputStyle} />
             <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8, lineHeight: 1.5 }}>
               Dirección con la que tus clientes abren el sistema. Se usa en los mensajes de WhatsApp y en los QR impresos.
               Si lo dejas vacío se usa la dirección desde donde se abre el sistema.

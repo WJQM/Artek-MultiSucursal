@@ -327,25 +327,25 @@ export default function EquipmentPage() {
               </div>
               {type === "laptop" && (
                 <div className="ox-row" style={{ marginTop: 12 }}>
-                  <Field label="Marca" required><input className="ox-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Ej: HP, Dell, Lenovo" /></Field>
-                  <Field label="Modelo" required><input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Ej: Pavilion 245 G8" /></Field>
+                  <Field label="Marca" required><input className="ox-input" value={brand} onChange={(e) => setBrand(e.target.value)} /></Field>
+                  <Field label="Modelo" required><input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} /></Field>
                 </div>
               )}
             </FormSection>
 
             <FormSection icon={<Cpu size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Especificaciones">
               <div className="ox-row">
-                <Field label="Procesador"><input className="ox-input" value={processor} onChange={(e) => setProcessor(e.target.value)} placeholder="Ej: Intel Core i5-1135G7" /></Field>
-                <Field label="Memoria RAM"><input className="ox-input" value={ram} onChange={(e) => setRam(e.target.value)} placeholder="Ej: 16GB DDR4" /></Field>
-                <Field label="Disco 1"><input className="ox-input" value={storage} onChange={(e) => setStorage(e.target.value)} placeholder="Ej: 512GB SSD NVMe" /></Field>
-                <Field label="Disco 2"><input className="ox-input" value={storage2} onChange={(e) => setStorage2(e.target.value)} placeholder="Ej: 1TB HDD" /></Field>
-                <Field label="Tarjeta gráfica"><input className="ox-input" value={graphicsCard} onChange={(e) => setGraphicsCard(e.target.value)} placeholder="Ej: NVIDIA GTX 1650" /></Field>
+                <Field label="Procesador"><input className="ox-input" value={processor} onChange={(e) => setProcessor(e.target.value)} /></Field>
+                <Field label="Memoria RAM"><input className="ox-input" value={ram} onChange={(e) => setRam(e.target.value)} /></Field>
+                <Field label="Disco 1"><input className="ox-input" value={storage} onChange={(e) => setStorage(e.target.value)} /></Field>
+                <Field label="Disco 2"><input className="ox-input" value={storage2} onChange={(e) => setStorage2(e.target.value)} /></Field>
+                <Field label="Tarjeta gráfica"><input className="ox-input" value={graphicsCard} onChange={(e) => setGraphicsCard(e.target.value)} /></Field>
                 {type === "laptop" && <Field label="Pantalla"><input className="ox-input" value={screenSize} onChange={(e) => setScreenSize(e.target.value)} placeholder='Ej: 15.6" FHD IPS' /></Field>}
-                <Field label="Sistema operativo"><input className="ox-input" value={os} onChange={(e) => setOs(e.target.value)} placeholder="Ej: Windows 11 Pro" /></Field>
+                <Field label="Sistema operativo"><input className="ox-input" value={os} onChange={(e) => setOs(e.target.value)} /></Field>
                 {type === "desktop" && <>
-                  <Field label="Gabinete" required><input className="ox-input" value={cabinet} onChange={(e) => setCabinet(e.target.value)} placeholder="Ej: Corsair 4000D" /></Field>
-                  <Field label="Placa madre"><input className="ox-input" value={motherboard} onChange={(e) => setMotherboard(e.target.value)} placeholder="Ej: ASUS PRIME B550M-A" /></Field>
-                  <Field label="Fuente de poder"><input className="ox-input" value={powerSupply} onChange={(e) => setPowerSupply(e.target.value)} placeholder="Ej: EVGA 650W 80+ Gold" /></Field>
+                  <Field label="Gabinete" required><input className="ox-input" value={cabinet} onChange={(e) => setCabinet(e.target.value)} /></Field>
+                  <Field label="Placa madre"><input className="ox-input" value={motherboard} onChange={(e) => setMotherboard(e.target.value)} /></Field>
+                  <Field label="Fuente de poder"><input className="ox-input" value={powerSupply} onChange={(e) => setPowerSupply(e.target.value)} /></Field>
                 </>}
               </div>
             </FormSection>
@@ -356,10 +356,10 @@ export default function EquipmentPage() {
 
             <FormSection icon={<Banknote size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Precio y detalles">
               <div className="ox-row">
-                <Field label="Precio (Bs.)"><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" type="number" min="0" inputMode="decimal" /></Field>
-                <Field label="Accesorios que incluye"><input className="ox-input" value={accessories} onChange={(e) => setAccessories(e.target.value)} placeholder="Mouse, cargador, mochila..." /></Field>
+                <Field label="Precio (Bs.)"><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} type="number" min="0" inputMode="decimal" /></Field>
+                <Field label="Accesorios que incluye"><input className="ox-input" value={accessories} onChange={(e) => setAccessories(e.target.value)} /></Field>
               </div>
-              <Field label="Notas" style={{ marginTop: 12 }}><textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Estado de la batería, detalles, daños..." rows={3} /></Field>
+              <Field label="Notas" style={{ marginTop: 12 }}><textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} /></Field>
             </FormSection>
           </FormModal>
         )}

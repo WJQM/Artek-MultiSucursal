@@ -141,8 +141,8 @@ export default function ServicesPage() {
             </>}>
             <FormSection icon={<Wrench size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Servicio">
               <div className="ox-row">
-                <Field label="Nombre del servicio" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Mantenimiento general" autoFocus /></Field>
-                <Field label="Precio (Bs.)" required><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" type="number" min="0" inputMode="decimal" /></Field>
+                <Field label="Nombre del servicio" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} autoFocus /></Field>
+                <Field label="Precio (Bs.)" required><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} type="number" min="0" inputMode="decimal" /></Field>
               </div>
             </FormSection>
             <FormSection icon={<Shapes size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Ícono" hint="Se ve en la orden y en el recibo">

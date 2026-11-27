@@ -409,18 +409,18 @@ export default function ConsolesPage() {
               <SaveButton onClick={saveItem} disabled={uploading}>{editingId ? "Guardar cambios" : "Agregar consola"}</SaveButton>
             </>}>
             <FormSection icon={<Joystick size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Consola">
-              <Field label="Nombre" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Nintendo Switch OLED, PlayStation 5..." /></Field>
+              <Field label="Nombre" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
               <span className="ox-label" style={{ marginTop: 12 }}>Categoría</span>
               <div className="ox-chips" role="group" aria-label="Categoría">
                 <button type="button" className="ox-chip" aria-pressed={!category} onClick={() => setCategory("")}>Sin categoría</button>
                 {[...categories, ...(category && !categories.includes(category) ? [category] : [])].map(c => <button key={c} type="button" className="ox-chip" aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}
               </div>
               <div className="ox-row" style={{ marginTop: 12 }}>
-                <Field label="Marca"><input className="ox-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Nintendo, Sony, Microsoft..." /></Field>
-                <Field label="Modelo"><input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Switch OLED, PS5 Slim..." /></Field>
-                <Field label="Color"><input className="ox-input" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Negro, Blanco, Rojo..." /></Field>
-                <Field label="Almacenamiento"><input className="ox-input" value={storage} onChange={(e) => setStorage(e.target.value)} placeholder="64GB, 825GB SSD..." /></Field>
-                <Field label="Generación"><input className="ox-input" value={generation} onChange={(e) => setGeneration(e.target.value)} placeholder="8va, 9na, Retro..." /></Field>
+                <Field label="Marca"><input className="ox-input" value={brand} onChange={(e) => setBrand(e.target.value)} /></Field>
+                <Field label="Modelo"><input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} /></Field>
+                <Field label="Color"><input className="ox-input" value={color} onChange={(e) => setColor(e.target.value)} /></Field>
+                <Field label="Almacenamiento"><input className="ox-input" value={storage} onChange={(e) => setStorage(e.target.value)} /></Field>
+                <Field label="Generación"><input className="ox-input" value={generation} onChange={(e) => setGeneration(e.target.value)} /></Field>
               </div>
             </FormSection>
 
@@ -438,10 +438,10 @@ export default function ConsolesPage() {
             </FormSection>
 
             <FormSection icon={<Banknote size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Precio y detalles">
-              <Field label="Precio (Bs.)"><input className="ox-input tabular" type="number" step="0.01" min="0" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" /></Field>
+              <Field label="Precio (Bs.)"><input className="ox-input tabular" type="number" step="0.01" min="0" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} /></Field>
               <div className="ox-row" style={{ marginTop: 12 }}>
-                <Field label="Accesorios incluidos"><textarea className="ox-input" value={accessories} onChange={(e) => setAccessories(e.target.value)} placeholder="2 controles, cargador, juego incluido..." rows={2} /></Field>
-                <Field label="Notas"><textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones, detalles extras..." rows={2} /></Field>
+                <Field label="Accesorios incluidos"><textarea className="ox-input" value={accessories} onChange={(e) => setAccessories(e.target.value)} rows={2} /></Field>
+                <Field label="Notas"><textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></Field>
               </div>
             </FormSection>
           </FormModal>

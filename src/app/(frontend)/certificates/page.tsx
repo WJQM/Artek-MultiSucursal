@@ -202,10 +202,10 @@ export default function CertificatesPage() {
                 <div className="ox-card" style={{ marginBottom: 16 }}>
                   <h2><span className="ox-e" aria-hidden="true"><User size={18} strokeWidth={STROKE} aria-hidden="true" /></span>Cliente y equipo</h2>
                   <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div><label htmlFor="f-certificates-1" className="ox-label" style={{ marginBottom: 6 }}>Nombre del Cliente *</label><input id="f-certificates-1" className="ox-input" value={form.clientName} onChange={set("clientName")} placeholder="Juan Pérez" /></div>
-                    <div><label htmlFor="f-certificates-2" className="ox-label" style={{ marginBottom: 6 }}>Nombre del Equipo</label><input id="f-certificates-2" className="ox-input" value={form.computerName} onChange={set("computerName")} placeholder="PC-OFICINA-01" /></div>
+                    <div><label htmlFor="f-certificates-1" className="ox-label" style={{ marginBottom: 6 }}>Nombre del Cliente *</label><input id="f-certificates-1" className="ox-input" value={form.clientName} onChange={set("clientName")} /></div>
+                    <div><label htmlFor="f-certificates-2" className="ox-label" style={{ marginBottom: 6 }}>Nombre del Equipo</label><input id="f-certificates-2" className="ox-input" value={form.computerName} onChange={set("computerName")} /></div>
                     <div><label htmlFor="f-certificates-3" className="ox-label" style={{ marginBottom: 6 }}>Fecha</label><input id="f-certificates-3" type="date" className="ox-input" value={form.date} onChange={set("date")} /></div>
-                    <div><label htmlFor="f-certificates-4" className="ox-label" style={{ marginBottom: 6 }}>Técnico Responsable</label><input id="f-certificates-4" className="ox-input" value={form.technician} onChange={set("technician")} placeholder="Nombre del técnico" /></div>
+                    <div><label htmlFor="f-certificates-4" className="ox-label" style={{ marginBottom: 6 }}>Técnico Responsable</label><input id="f-certificates-4" className="ox-input" value={form.technician} onChange={set("technician")} /></div>
                   </div>
                 </div>
 
@@ -217,7 +217,7 @@ export default function CertificatesPage() {
                   </h2>
                   <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div><label htmlFor="f-certificates-5" className="ox-label" style={{ marginBottom: 6 }}>Edición</label><select id="f-certificates-5" className="ox-input" value={form.windowsEdition} onChange={set("windowsEdition")}>{(WINDOWS_EDITIONS || []).map(e => <option key={e} value={e}>{e}</option>)}</select></div>
-                    <div><label htmlFor="f-certificates-6" className="ox-label" style={{ marginBottom: 6 }}>Clave de Producto</label><input id="f-certificates-6" className="ox-input" style={{ fontFamily: "'Courier New', monospace", letterSpacing: 1.5 }} value={form.windowsSerial} onChange={handleSerialChange("windowsSerial")} placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" maxLength={29} /></div>
+                    <div><label htmlFor="f-certificates-6" className="ox-label" style={{ marginBottom: 6 }}>Clave de Producto</label><input id="f-certificates-6" className="ox-input" style={{ fontFamily: "'Courier New', monospace", letterSpacing: 1.5 }} value={form.windowsSerial} onChange={handleSerialChange("windowsSerial")} maxLength={29} /></div>
                   </div>
                 </div>
 
@@ -229,14 +229,14 @@ export default function CertificatesPage() {
                   </h2>
                   <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div><label htmlFor="f-certificates-7" className="ox-label" style={{ marginBottom: 6 }}>Edición</label><select id="f-certificates-7" className="ox-input" value={form.officeEdition} onChange={set("officeEdition")}>{(OFFICE_EDITIONS || []).map(e => <option key={e} value={e}>{e}</option>)}</select></div>
-                    <div><label htmlFor="f-certificates-8" className="ox-label" style={{ marginBottom: 6 }}>Clave de Producto</label><input id="f-certificates-8" className="ox-input" style={{ fontFamily: "'Courier New', monospace", letterSpacing: 1.5 }} value={form.officeSerial} onChange={handleSerialChange("officeSerial")} placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" maxLength={29} /></div>
+                    <div><label htmlFor="f-certificates-8" className="ox-label" style={{ marginBottom: 6 }}>Clave de Producto</label><input id="f-certificates-8" className="ox-input" style={{ fontFamily: "'Courier New', monospace", letterSpacing: 1.5 }} value={form.officeSerial} onChange={handleSerialChange("officeSerial")} maxLength={29} /></div>
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div className="ox-card" style={{ marginBottom: 20 }}>
                   <label htmlFor="f-certificates-9" className="ox-label" style={{ marginBottom: 6 }}>Notas Adicionales</label>
-                  <textarea id="f-certificates-9" className="ox-input" style={{ minHeight: 60, resize: "vertical" }} value={form.notes} onChange={set("notes")} placeholder="Observaciones opcionales..." />
+                  <textarea id="f-certificates-9" className="ox-input" style={{ minHeight: 60, resize: "vertical" }} value={form.notes} onChange={set("notes")} />
                 </div>
 
                 <SaveButton disabled={!canGenerate || saving} onClick={handleGenerate}>

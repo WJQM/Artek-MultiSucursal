@@ -404,8 +404,8 @@ export default function QuotationsPage() {
 
           <FormSection icon={<User size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Cliente">
             <div className="ox-row">
-              <Field label="Nombre" required><input className="ox-input" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Juan Pérez" /></Field>
-              <Field label="Celular"><input className="ox-input" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="70012345" inputMode="tel" /></Field>
+              <Field label="Nombre" required><input className="ox-input" value={clientName} onChange={(e) => setClientName(e.target.value)} /></Field>
+              <Field label="Celular"><input className="ox-input" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} inputMode="tel" /></Field>
             </div>
           </FormSection>
 
@@ -481,7 +481,7 @@ export default function QuotationsPage() {
           <PickerBox icon={<PenLine size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Otro concepto" open={showCustomPicker} onToggle={() => setShowCustomPicker(!showCustomPicker)} count={selectedItems.filter(i => lineKind(i) === "custom").length}>
             <p className="ox-hint" style={{ marginBottom: 10 }}>Para lo que no está en el catálogo: mano de obra, envío, un trabajo especial, etc.</p>
             <div className="custom-line" style={{ display: "flex", gap: 8 }}>
-              <input className="ox-input" value={customName} onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="Descripción (ej: Envío a domicilio)" aria-label="Descripción" style={{ flex: 1 }} />
+              <input className="ox-input" value={customName} onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="Descripción" aria-label="Descripción" style={{ flex: 1 }} />
               <input className="ox-input tabular" value={customPrice} onChange={(e) => setCustomPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="Bs." inputMode="decimal" aria-label="Precio" style={{ width: 100 }} />
               <button type="button" className="ox-ghost" onClick={addCustom} style={{ width: "auto", height: 46, marginTop: 0, padding: "0 16px", whiteSpace: "nowrap" }}>＋ Añadir</button>
             </div>
@@ -512,7 +512,7 @@ export default function QuotationsPage() {
             </FormSection>
           )}
 
-          <Field label="Notas" hint="Opcional · condiciones, garantía, validez"><textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones, condiciones, garantía..." rows={2} /></Field>
+          <Field label="Notas" hint="Opcional · condiciones, garantía, validez"><textarea className="ox-input" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></Field>
         </FormModal>
       )}
 

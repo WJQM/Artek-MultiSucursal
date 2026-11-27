@@ -240,10 +240,10 @@ function NewAppt({ onClose, onSaved }: { onClose: () => void; onSaved: () => voi
       </FormSection>
       <FormSection icon={<User size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Cliente y equipo">
         <div className="ox-row">
-          <Field label="Nombre" required><input className="ox-input" value={f.clientName} onChange={(e) => setF({ ...f, clientName: e.target.value })} placeholder="Nombre del cliente" /></Field>
-          <Field label="Celular (WhatsApp)" required><input className="ox-input" value={f.clientPhone} onChange={(e) => setF({ ...f, clientPhone: e.target.value })} placeholder="70012345" inputMode="tel" /></Field>
-          <Field label="Equipo"><input className="ox-input" value={f.device} onChange={(e) => setF({ ...f, device: e.target.value })} placeholder="Ej. Laptop HP" /></Field>
-          <Field label="Problema" hint="Opcional"><input className="ox-input" value={f.issue} onChange={(e) => setF({ ...f, issue: e.target.value })} placeholder="¿Qué le pasa?" /></Field>
+          <Field label="Nombre" required><input className="ox-input" value={f.clientName} onChange={(e) => setF({ ...f, clientName: e.target.value })} /></Field>
+          <Field label="Celular (WhatsApp)" required><input className="ox-input" value={f.clientPhone} onChange={(e) => setF({ ...f, clientPhone: e.target.value })} inputMode="tel" /></Field>
+          <Field label="Equipo"><input className="ox-input" value={f.device} onChange={(e) => setF({ ...f, device: e.target.value })} /></Field>
+          <Field label="Problema" hint="Opcional"><input className="ox-input" value={f.issue} onChange={(e) => setF({ ...f, issue: e.target.value })} /></Field>
         </div>
         <button type="button" className="ox-chip" aria-pressed={f.notify} onClick={() => setF({ ...f, notify: !f.notify })} style={{ marginTop: 12 }}>
           <span className="e" aria-hidden="true">{f.notify ? <SquareCheck size={18} strokeWidth={STROKE} aria-hidden="true" /> : <Square size={18} strokeWidth={STROKE} aria-hidden="true" />}</span>Enviar confirmación por WhatsApp

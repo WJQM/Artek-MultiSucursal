@@ -108,7 +108,7 @@ export function AdvanceDialog({ repair, to, isManager, onClose, onDone }: {
           <label htmlFor="f-advancedialog-1" style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)" }}>
             {stage.title}: {stage.ask} {stage.required && <span style={{ color: "var(--danger-bright)" }}>*</span>}
           </label>
-          <textarea id="f-advancedialog-1" value={text} onChange={(e) => { setText(e.target.value); if (error) setError(""); }} rows={4} maxLength={2000} autoFocus placeholder={stage.placeholder}
+          <textarea id="f-advancedialog-1" value={text} onChange={(e) => { setText(e.target.value); if (error) setError(""); }} rows={4} maxLength={2000} autoFocus
             style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${error ? "var(--danger-bright)" : "var(--border-strong)"}`, fontSize: 14, resize: "vertical", fontFamily: "inherit", outline: "none" }} />
           <AiDraft repairId={repair.id} stage={to} text={text} onUse={(t) => { setText(t); if (error) setError(""); }} />
 

@@ -134,7 +134,7 @@ export default function ReservarPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <input aria-label="Tu nombre" value={f.clientName} onChange={(e) => setF({ ...f, clientName: e.target.value })} placeholder="Tu nombre" autoComplete="name" style={inp} />
                   <input aria-label="Celular (WhatsApp)" value={f.clientPhone} onChange={(e) => setF({ ...f, clientPhone: e.target.value })} placeholder="Celular (WhatsApp)" inputMode="tel" autoComplete="tel" style={inp} />
-                  <input aria-label="Equipo" value={f.device} onChange={(e) => setF({ ...f, device: e.target.value })} placeholder="Equipo (ej. Celular Samsung A52)" style={inp} />
+                  <input aria-label="Equipo" value={f.device} onChange={(e) => setF({ ...f, device: e.target.value })} placeholder="Equipo" style={inp} />
                   <textarea aria-label="Problema del equipo" value={f.issue} onChange={(e) => setF({ ...f, issue: e.target.value })} placeholder="¿Qué problema tiene? (opcional)" rows={2} maxLength={300} style={{ ...inp, resize: "vertical" }} />
                   <Turnstile onToken={setCaptcha} onEnabled={setCaptchaOn} resetKey={captchaKey} />
                 </div>

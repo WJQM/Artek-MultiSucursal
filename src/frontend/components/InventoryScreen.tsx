@@ -424,7 +424,7 @@ export function InventoryScreen() {
                 <button type="button" className="ox-chip" aria-pressed={!part} onClick={() => setFormKind("product")}><span className="e" aria-hidden="true"><Package size={14} strokeWidth={STROKE} aria-hidden="true" /></span>Producto (se vende)</button>
                 <button type="button" className="ox-chip" aria-pressed={part} onClick={() => setFormKind("part")}><span className="e" aria-hidden="true"><Cog size={14} strokeWidth={STROKE} aria-hidden="true" /></span>Repuesto (para reparar)</button>
               </div>
-              <Field label="Nombre" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: SSD Kingston 500GB" /></Field>
+              <Field label="Nombre" required><input className="ox-input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
               <span className="ox-label" style={{ marginTop: 12 }}>Categoría</span>
               <div className="ox-chips" role="group" aria-label="Categoría">
                 <button type="button" className="ox-chip" aria-pressed={!category} onClick={() => setCategory("")}>Sin categoría</button>
@@ -434,8 +434,8 @@ export function InventoryScreen() {
 
             <FormSection icon={<Banknote size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Precios">
               <div className="ox-row">
-                <Field label="Precio de venta (Bs.)"><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" type="number" min="0" inputMode="decimal" /></Field>
-                <Field label="Precio de compra (Bs.)" hint="Sirve para calcular la ganancia"><input className="ox-input tabular" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="0" type="number" min="0" inputMode="decimal" /></Field>
+                <Field label="Precio de venta (Bs.)"><input className="ox-input tabular" value={price} onChange={(e) => setPrice(e.target.value)} type="number" min="0" inputMode="decimal" /></Field>
+                <Field label="Precio de compra (Bs.)" hint="Sirve para calcular la ganancia"><input className="ox-input tabular" value={cost} onChange={(e) => setCost(e.target.value)} type="number" min="0" inputMode="decimal" /></Field>
               </div>
               {margin !== null && (
                 <div className={`ox-note ${margin >= 0 ? "ok" : "warn"}`} style={{ marginTop: 12 }}>
@@ -446,8 +446,8 @@ export function InventoryScreen() {
 
             <FormSection icon={<Boxes size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Stock">
               <div className="ox-row">
-                <Field label="Cantidad en tienda"><input className="ox-input tabular" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" type="number" min="0" inputMode="numeric" /></Field>
-                <Field label="Avisar cuando queden" hint="Stock mínimo"><input className="ox-input tabular" value={minStock} onChange={(e) => setMinStock(e.target.value)} placeholder="5" type="number" min="0" inputMode="numeric" /></Field>
+                <Field label="Cantidad en tienda"><input className="ox-input tabular" value={quantity} onChange={(e) => setQuantity(e.target.value)} type="number" min="0" inputMode="numeric" /></Field>
+                <Field label="Avisar cuando queden" hint="Stock mínimo"><input className="ox-input tabular" value={minStock} onChange={(e) => setMinStock(e.target.value)} type="number" min="0" inputMode="numeric" /></Field>
               </div>
             </FormSection>
 

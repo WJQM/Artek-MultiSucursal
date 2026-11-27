@@ -235,7 +235,7 @@ export function RepairLogPanel({ repairId, compact = false }: { repairId: string
           <div style={{ borderTop: entries.length ? "1px dashed var(--border-strong)" : "none", paddingTop: entries.length ? 12 : 0, display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "#0369a1" }}><Megaphone size={15} strokeWidth={STROKE} aria-hidden="true" /> Novedad al cliente <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text-muted)" }}>· se ve en su seguimiento</span></div>
             <textarea aria-label="Nota de la reparación" value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={2000} autoFocus
-              placeholder={mode === "cliente" ? "Ej.: encontramos también el ventilador dañado; así quedó el equipo después de la limpieza…" : data.isManager ? "Ej.: el cliente llamó, pide revisar también el teclado…" : "Ej.: ya pedí el repuesto, llega el jueves…"}
+              placeholder={mode === "cliente" ? "Escribe la novedad para el cliente" : "Escribe la nota interna"}
               style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, resize: "vertical", fontFamily: "inherit", outline: "none" }} />
             <AiDraft repairId={repairId} stage="novedad" text={text} onUse={setText} />
 

@@ -121,7 +121,7 @@ export function CloudCard() {
 
       <div style={grid2}>
         <label style={{ display: "block" }}><span style={small}>Account ID de Cloudflare</span><input style={input} value={form.account} onChange={(e) => setForm({ ...form, account: e.target.value })} placeholder="32 letras y números" autoComplete="off" /></label>
-        <label style={{ display: "block" }}><span style={small}>Nombre del bucket</span><input style={input} value={form.bucket} onChange={(e) => setForm({ ...form, bucket: e.target.value })} placeholder="repairtrack-respaldos" autoComplete="off" /></label>
+        <label style={{ display: "block" }}><span style={small}>Nombre del bucket</span><input style={input} value={form.bucket} onChange={(e) => setForm({ ...form, bucket: e.target.value })} autoComplete="off" /></label>
         <label style={{ display: "block" }}><span style={small}>Access Key ID</span><input style={input} value={form.accessKeyId} onChange={(e) => setForm({ ...form, accessKeyId: e.target.value })} autoComplete="off" /></label>
         <label style={{ display: "block" }}><span style={small}>Secret Access Key</span><input style={input} type="password" value={form.secretAccessKey} onChange={(e) => setForm({ ...form, secretAccessKey: e.target.value })} placeholder={cfg.hasSecret ? "•••••••• guardada" : "Pega la clave secreta"} autoComplete="new-password" /></label>
         <div><span style={small}>Guardar en la nube</span>
@@ -218,8 +218,8 @@ export function MonitorCard() {
           {st.lastBackupPing && <span>· {st.lastBackupPingOk ? "✓" : "✕"} respaldo avisado {ago(st.lastBackupPing)}</span>}
         </div>
       )}
-      <div style={{ marginBottom: 12 }}><span style={small}>Enlace del respaldo diario</span><input aria-label="Enlace del respaldo diario" style={input} value={form.backupUrl} onChange={(e) => setForm({ ...form, backupUrl: e.target.value })} placeholder="https://hc-ping.com/…" inputMode="url" autoComplete="off" /></div>
-      <div style={{ marginBottom: 12 }}><span style={small}>Enlace de “sistema encendido” (cada 5 minutos)</span><input aria-label="Enlace del aviso de servidor activo" style={input} value={form.aliveUrl} onChange={(e) => setForm({ ...form, aliveUrl: e.target.value })} placeholder="https://hc-ping.com/…" inputMode="url" autoComplete="off" /></div>
+      <div style={{ marginBottom: 12 }}><span style={small}>Enlace del respaldo diario</span><input aria-label="Enlace del respaldo diario" style={input} value={form.backupUrl} onChange={(e) => setForm({ ...form, backupUrl: e.target.value })} inputMode="url" autoComplete="off" /></div>
+      <div style={{ marginBottom: 12 }}><span style={small}>Enlace de “sistema encendido” (cada 5 minutos)</span><input aria-label="Enlace del aviso de servidor activo" style={input} value={form.aliveUrl} onChange={(e) => setForm({ ...form, aliveUrl: e.target.value })} inputMode="url" autoComplete="off" /></div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button disabled={busy} onClick={save} style={btnP}>Guardar</button>
         <button disabled={busy} onClick={test} style={btnG}><Radio size={14} strokeWidth={STROKE} aria-hidden="true" /> Enviar señal de prueba</button>
@@ -301,7 +301,7 @@ export function MailCard() {
       </div>
       {p === "smtp" && (
         <div style={grid2}>
-          <label style={{ display: "block" }}><span style={small}>Servidor SMTP</span><input style={input} value={form.host} onChange={(e) => setForm({ ...form, host: e.target.value })} placeholder="mail.tudominio.com" /></label>
+          <label style={{ display: "block" }}><span style={small}>Servidor SMTP</span><input style={input} value={form.host} onChange={(e) => setForm({ ...form, host: e.target.value })} /></label>
           <div style={{ display: "flex", gap: 10 }}>
             <label style={{ display: "block", flex: 1 }}><span style={small}>Puerto</span><input style={input} inputMode="numeric" value={form.port} onChange={(e) => setForm({ ...form, port: Number(e.target.value.replace(/\D/g, "")) || 0 })} /></label>
             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, alignSelf: "end", paddingBottom: 12 }}><input type="checkbox" checked={form.secure} onChange={(e) => setForm({ ...form, secure: e.target.checked })} /> SSL (465)</label>
@@ -309,11 +309,11 @@ export function MailCard() {
         </div>
       )}
       <div style={grid2}>
-        <label style={{ display: "block" }}><span style={small}>{userLabel}</span><input style={input} value={form.user} onChange={(e) => setForm({ ...form, user: e.target.value })} placeholder={p === "gmail" ? "taller@gmail.com" : ""} autoComplete="off" /></label>
-        <label style={{ display: "block" }}><span style={small}>{passLabel}</span><input style={input} type="password" value={form.pass} onChange={(e) => setForm({ ...form, pass: e.target.value })} placeholder={cfg.hasPass ? "•••••••• guardada" : p === "gmail" ? "abcd efgh ijkl mnop" : ""} autoComplete="new-password" /></label>
-        {p !== "gmail" && <label style={{ display: "block" }}><span style={small}>Correo que envía</span><input style={input} type="email" value={form.fromEmail} onChange={(e) => setForm({ ...form, fromEmail: e.target.value })} placeholder="taller@tudominio.com" /></label>}
-        <label style={{ display: "block" }}><span style={small}>Nombre que ve el cliente</span><input style={input} value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} placeholder="Nombre del taller" /></label>
-        <label style={{ display: "block" }}><span style={small}>Correo para alertas del sistema</span><input style={input} type="email" value={form.alertEmail} onChange={(e) => setForm({ ...form, alertEmail: e.target.value })} placeholder="dueño@gmail.com (opcional)" /></label>
+        <label style={{ display: "block" }}><span style={small}>{userLabel}</span><input style={input} value={form.user} onChange={(e) => setForm({ ...form, user: e.target.value })} autoComplete="off" /></label>
+        <label style={{ display: "block" }}><span style={small}>{passLabel}</span><input style={input} type="password" value={form.pass} onChange={(e) => setForm({ ...form, pass: e.target.value })} placeholder={cfg.hasPass ? "•••••••• guardada" : ""} autoComplete="new-password" /></label>
+        {p !== "gmail" && <label style={{ display: "block" }}><span style={small}>Correo que envía</span><input style={input} type="email" value={form.fromEmail} onChange={(e) => setForm({ ...form, fromEmail: e.target.value })} /></label>}
+        <label style={{ display: "block" }}><span style={small}>Nombre que ve el cliente</span><input style={input} value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} /></label>
+        <label style={{ display: "block" }}><span style={small}>Correo para alertas del sistema</span><input style={input} type="email" value={form.alertEmail} onChange={(e) => setForm({ ...form, alertEmail: e.target.value })} /></label>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button disabled={!!busy} onClick={save} style={btnP}>{busy === "save" ? "Guardando…" : "Guardar"}</button>
@@ -381,8 +381,8 @@ export function PaymentQrCard() {
           {qr.image ? <img src={qr.image} alt="QR del taller" style={{ width: "100%", height: "100%", objectFit: "contain", background: "#fff" }} /> : <span>＋ Subir<br />imagen del QR</span>}
         </label>
         <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 10 }}>
-          <label style={{ display: "block" }}><span style={small}>Banco</span><input style={input} defaultValue={qr.bank} onBlur={(e) => e.target.value.trim() !== qr.bank && save({ bank: e.target.value.trim() })} placeholder="Ej: Banco Unión" /></label>
-          <label style={{ display: "block" }}><span style={small}>Titular de la cuenta</span><input style={input} defaultValue={qr.holder} onBlur={(e) => e.target.value.trim() !== qr.holder && save({ holder: e.target.value.trim() })} placeholder="Ej: Juan Pérez" /></label>
+          <label style={{ display: "block" }}><span style={small}>Banco</span><input style={input} defaultValue={qr.bank} onBlur={(e) => e.target.value.trim() !== qr.bank && save({ bank: e.target.value.trim() })} /></label>
+          <label style={{ display: "block" }}><span style={small}>Titular de la cuenta</span><input style={input} defaultValue={qr.holder} onBlur={(e) => e.target.value.trim() !== qr.holder && save({ holder: e.target.value.trim() })} /></label>
           <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12.5, cursor: "pointer" }}>
             <input type="checkbox" checked={qr.onDocuments} onChange={(e) => save({ onDocuments: e.target.checked })} style={{ width: 17, height: 17, marginTop: 1 }} />
             <span>Mostrar también en la cotización y la nota de venta<small style={{ display: "block", color: "var(--text-muted)", fontSize: 11 }}>Para que el cliente pueda pagar desde el documento</small></span>
@@ -439,13 +439,13 @@ export function WhatsAppCard() {
         : <div style={{ ...okBox, background: "#fffbeb", borderColor: "#fde68a", color: "#b45309" }}>Sin clave: los avisos por WhatsApp no se envían</div>}
       <span style={small}>Nueva clave (para cambiar de cuenta)</span>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-        <input aria-label="Clave de WasenderApi" style={{ ...input, flex: "1 1 260px" }} type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Pega la API key de la sesión de WasenderApi" />
+        <input aria-label="Clave de WasenderApi" style={{ ...input, flex: "1 1 260px" }} type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} />
         <button disabled={busy || !key.trim()} onClick={() => save(key)} style={btnP}>{busy ? "Comprobando…" : "Guardar y probar"}</button>
         {st.source === "config" && <button disabled={busy} onClick={() => save("")} style={btnG}>Quitar clave</button>}
       </div>
       <span style={small}>Mensaje de prueba</span>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <input aria-label="Celular para el mensaje de prueba" style={{ ...input, flex: "1 1 200px" }} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Celular, ej. 76212998" />
+        <input aria-label="Celular para el mensaje de prueba" style={{ ...input, flex: "1 1 200px" }} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Celular" />
         <button disabled={busy || !phone.trim() || !st.configured} onClick={test} style={btnG}>Enviar prueba</button>
       </div>
       <Guide title="¿Dónde saco la clave?" steps={[
@@ -481,7 +481,7 @@ export function TelegramCard() {
       {st.ready && <div style={okBox}>✓ Bot conectado · @{st.username}</div>}
       <span style={small}>Token del bot (de @BotFather)</span>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <input aria-label="Token del bot de Telegram" style={{ ...input, flex: "1 1 260px" }} type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder={st.hasToken ? "•••••••• guardado (pega otro para cambiarlo)" : "123456789:AAH…"} autoComplete="off" />
+        <input aria-label="Token del bot de Telegram" style={{ ...input, flex: "1 1 260px" }} type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder={st.hasToken ? "•••••••• guardado (pega otro para cambiarlo)" : ""} autoComplete="off" />
         <button disabled={busy || !token.trim()} onClick={() => save(token)} style={btnP}>{busy ? "Comprobando…" : "Guardar"}</button>
         {st.hasToken && <button disabled={busy} onClick={() => save("")} style={btnG}>Quitar</button>}
       </div>
@@ -533,7 +533,7 @@ export function AiCard() {
       <div style={grid2}>
         <div>
           <span style={small}>Clave de API (Anthropic)</span>
-          <input aria-label="Clave de API (Anthropic)" style={input} type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={st.hasKey ? "•••••••• guardada (pega otra para cambiarla)" : "sk-ant-…"} autoComplete="off" />
+          <input aria-label="Clave de API (Anthropic)" style={input} type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={st.hasKey ? "•••••••• guardada (pega otra para cambiarla)" : ""} autoComplete="off" />
         </div>
         <div>
           <span style={small}>Modelo</span>
@@ -592,13 +592,13 @@ export function ImeiCard() {
         </div>
         <div>
           <span style={small}>N° de servicio (Service ID)</span>
-          <input aria-label="Nº de servicio (Service ID)" style={input} value={serviceId} onChange={(e) => setServiceId(e.target.value)} placeholder="Ej.: 12" />
+          <input aria-label="Nº de servicio (Service ID)" style={input} value={serviceId} onChange={(e) => setServiceId(e.target.value)} />
         </div>
       </div>
       <details style={{ marginBottom: 12 }}>
         <summary style={{ fontSize: 11.5, color: "var(--text-secondary)", cursor: "pointer" }}>Avanzado: otro servicio</summary>
         <span style={{ ...small, marginTop: 8 }}>Dirección de la API</span>
-        <input aria-label="Dirección de la API" style={input} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://api.imeicheck.net/v1/checks" />
+        <input aria-label="Dirección de la API" style={input} value={url} onChange={(e) => setUrl(e.target.value)} />
       </details>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button disabled={busy} onClick={() => save({ apiKey: key, serviceId, url }, "Consulta de IMEI guardada")} style={btnP}>{busy ? "Guardando…" : "Guardar"}</button>
@@ -642,7 +642,7 @@ export function GoogleReviewsCard() {
       {st.branches.map((b) => (
         <div key={b.id} style={{ marginBottom: 10 }}>
           <span style={small}>{b.name}{b.link ? ` · este mes: ${b.clicks} clic${b.clicks === 1 ? "" : "s"} a Google` : ""}{b.reviews ? ` · ★ ${b.avg} (${b.reviews})` : ""}</span>
-          <input aria-label={`Enlace de reseñas de ${b.name}`} style={input} value={links[b.id] || ""} onChange={(e) => setLinks((p) => ({ ...p, [b.id]: e.target.value }))} placeholder="https://g.page/r/…/review" autoComplete="off" />
+          <input aria-label={`Enlace de reseñas de ${b.name}`} style={input} value={links[b.id] || ""} onChange={(e) => setLinks((p) => ({ ...p, [b.id]: e.target.value }))} autoComplete="off" />
         </div>
       ))}
       <button disabled={busy} onClick={() => save({ links }, "Enlaces guardados")} style={{ ...btnP, marginBottom: 14 }}>{busy ? "Guardando…" : "Guardar enlaces"}</button>

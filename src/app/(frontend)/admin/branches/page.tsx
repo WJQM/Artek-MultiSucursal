@@ -184,10 +184,10 @@ export default function AdminBranchesPage() {
             <SaveButton onClick={handleSubmit} disabled={saving}>{saving ? "Guardando…" : editId ? "Guardar cambios" : "Crear sucursal"}</SaveButton>
           </>}>
           <FormSection icon={<Store size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Datos">
-            <Field label="Nombre" required><input className="ox-input" value={formName} onChange={e => setFormName(e.target.value)} placeholder="Ej: Sucursal Centro" /></Field>
+            <Field label="Nombre" required><input className="ox-input" value={formName} onChange={e => setFormName(e.target.value)} /></Field>
             <div className="ox-row" style={{ marginTop: 12 }}>
-              <Field label="Dirección" hint="Opcional"><input className="ox-input" value={formAddress} onChange={e => setFormAddress(e.target.value)} placeholder="Calle, número, zona" /></Field>
-              <Field label="Teléfono" hint="Opcional"><input className="ox-input" value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="70012345" inputMode="tel" /></Field>
+              <Field label="Dirección" hint="Opcional"><input className="ox-input" value={formAddress} onChange={e => setFormAddress(e.target.value)} /></Field>
+              <Field label="Teléfono" hint="Opcional"><input className="ox-input" value={formPhone} onChange={e => setFormPhone(e.target.value)} inputMode="tel" /></Field>
             </div>
           </FormSection>
           <FormSection icon={<Clock size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Horario de atención" hint="El cliente lo ve en su seguimiento">

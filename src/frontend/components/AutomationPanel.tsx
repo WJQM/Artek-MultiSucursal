@@ -206,7 +206,7 @@ function OwnerCard({ cfg, saving, save }: { cfg: Config; saving: boolean; save: 
       <label style={label}><MessageCircle size={14} strokeWidth={STROKE} aria-hidden="true" /> Avisos al dueño por WhatsApp</label>
       <span style={small}>Celular del dueño</span>
       <div style={{ display: "flex", gap: 8 }}>
-        <input aria-label="Celular del dueño" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ej: 71234567" inputMode="tel" style={{ ...input, flex: 1 }} />
+        <input aria-label="Celular del dueño" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" style={{ ...input, flex: 1 }} />
         <button disabled={saving || phone.trim() === cfg.ownerPhone} onClick={() => save({ ownerPhone: phone.trim() }, "Celular del dueño guardado")}
           style={{ padding: "0 16px", background: phone.trim() === cfg.ownerPhone ? "var(--bg-tertiary)" : "linear-gradient(135deg, var(--accent), var(--accent-dim))", border: "none", borderRadius: 10, color: phone.trim() === cfg.ownerPhone ? "var(--text-muted)" : "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Guardar</button>
       </div>
