@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { PasswordInput } from "@/frontend/components/PasswordInput";
 import { PhoneInput } from "@/frontend/components/PhoneInput";
 import { AppLogo } from "@/frontend/components/AppLogo";
+import { useBrand } from "@/frontend/components/BrandProvider";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "@/frontend/components/Turnstile";
 import { AuthSteps, type StepState } from "@/frontend/components/AuthSteps";
@@ -42,9 +43,12 @@ export default function LoginPage() {
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
   const renewCaptcha = () => setCaptchaKey((k) => k + 1);
-  const [settings, setSettings] = useState<{ companyName: string; slogan: string; logo: string | null }>({ companyName: "", slogan: "", logo: null });
+  // Nombre, lema y logo llegan con la página (BrandProvider): sin el ícono y el nombre por defecto al cargar.
+  // El logo es el ícono liviano generado por /api/brand/icon; la consulta a /api/settings solo actualiza lo que cambie.
+  const brand = useBrand();
+  const [settings, setSettings] = useState<{ companyName: string; slogan: string; logo: string | null }>({ companyName: brand.companyName, slogan: brand.slogan || "", logo: brand.logo });
 
-  const refreshSettings = () => { fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setSettings({ companyName: d.companyName, slogan: d.slogan, logo: d.logo }); }).catch(() => {}); };
+  const refreshSettings = () => { fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setSettings(prev => ({ companyName: d.companyName, slogan: d.slogan, logo: prev.logo || d.logo })); }).catch(() => {}); };
 
   useEffect(() => {
     setMounted(true);

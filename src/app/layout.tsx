@@ -58,13 +58,14 @@ const PWA_EARLY_CAPTURE = `window.addEventListener("beforeinstallprompt",functio
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Colores de Configuración › Colores: reemplazan los de globals.css (vacío si son los originales)
   const marca = brandCss(await getBrandColors());
-  // Nombre, logo y ciudad para el menú lateral (BrandProvider): llegan con la página, sin esperar a /api/settings.
+  // Nombre, logo, ciudad y lema para el menú lateral y el inicio de sesión (BrandProvider): llegan con la página, sin esperar a /api/settings.
   // El logo va como el ícono generado (unos KB) y no como el logo original guardado en la base.
   const s = await getSettings();
   const brand = {
     companyName: s?.companyName?.trim() || DEFAULT_COMPANY_NAME,
     logo: s?.logo ? iconUrl(192, s.updatedAt ? s.updatedAt.getTime() : 0, "portal") : null,
     city: s?.city ?? null,
+    slogan: s?.slogan ?? null,
   };
   return (
     <html lang="es" suppressHydrationWarning className="h-full antialiased">
