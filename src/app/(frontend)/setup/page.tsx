@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { PasswordInput } from "@/frontend/components/PasswordInput";
 import { PhoneInput } from "@/frontend/components/PhoneInput";
 import { AppLogo } from "@/frontend/components/AppLogo";
+import { useBrand } from "@/frontend/components/BrandProvider";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "@/frontend/components/Turnstile";
 import { AuthSteps, type StepState } from "@/frontend/components/AuthSteps";
@@ -37,11 +38,11 @@ export default function SetupPage() {
   const [captchaKey, setCaptchaKey] = useState(0);
   const [stepState, setStepState] = useState<StepState | null>(null);
   const renewCaptcha = () => setCaptchaKey((k) => k + 1);
-  const [settings, setSettings] = useState<{ companyName: string; logo: string | null }>({ companyName: "", logo: null });
+  // Nombre y logo llegan con la página (BrandProvider): sin el ícono y el nombre por defecto al cargar
+  const settings = useBrand();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => { fetch("/api/auth/setup").then(r => r.json()).then(d => { const has = d?.hasSuperadmin !== false; setHasSuperadmin(has); if (!has) setMode("register"); }).catch(() => {}); }, []);
-  useEffect(() => { fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setSettings({ companyName: d.companyName, logo: d.logo }); }).catch(() => {}); }, []);
 
   const handleImageUpload = async (file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
