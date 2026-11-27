@@ -400,6 +400,63 @@ export function PaymentQrCard() {
   );
 }
 
+/** WhatsApp del taller (WasenderApi): cambiar de cuenta pegando otra clave, probar y quitar. */
+export function WhatsAppCard() {
+  const [st, setSt] = useState<{ configured: boolean; source: "config" | "env" | "none"; last4: string | null } | null>(null);
+  const [key, setKey] = useState("");
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { apiFetch("/api/whatsapp/config").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSt(d)).catch(() => {}); }, []);
+  if (!st) return null;
+  const save = async (value: string) => {
+    setBusy(true);
+    try {
+      const r = await apiFetch("/api/whatsapp/config", { method: "PUT", body: JSON.stringify({ apiKey: value }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { sileo.error({ title: d.error || "No se pudo guardar" }); return; }
+      setSt(d); setKey("");
+      if (d.warning) sileo.warning({ title: d.warning });
+      else sileo.success({ title: value ? "Clave guardada y comprobada" : "Clave quitada" });
+    } finally { setBusy(false); }
+  };
+  const test = async () => {
+    setBusy(true);
+    try {
+      const r = await apiFetch("/api/whatsapp/config", { method: "POST", body: JSON.stringify({ phone }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { sileo.error({ title: d.error || "No se pudo enviar" }); return; }
+      sileo.success({ title: "Mensaje de prueba enviado", description: "Revisa ese WhatsApp" });
+    } finally { setBusy(false); }
+  };
+  return (
+    <div style={card}>
+      <label style={label}><Smartphone size={14} strokeWidth={STROKE} aria-hidden="true" /> WhatsApp del taller (WasenderApi)</label>
+      <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 14 }}>
+        Envía los avisos automáticos a los clientes (orden recibida, lista para recoger, entrega) y los PIN de acceso. La clave se guarda en el servidor y nunca se vuelve a mostrar completa.
+      </p>
+      {st.configured
+        ? <div style={okBox}>✓ Clave activa ··· {st.last4}{st.source === "env" ? " (del archivo .env del servidor)" : ""}</div>
+        : <div style={{ ...okBox, background: "#fffbeb", borderColor: "#fde68a", color: "#b45309" }}>Sin clave: los avisos por WhatsApp no se envían</div>}
+      <span style={small}>Nueva clave (para cambiar de cuenta)</span>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        <input aria-label="Clave de WasenderApi" style={{ ...input, flex: "1 1 260px" }} type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Pega la API key de la sesión de WasenderApi" />
+        <button disabled={busy || !key.trim()} onClick={() => save(key)} style={btnP}>{busy ? "Comprobando…" : "Guardar y probar"}</button>
+        {st.source === "config" && <button disabled={busy} onClick={() => save("")} style={btnG}>Quitar clave</button>}
+      </div>
+      <span style={small}>Mensaje de prueba</span>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <input aria-label="Celular para el mensaje de prueba" style={{ ...input, flex: "1 1 200px" }} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Celular, ej. 76212998" />
+        <button disabled={busy || !phone.trim() || !st.configured} onClick={test} style={btnG}>Enviar prueba</button>
+      </div>
+      <Guide title="¿Dónde saco la clave?" steps={[
+        <>Entra a <b>wasenderapi.com</b> con la cuenta del taller y abre tu <b>sesión</b> (el número de WhatsApp).</>,
+        <>Si la sesión dice desconectada, toca <b>Conectar</b> y escanea el QR con el WhatsApp del taller.</>,
+        <>Copia la <b>API key</b> de esa sesión y pégala aquí. Cada número tiene su propia clave: para cambiar de número, pega la clave de la otra sesión.</>,
+      ]} />
+    </div>
+  );
+}
+
 export function TelegramCard() {
   const [st, setSt] = useState<{ username: string; botName: string; hasToken: boolean; ready: boolean } | null>(null);
   const [token, setToken] = useState("");

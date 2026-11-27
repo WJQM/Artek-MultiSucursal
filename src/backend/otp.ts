@@ -1,6 +1,6 @@
 // PIN de un solo uso enviado por WhatsApp (login, registro, recuperación, cambio de celular).
 import { prisma } from "./prisma";
-import { sendWhatsAppSafe } from "./whatsapp";
+import { sendWhatsAppSafe, whatsappConfigured } from "./whatsapp";
 import { pepperHash, randomDigits, safeEqualHex } from "./secure";
 import { rateLimit } from "./rate-limit";
 
@@ -25,14 +25,15 @@ function hashCode(codeId: string, code: string) {
 
 async function deliver(phone: string, message: string): Promise<boolean> {
   // En desarrollo: sin WhatsApp configurado, o con OTP_CONSOLE=1, el PIN se muestra en la terminal
-  const toConsole = process.env.NODE_ENV !== "production" && (process.env.OTP_CONSOLE === "1" || !process.env.WASENDER_API_KEY);
-  if (toConsole || !process.env.WASENDER_API_KEY) {
+  const configured = await whatsappConfigured();
+  const toConsole = process.env.NODE_ENV !== "production" && (process.env.OTP_CONSOLE === "1" || !configured);
+  if (toConsole || !configured) {
     if (process.env.NODE_ENV !== "production") {
       // Desarrollo sin WhatsApp configurado: el PIN aparece en la consola del servidor
       console.log(`[OTP-DEV] ${phone} :: ${message}`);
       return true;
     }
-    console.error("[OTP] WASENDER_API_KEY no configurada: no se puede enviar el PIN");
+    console.error("[OTP] WhatsApp sin clave de WasenderApi: no se puede enviar el PIN");
     return false;
   }
   return sendWhatsAppSafe(phone, message);

@@ -6,7 +6,7 @@ import { STROKE } from "@/frontend/components/UiIcons";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/frontend/lib/api";
 import { sileo } from "@/frontend/lib/toast";
-import { CloudCard, MailCard, MonitorCard, TelegramCard } from "@/frontend/components/CloudMonitorPanel";
+import { CloudCard, MailCard, MonitorCard, TelegramCard, WhatsAppCard } from "@/frontend/components/CloudMonitorPanel";
 
 interface Config { backupEnabled: boolean; backupHour: number; backupKeep: number; ownerPhone: string; summaryAuto: boolean; summaryHour: number }
 interface BFile { name: string; size: number; at: string; uploads?: { name: string; size: number } }
@@ -110,6 +110,7 @@ export default function AutomationPanel({ parte }: { parte: "respaldos" | "aviso
   if (parte === "avisos") return (
     <>
       <OwnerCard cfg={cfg} saving={saving} save={save} />
+      <WhatsAppCard />
       <MailCard />
       <TelegramCard />
     </>

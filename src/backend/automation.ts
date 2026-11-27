@@ -60,7 +60,7 @@ export async function saveAutomationConfig(input: Partial<AutomationConfig>): Pr
 
 // Claves de KeyValue con contraseñas, tokens o vínculos personales: nunca salen en un respaldo JSON
 // ni se aceptan al importar uno (un archivo manipulado podría redirigir la copia en la nube o el correo).
-const SECRET_KEYS = /^(mail:config|cloud:config|push:vapid|telegram:|ai:config|imei:config|monitor:config)/;
+const SECRET_KEYS = /^(mail:config|cloud:config|push:vapid|telegram:|ai:config|imei:config|monitor:config|whatsapp:config)/;
 export const isSecretKey = (key: string) => SECRET_KEYS.test(key);
 
 /** Lee/escribe un JSON en KeyValue */

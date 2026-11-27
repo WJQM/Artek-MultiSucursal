@@ -1,7 +1,64 @@
 // Envío de WhatsApp por WasenderAPI. Si falla, NO bloquea la respuesta al usuario.
 import { normalizePhone } from "./phone";
+import { readKV, writeKV } from "./automation";
 
-const API_KEY = process.env.WASENDER_API_KEY || "";
+// Clave de WasenderApi: la guardada en Configuración (KeyValue) o, si no hay, la del .env.
+// Nunca se devuelve al navegador: solo sus últimos 4 caracteres.
+const KV_KEY = "whatsapp:config";
+const apiBase = () => (process.env.WASENDER_API_BASE || "https://www.wasenderapi.com").replace(/\/+$/, "");
+let cache: { at: number; key: string } | null = null;
+
+async function savedKey(): Promise<string> {
+  const c = await readKV<{ apiKey?: string }>(KV_KEY, {});
+  return (c.apiKey || "").trim();
+}
+
+export async function wasenderKey(): Promise<string> {
+  if (cache && Date.now() - cache.at < 30_000) return cache.key;
+  const key = (await savedKey()) || process.env.WASENDER_API_KEY || "";
+  cache = { at: Date.now(), key };
+  return key;
+}
+
+export async function whatsappConfigured(): Promise<boolean> {
+  return !!(await wasenderKey());
+}
+
+export async function publicWhatsAppConfig() {
+  const saved = await savedKey();
+  const env = process.env.WASENDER_API_KEY || "";
+  const active = saved || env;
+  return { configured: !!active, source: saved ? "config" : env ? "env" : "none", last4: active ? active.slice(-4) : null };
+}
+
+/** Comprueba la clave contra WasenderApi antes de guardarla. Clave vacía = quitarla (vuelve a la del .env). */
+export async function saveWhatsAppKey(apiKey: string): Promise<{ config: Awaited<ReturnType<typeof publicWhatsAppConfig>>; warning?: string }> {
+  const key = apiKey.trim();
+  if (!key) {
+    await writeKV(KV_KEY, {});
+    cache = null;
+    return { config: await publicWhatsAppConfig() };
+  }
+  if (key.length < 16 || /\s/.test(key)) throw new Error("La clave no tiene el formato de WasenderApi");
+  let warning: string | undefined;
+  try {
+    const res = await fetch(`${apiBase()}/api/status`, { headers: { Authorization: `Bearer ${key}` } });
+    const body = await res.json().catch(() => null) as { status?: string; message?: string } | null;
+    if (res.status === 401 || res.status === 403) throw new Error("WasenderApi rechazó la clave: no es válida o el plan venció");
+    if (res.ok) {
+      const st = String(body?.status || "").toLowerCase();
+      if (st && st !== "connected") warning = "Clave guardada, pero el WhatsApp de esa sesión no está conectado: escanea el QR en wasenderapi.com";
+    } else {
+      warning = "Clave guardada, pero no se pudo comprobar el estado: envía un mensaje de prueba";
+    }
+  } catch (e) {
+    if ((e as Error).message.startsWith("WasenderApi rechazó")) throw e;
+    warning = "Clave guardada, pero no se pudo conectar con WasenderApi para comprobarla: envía un mensaje de prueba";
+  }
+  await writeKV(KV_KEY, { apiKey: key });
+  cache = null;
+  return { config: await publicWhatsAppConfig(), warning };
+}
 
 export type WhatsAppResult = { ok: true; msgId?: string } | { ok: false; error: string };
 
@@ -18,13 +75,14 @@ function explainWasender(status: number, body: { message?: unknown; error?: unkn
 
 /** Envía y devuelve el motivo si falla (para mostrarlo en pantalla). */
 export async function sendWhatsApp(phone: string | null | undefined, message: string): Promise<WhatsAppResult> {
-  if (!API_KEY) return { ok: false, error: "El WhatsApp automático no está configurado en el servidor (falta WASENDER_API_KEY)" };
+  const API_KEY = await wasenderKey();
+  if (!API_KEY) return { ok: false, error: "El WhatsApp automático no está configurado (agrega la clave de WasenderApi en Configuración → Avisos)" };
   const to = normalizePhone(phone);
   if (!to) return { ok: false, error: "Número de celular inválido" };
   if (!message?.trim()) return { ok: false, error: "Mensaje vacío" };
 
   try {
-    const res = await fetch(`${(process.env.WASENDER_API_BASE || "https://www.wasenderapi.com").replace(/\/+$/, "")}/api/send-message`, {
+    const res = await fetch(`${apiBase()}/api/send-message`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${API_KEY}` },
       body: JSON.stringify({ to: `+${to}`, text: message }),
