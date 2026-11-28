@@ -507,9 +507,9 @@ function DashboardPage() {
     const bid = activeBranch ? `?branchId=${activeBranch}` : "";
     window.open(`/print-qr/${urlType}/${code}${bid}`, "_blank");
   };
-  // Etiquetas XS (38×25 mm) con mini QR de seguimiento, una por accesorio (cargador, funda, batería…)
-  const printAccLabels = (code: string, off: number[] = [], fmt: AccLabelFmt = "xs") => {
-    const q = new URLSearchParams(); if (activeBranch) q.set("branchId", activeBranch); if (fmt !== "xs") q.set("f", fmt); if (off.length) q.set("off", off.join(","));
+  // Etiquetas S (48×30 mm) con mini QR de seguimiento, una por accesorio (cargador, funda, batería…)
+  const printAccLabels = (code: string, off: number[] = [], fmt: AccLabelFmt = "s") => {
+    const q = new URLSearchParams(); if (activeBranch) q.set("branchId", activeBranch); if (fmt !== "s") q.set("f", fmt); if (off.length) q.set("off", off.join(","));
     window.open(`/print/${code}/accesorios${q.size ? `?${q}` : ""}`, "_blank");
   };
 
@@ -946,7 +946,7 @@ return (
                   <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{printModal.type === "reception" ? "QR azul de seguimiento para el cliente" : "QR verde comprobante de entrega"}</div>
                 </div>
               </button>
-              {/* Se despliega en el mismo modal: casillas por accesorio y formato XS / Bandera / Única */}
+              {/* Se despliega en el mismo modal: casillas por accesorio y formato S / Bandera / Única */}
               {printModal.type === "reception" && (() => {
                 const acc = parseAccessoriesDisplay(repairs.find((r) => r.code === printModal.code)?.accessories ?? null).map((a) => parseAccWithDetail(a).name);
                 return acc.length > 0 && <AccLabelsPicker items={acc} onPrint={(off, fmt) => { printAccLabels(printModal.code, off, fmt); setPrintModal(null); }} />;

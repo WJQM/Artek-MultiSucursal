@@ -1,5 +1,5 @@
 "use client";
-// Etiquetas de accesorios de una orden en tres formatos: XS 38×25 (una por accesorio), Bandera 70×20 (se dobla alrededor del cable)
+// Etiquetas de accesorios de una orden en tres formatos: S 48×30 (una por accesorio), Bandera 70×20 (se dobla alrededor del cable)
 // y Única 50×30 (un QR con la lista). El modal pasa ?f=formato&off=índices desmarcados; la barra permite cambiarlos. Ruta bajo /print/ para heredar la sesión.
 import { Backpack, Printer, X } from "@/frontend/components/icons";
 import { STROKE } from "@/frontend/components/UiIcons";
@@ -10,9 +10,9 @@ import { useParams } from "next/navigation";
 import { DocPrint, DocBar, qrSrc } from "@/frontend/components/DocKit";
 
 interface Repair { code: string; accessories: string | null; clientName: string | null; createdAt: string }
-type Fmt = "xs" | "bandera" | "unica";
+type Fmt = "s" | "bandera" | "unica";
 
-const FMTS: { k: Fmt; label: string }[] = [{ k: "xs", label: "XS 38×25" }, { k: "bandera", label: "Bandera" }, { k: "unica", label: "Única" }];
+const FMTS: { k: Fmt; label: string }[] = [{ k: "s", label: "S 48×30" }, { k: "bandera", label: "Bandera" }, { k: "unica", label: "Única" }];
 const accName = (raw: string) => (raw.match(/^(.+?)\s*\((.+)\)$/)?.[1] ?? raw).trim();
 const shortName = (n: string | null) => { const p = (n || "").trim().split(/\s+/).filter(Boolean); return p.length ? (p.length > 1 ? `${p[0]} ${p[1][0]}.` : p[0]) : ""; };
 const fecha = (iso: string) => { const d = new Date(iso); return isNaN(d.getTime()) ? "" : `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`; };
@@ -24,7 +24,7 @@ export default function AccessoryLabelsPage() {
   const [baseUrl, setBaseUrl] = useState("");
   const [branchParam, setBranchParam] = useState("");
   const [off, setOff] = useState<Set<number>>(new Set());
-  const [fmt, setFmt] = useState<Fmt>("xs");
+  const [fmt, setFmt] = useState<Fmt>("s");
 
   useEffect(() => {
     publicBase().then(setBaseUrl);
@@ -33,7 +33,7 @@ export default function AccessoryLabelsPage() {
     setBranchParam(bp); // eslint-disable-line react-hooks/set-state-in-effect
     const f = q.get("f");
     if (f === "bandera" || f === "unica") setFmt(f);
-    const o = (q.get("off") || "").split(",").map(Number).filter((n) => Number.isInteger(n) && n >= 0);
+    const o = (q.get("off") || "").split(",").filter(Boolean).map(Number).filter((n) => Number.isInteger(n) && n >= 0);
     if (o.length) setOff(new Set(o));
     fetch(`/api/track/${code}${bp ? `?branchId=${bp}` : ""}`).then(r => r.ok ? r.json() : null)
       .then(d => { setRepair(d?.multiple ? d.repairs[0] : d); setLoading(false); }).catch(() => setLoading(false));

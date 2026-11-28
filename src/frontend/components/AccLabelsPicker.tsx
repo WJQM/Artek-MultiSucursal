@@ -2,13 +2,13 @@
 // Opción del modal "Imprimir Recepción": al tocarla se despliega con una casilla por accesorio y el formato de etiqueta.
 import { useState } from "react";
 
-export type AccLabelFmt = "xs" | "bandera" | "unica";
-const FMTS: { k: AccLabelFmt; label: string }[] = [{ k: "xs", label: "XS 38×25" }, { k: "bandera", label: "Bandera" }, { k: "unica", label: "Única" }];
+export type AccLabelFmt = "s" | "bandera" | "unica";
+const FMTS: { k: AccLabelFmt; label: string }[] = [{ k: "s", label: "S 48×30" }, { k: "bandera", label: "Bandera" }, { k: "unica", label: "Única" }];
 
 export function AccLabelsPicker({ items, onPrint }: { items: string[]; onPrint: (off: number[], fmt: AccLabelFmt) => void }) {
   const [open, setOpen] = useState(false);
   const [off, setOff] = useState<number[]>([]);
-  const [fmt, setFmt] = useState<AccLabelFmt>("xs");
+  const [fmt, setFmt] = useState<AccLabelFmt>("s");
   const toggle = (i: number) => setOff((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
   const count = items.length - off.length;
 
