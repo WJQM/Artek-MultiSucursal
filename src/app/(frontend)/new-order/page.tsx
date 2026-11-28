@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { ImeiField, imeiState } from "@/frontend/components/ImeiField";
 import { AppSidebar } from "@/frontend/components/AppSidebar";
 import { FormSection, Field, oxLabelStyle, oxFieldStyle } from "@/frontend/components/FormKit";
-import { DEVICE_TYPES, ACCESSORIES_LIST, ACCESSORIES_HINTS, PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
+import { PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
+import { useRecepcion } from "@/frontend/components/RecepcionProvider";
 import { PageSkeleton } from "@/frontend/components/Skeletons";
 
 
@@ -33,6 +34,9 @@ export default function NewOrderPage() {
   const [warrantyOf, setWarrantyOf] = useState<WarrantyHit | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [uploading, setUploading] = useState(false); const [saving, setSaving] = useState(false);
+  // Tipos de equipo y accesorios configurables (Configuración → Recepción de equipos)
+  const { catalogo } = useRecepcion();
+  const pideDetalle = (acc: string) => !!catalogo.accessories.find((a) => a.name === acc)?.detail;
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]); const [accessoryDetails, setAccessoryDetails] = useState<Record<string, string>>({});
   const [selectedServices, setSelectedServices] = useState<string[]>([]); const [servicesList, setServicesList] = useState<ServiceItem[]>([]);
   const [selectedSoftware, setSelectedSoftware] = useState<string[]>([]); const [softwareList, setSoftwareList] = useState<SoftwareItem[]>([]);
@@ -219,9 +223,9 @@ export default function NewOrderPage() {
             {/* EQUIPO */}
             <FormSection card icon={<Smartphone size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Equipo">
               <div className="ox-chips" role="group" aria-label="Tipo de equipo" style={{ marginBottom: 14 }}>
-                {DEVICE_TYPES.map(d => (
-                  <button key={d.label} type="button" className="ox-chip" aria-pressed={device.trim().toLowerCase() === d.label.toLowerCase()} onClick={() => setDevice(d.label)}>
-                    <span className="e" aria-hidden="true"><DeviceIcon device={d.label} size={18} /></span>{d.label}
+                {catalogo.devices.map(d => (
+                  <button key={d.name} type="button" className="ox-chip" aria-pressed={device.trim().toLowerCase() === d.name.toLowerCase()} onClick={() => setDevice(d.name)}>
+                    <span className="e" aria-hidden="true"><DeviceIcon device={d.name} size={18} /></span>{d.name}
                   </button>
                 ))}
               </div>
@@ -264,15 +268,15 @@ export default function NewOrderPage() {
             {/* ACCESORIOS */}
             <FormSection card icon={<Backpack size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Accesorios que deja" hint="Toca para marcar">
               <div className="ox-chips" role="group" aria-label="Accesorios" translate="no">
-                {ACCESSORIES_LIST.map(acc => (
+                {catalogo.accessories.map(a => a.name).map(acc => (
                   <button key={acc} type="button" className="ox-chip" aria-pressed={selectedAccessories.includes(acc)} onClick={() => toggleAcc(acc)}>
                     <span className="e" aria-hidden="true"><AccessoryIcon name={acc} size={18} /></span>{acc}
                   </button>
                 ))}
               </div>
-              {selectedAccessories.some(acc => ACCESSORIES_HINTS[acc]) && (
+              {selectedAccessories.some(pideDetalle) && (
                 <div className="ox-acc-details">
-                  {selectedAccessories.filter(acc => ACCESSORIES_HINTS[acc]).map(acc => (
+                  {selectedAccessories.filter(pideDetalle).map(acc => (
                     <Field key={acc} label={acc}>
                       <input className="ox-input" value={accessoryDetails[acc] || ""} onChange={(e) => updateDetail(acc, e.target.value)} />
                     </Field>

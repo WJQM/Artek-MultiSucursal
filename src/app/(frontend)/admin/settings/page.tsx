@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Bell, ChevronRight, Eye, Globe, HardDrive, ImagePlus, Mail, MapPin, Palette, Pencil, Phone, Plug, RotateCcw, ShieldCheck, Store, Trash2, TriangleAlert, Upload, Wrench } from "@/frontend/components/icons";
+import { ArrowLeft, Backpack, Bell, ChevronRight, Eye, Globe, HardDrive, ImagePlus, Mail, MapPin, Palette, Pencil, Phone, Plug, RotateCcw, ShieldCheck, Store, Trash2, TriangleAlert, Upload, Wrench } from "@/frontend/components/icons";
 import { STROKE } from "@/frontend/components/UiIcons";
 import { sileo } from "@/frontend/lib/toast";
 import { useEffect, useState, useRef } from "react";
@@ -12,16 +12,19 @@ import { AiCard, GoogleReviewsCard, ImeiCard, PaymentQrCard } from "@/frontend/c
 import { pressKey } from "@/frontend/lib/a11y";
 import { PageSkeleton } from "@/frontend/components/Skeletons";
 import BrandColorsPanel from "@/frontend/components/BrandColorsPanel";
+import RecepcionPanel from "@/frontend/components/RecepcionPanel";
+import { useRecepcion } from "@/frontend/components/RecepcionProvider";
 import { coverBackground, type CoverFit, type PortalNav } from "@/shared/portal-cover";
 import { BRAND_DEFAULT, BRAND_PRESETS, type BrandColors } from "@/shared/brand-colors";
 
 // Configuración por apartados: primero las tarjetas; al tocar una se ve solo ese apartado (?s=… en la dirección)
-type Apartado = "empresa" | "colores" | "portal" | "garantia" | "avisos" | "respaldos" | "integraciones";
+type Apartado = "empresa" | "colores" | "portal" | "garantia" | "recepcion" | "avisos" | "respaldos" | "integraciones";
 const APARTADOS: { key: Apartado; icon: React.ReactNode; title: string; desc: string; long: string }[] = [
   { key: "empresa", icon: <Store size={20} strokeWidth={STROKE} />, title: "Empresa", desc: "Nombre, logo, teléfono y dirección", long: "Se muestra en el login, el portal, las impresiones, el seguimiento y los mensajes de WhatsApp." },
   { key: "colores", icon: <Palette size={20} strokeWidth={STROKE} />, title: "Colores", desc: "Color principal y color oscuro", long: "Los colores del sistema y del portal: botones, enlaces, menú y portada. Los documentos impresos siguen en negro." },
   { key: "portal", icon: <Globe size={20} strokeWidth={STROKE} />, title: "Portal de clientes", desc: "Foto de portada y enlace público", long: "Cómo se ve el portal y la dirección que reciben tus clientes en WhatsApp y en los QR." },
   { key: "garantia", icon: <ShieldCheck size={20} strokeWidth={STROKE} />, title: "Garantía y condiciones", desc: "Días de garantía y términos impresos", long: "Días de garantía, días para equipos no reclamados y los términos que salen en la orden impresa." },
+  { key: "recepcion", icon: <Backpack size={20} strokeWidth={STROKE} />, title: "Recepción de equipos", desc: "Tipos de equipo y accesorios", long: "Los botones que salen al recibir un equipo: tipos de equipo y accesorios que deja el cliente. Las órdenes ya creadas no cambian." },
   { key: "avisos", icon: <Bell size={20} strokeWidth={STROKE} />, title: "Avisos y mensajes", desc: "Resumen del día, correo y Telegram", long: "Avisos al celular del dueño, resumen del día, correo y Telegram. Se guardan al instante." },
   { key: "respaldos", icon: <HardDrive size={20} strokeWidth={STROKE} />, title: "Respaldos y nube", desc: "Copias diarias, nube y monitor", long: "Copias de seguridad automáticas, copia en la nube y aviso si el sistema se apaga. Se guardan al instante." },
   { key: "integraciones", icon: <Plug size={20} strokeWidth={STROKE} />, title: "Integraciones", desc: "Pagos con QR, IA, IMEI y reseñas", long: "Servicios externos que el sistema puede usar. Se guardan al instante." },
@@ -79,7 +82,10 @@ export default function AdminSettingsPage() {
   // Estado de cada tarjeta (lo que falta configurar)
   const [auto, setAuto] = useState<{ ownerPhone: string; backupEnabled: boolean } | null>(null);
   useEffect(() => { apiFetch("/api/automation").then(r => r.ok ? r.json() : null).then(d => { if (d?.config) setAuto(d.config); }).catch(() => {}); }, [sec]);
+  // Catálogo de recepción (tipos de equipo y accesorios) para el resumen de la tarjeta
+  const { catalogo } = useRecepcion();
   const estado = (k: Apartado): { ok: boolean; text: string } | null => {
+    if (k === "recepcion") return { ok: true, text: `${catalogo.devices.length} tipos · ${catalogo.accessories.length} accesorios` };
     if (k === "empresa") return companyName.trim() && (phone.trim() || address.trim()) ? { ok: true, text: "Listo" } : { ok: false, text: "Faltan datos" };
     if (k === "colores") { const p = BRAND_PRESETS.find((x) => x.accent === brandColors.accent && x.dark === brandColors.dark); return { ok: true, text: p ? p.label : "Propios" }; }
     if (k === "portal") return publicUrl.trim() ? { ok: true, text: "Listo" } : { ok: false, text: "Falta enlace" };
@@ -490,6 +496,7 @@ export default function AdminSettingsPage() {
           </>)}
 
           {/* Apartados que se guardan al instante, sin el botón Guardar */}
+          {sec === "recepcion" && <RecepcionPanel />}
           {sec === "colores" && <BrandColorsPanel initial={brandColors} onSaved={setBrandColors} cover={portalCover} />}
           {sec === "avisos" && <AutomationPanel parte="avisos" />}
           {sec === "respaldos" && <AutomationPanel parte="respaldos" />}

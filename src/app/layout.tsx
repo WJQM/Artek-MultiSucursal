@@ -6,6 +6,7 @@ import { iconUrl } from "@/backend/pwa-manifest";
 import { shareMetadata } from "@/backend/share-metadata";
 import { brandThemeColor, getBrandColors } from "@/backend/brand-colors";
 import { brandCss } from "@/shared/brand-colors";
+import { getCatalogo } from "@/backend/recepcion";
 
 
 export async function generateViewport(): Promise<Viewport> {
@@ -51,6 +52,7 @@ import { PwaSetup } from "@/frontend/components/PwaSetup";
 import { GlobalSearchProvider } from "@/frontend/components/GlobalSearchProvider";
 import { MotionGlobal } from "@/frontend/components/MotionGlobal";
 import { BrandProvider } from "@/frontend/components/BrandProvider";
+import { RecepcionProvider } from "@/frontend/components/RecepcionProvider";
 import Script from "next/script";
 
 const PWA_EARLY_CAPTURE = `window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__pwaDeferred=e;window.dispatchEvent(new Event("pwa-deferred"));});`;
@@ -61,6 +63,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // Nombre, logo, ciudad y lema para el menú lateral y el inicio de sesión (BrandProvider): llegan con la página, sin esperar a /api/settings.
   // El logo va como el ícono generado (unos KB) y no como el logo original guardado en la base.
   const s = await getSettings();
+  // Tipos de equipo y accesorios configurables, para que los formularios los tengan al instante
+  const catalogo = await getCatalogo();
   const brand = {
     companyName: s?.companyName?.trim() || DEFAULT_COMPANY_NAME,
     logo: s?.logo ? iconUrl(192, s.updatedAt ? s.updatedAt.getTime() : 0, "portal") : null,
@@ -75,11 +79,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             Con next/script (no <script> a mano en <head>): React 19 no ejecuta ni hidrata bien un <script> escrito en JSX */}
         <Script id="pwa-early-capture" strategy="beforeInteractive">{PWA_EARLY_CAPTURE}</Script>
         <BrandProvider value={brand}>
+        <RecepcionProvider value={catalogo}>
           <ToastProvider />
           <PwaSetup />
           <GlobalSearchProvider />
           <MotionGlobal />
           {children}
+        </RecepcionProvider>
         </BrandProvider>
       </body>
     </html>

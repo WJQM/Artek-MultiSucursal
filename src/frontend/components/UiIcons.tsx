@@ -1,4 +1,7 @@
 import type { AppIcon } from "@/frontend/components/icons";
+import { createElement } from "react";
+import { useRecepcion } from "@/frontend/components/RecepcionProvider";
+import { iconoRecepcion } from "@/frontend/components/RecepcionIconos";
 import {
   Brush, Disc3, Droplet, FolderOpen, Hammer, Keyboard, Radio, Thermometer, Zap,
   Backpack, BatteryFull, Cable, CircleCheck, Cpu, Gamepad2, Handshake, HardDrive, Hourglass, Inbox, Laptop, Lock, MemoryStick, MessageCircle,
@@ -35,8 +38,11 @@ function deviceKind(device: string | null | undefined): string {
 }
 
 export function DeviceIcon({ device, size = 16, className }: { device: string | null | undefined; size?: number; className?: string }) {
-  const I = DEVICE_ICON[deviceKind(device)];
-  return <I size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />;
+  // Primero el ícono elegido en Configuración; si el tipo no está en la lista, se adivina por el nombre
+  const { catalogo } = useRecepcion();
+  const d = (device || "").trim().toLowerCase();
+  const I = iconoRecepcion(catalogo.devices.find((t) => t.name.toLowerCase() === d)?.icon) || DEVICE_ICON[deviceKind(device)];
+  return createElement(I, { size, strokeWidth: STROKE, className, "aria-hidden": true });
 }
 
 const NOTIF_ICON: Record<string, AppIcon> = { status_change: RefreshCw, new_repair: Inbox, message: MessageCircle, system: Lock, review: Star };
@@ -62,8 +68,10 @@ const ACCESSORY_ICON: Record<string, AppIcon> = {
 };
 /** Accesorio que deja el cliente (Cargador, Batería…); los que no están en la lista usan "+". */
 export function AccessoryIcon({ name, size = 16 }: { name: string; size?: number }) {
-  const I = ACCESSORY_ICON[name] || Plus;
-  return <I size={size} strokeWidth={STROKE} aria-hidden="true" />;
+  const { catalogo } = useRecepcion();
+  const n = name.trim().toLowerCase();
+  const I = iconoRecepcion(catalogo.accessories.find((a) => a.name.toLowerCase() === n)?.icon) || ACCESSORY_ICON[name] || Plus;
+  return createElement(I, { size, strokeWidth: STROKE, "aria-hidden": true });
 }
 
 /** Íconos que se pueden elegir para un servicio. Se guardan con su emoji de siempre (compatibles con lo ya guardado). */

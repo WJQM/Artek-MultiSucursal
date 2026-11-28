@@ -22,7 +22,8 @@ import { ImeiField, ImeiInfo } from "@/frontend/components/ImeiField";
 import { AccLabelsPicker, type AccLabelFmt } from "@/frontend/components/AccLabelsPicker";
 import { PartsPicker, countIds, partsPayload } from "@/frontend/components/PartsPicker";
 import { FormModal, FormSection, Field, oxLabelStyle, oxFieldStyle, nudgeOnBackdrop } from "@/frontend/components/FormKit";
-import { DEVICE_TYPES, ACCESSORIES_LIST, ACCESSORIES_HINTS, PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
+import { ACCESSORIES_HINTS, PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
+import { useRecepcion } from "@/frontend/components/RecepcionProvider";
 import { CountUp, SaveButton } from "@/frontend/components/Motion";
 import { askConfirm } from "@/frontend/lib/dialog";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
@@ -159,6 +160,10 @@ function DashboardPage() {
   const [editDevice, setEditDevice] = useState(""); const [editBrand, setEditBrand] = useState(""); const [editModel, setEditModel] = useState(""); const [editImei, setEditImei] = useState("");
   const [editIssue, setEditIssue] = useState(""); const [editCost, setEditCost] = useState(""); const [editNotes, setEditNotes] = useState("");
   const [editClientName, setEditClientName] = useState(""); const [editClientPhone, setEditClientPhone] = useState(""); const [editClientEmail, setEditClientEmail] = useState("");
+  // Accesorios del catálogo configurable; los de órdenes antiguas que ya no están en la lista siguen mostrándose
+  const { catalogo } = useRecepcion();
+  const accNames = catalogo.accessories.map((a) => a.name);
+  const pideDetalle = (acc: string) => catalogo.accessories.find((a) => a.name === acc)?.detail ?? !!ACCESSORIES_HINTS[acc];
   const [editSelectedAccessories, setEditSelectedAccessories] = useState<string[]>([]); const [editAccessoryDetails, setEditAccessoryDetails] = useState<Record<string, string>>({});
   const [editSelectedServices, setEditSelectedServices] = useState<string[]>([]);
   const [editSelectedSoftware, setEditSelectedSoftware] = useState<string[]>([]);
@@ -566,9 +571,9 @@ return (
 
             <FormSection icon={<Smartphone size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Equipo">
               <div className="ox-chips" role="group" aria-label="Tipo de equipo" style={{ marginBottom: 12 }}>
-                {DEVICE_TYPES.map(d => (
-                  <button key={d.label} type="button" className="ox-chip" aria-pressed={editDevice.trim().toLowerCase() === d.label.toLowerCase()} onClick={() => setEditDevice(d.label)}>
-                    <span className="e" aria-hidden="true"><DeviceIcon device={d.label} size={18} /></span>{d.label}
+                {catalogo.devices.map(d => (
+                  <button key={d.name} type="button" className="ox-chip" aria-pressed={editDevice.trim().toLowerCase() === d.name.toLowerCase()} onClick={() => setEditDevice(d.name)}>
+                    <span className="e" aria-hidden="true"><DeviceIcon device={d.name} size={18} /></span>{d.name}
                   </button>
                 ))}
               </div>
@@ -601,15 +606,15 @@ return (
 
             <FormSection icon={<Backpack size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Accesorios que dejó" hint="Toca para marcar">
               <div className="ox-chips" role="group" aria-label="Accesorios" translate="no">
-                {[...ACCESSORIES_LIST, ...editSelectedAccessories.filter(a => !ACCESSORIES_LIST.includes(a))].map(acc => (
+                {[...accNames, ...editSelectedAccessories.filter(a => !accNames.includes(a))].map(acc => (
                   <button key={acc} type="button" className="ox-chip" aria-pressed={editSelectedAccessories.includes(acc)} onClick={() => toggleEditAcc(acc)}>
                     <span className="e" aria-hidden="true"><AccessoryIcon name={acc} size={18} /></span>{acc}
                   </button>
                 ))}
               </div>
-              {editSelectedAccessories.some(acc => ACCESSORIES_HINTS[acc]) && (
+              {editSelectedAccessories.some(pideDetalle) && (
                 <div className="ox-acc-details">
-                  {editSelectedAccessories.filter(acc => ACCESSORIES_HINTS[acc]).map(acc => (
+                  {editSelectedAccessories.filter(pideDetalle).map(acc => (
                     <Field key={acc} label={acc}>
                       <input className="ox-input" value={editAccessoryDetails[acc] || ""} onChange={(e) => updateEditDetail(acc, e.target.value)} />
                     </Field>
