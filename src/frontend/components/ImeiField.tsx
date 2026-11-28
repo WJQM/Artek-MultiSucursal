@@ -34,12 +34,21 @@ export function imeiState(raw: string): "empty" | "typing" | "ok" | "bad" | "ser
   if (/^\d+$/.test(s)) return s.length < 15 ? "typing" : s.length === 15 && luhn(s) ? "ok" : "bad";
   return /^[A-Z0-9]{6,30}$/.test(s) ? "serial" : "bad";
 }
+// Para equipos sin IMEI: lo que el servidor acepta como N° de serie (6 a 30 letras o números; 14-17 dígitos se toma como IMEI)
+export function serieState(raw: string): "empty" | "typing" | "ok" | "bad" {
+  const s = clean(raw);
+  if (!s) return "empty";
+  if (s.length < 6 && /^[A-Z0-9]+$/.test(s)) return "typing";
+  if (/^\d{14,17}$/.test(s)) return s.length === 15 && luhn(s) ? "ok" : "bad";
+  return /^[A-Z0-9]{6,30}$/.test(s) ? "ok" : "bad";
+}
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("es-BO", { day: "2-digit", month: "short", year: "numeric" });
 const STATUS: Record<string, string> = { pending: "Pendiente", diagnosed: "Diagnosticado", waiting_parts: "Esperando repuestos", in_progress: "En progreso", completed: "Completado", delivered: "Entregado" };
 
 /** Campo para el formulario (nueva orden / editar). */
-export function ImeiField({ value, onChange, repairId, labelStyle, fieldStyle }: { value: string; onChange: (v: string) => void; repairId?: string; labelStyle?: React.CSSProperties; fieldStyle?: React.CSSProperties }) {
-  const st = imeiState(value);
+export function ImeiField({ value, onChange, repairId, labelStyle, fieldStyle, modo = "imei" }: { value: string; onChange: (v: string) => void; repairId?: string; labelStyle?: React.CSSProperties; fieldStyle?: React.CSSProperties; modo?: "imei" | "serie" }) {
+  const serie = modo === "serie";
+  const st = serie ? serieState(value) : imeiState(value);
   const [res, setRes] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -68,15 +77,17 @@ export function ImeiField({ value, onChange, repairId, labelStyle, fieldStyle }:
     } catch { setError("Sin conexión"); } finally { setBusy(false); }
   };
 
-  const hint = st === "ok" ? { t: "✓ IMEI válido", c: "#047857" } : st === "bad" ? { t: "✗ IMEI no válido: revisa los 15 dígitos", c: "#b91c1c" } : st === "typing" ? { t: `${clean(value).length}/15 dígitos`, c: "#5a6a80" } : st === "serial" ? { t: "N° de serie", c: "#5a6a80" } : { t: "Marca *#06# en el celular para verlo", c: "#5a6a80" };
+  const hint = serie
+    ? (st === "ok" ? { t: "✓ N° de serie", c: "#047857" } : st === "bad" ? { t: /^\d{14,17}$/.test(clean(value)) ? "✗ Parece un IMEI: revisa los 15 dígitos" : "✗ Solo letras y números, de 6 a 30", c: "#b91c1c" } : st === "typing" ? { t: "Mínimo 6 letras o números", c: "#5a6a80" } : { t: "Suele estar en una etiqueta debajo o atrás del equipo", c: "#5a6a80" })
+    : st === "ok" ? { t: "✓ IMEI válido", c: "#047857" } : st === "bad" ? { t: "✗ IMEI no válido: revisa los 15 dígitos", c: "#b91c1c" } : st === "typing" ? { t: `${clean(value).length}/15 dígitos`, c: "#5a6a80" } : st === "serial" ? { t: "N° de serie", c: "#5a6a80" } : { t: "Marca *#06# en el celular para verlo", c: "#5a6a80" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label htmlFor="f-imeifield-1" style={labelStyle}>IMEI / N° de serie <span style={{ fontWeight: 500, textTransform: "none" }}>(opcional)</span></label>
+      <label htmlFor="f-imeifield-1" style={labelStyle}>{serie ? "N° de serie" : "IMEI"} <span style={{ fontWeight: 500, textTransform: "none" }}>(opcional)</span></label>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <input id="f-imeifield-1" value={value} onChange={(e) => onChange(e.target.value.slice(0, 40))} inputMode="text" autoComplete="off"
           style={{ ...fieldStyle, flex: "1 1 200px", fontFamily: "ui-monospace, monospace", letterSpacing: 0.5, borderColor: st === "bad" ? "var(--danger-bright)" : st === "ok" ? "var(--ok-bright)" : (fieldStyle?.borderColor as string | undefined) }} />
-        {st === "ok" && res?.paidAvailable && !res.check && (
+        {!serie && st === "ok" && res?.paidAvailable && !res.check && (
           <button type="button" onClick={paid} disabled={busy} style={btn}>{busy ? "Consultando…" : "Consultar robo/bloqueo"}</button>
         )}
       </div>

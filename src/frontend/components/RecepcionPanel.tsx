@@ -9,15 +9,15 @@ import { useRecepcion } from "@/frontend/components/RecepcionProvider";
 import { ICONOS_RECEPCION, iconoRecepcion } from "@/frontend/components/RecepcionIconos";
 import { ICON_KEYS, MAX_ITEMS, MAX_NAME, OTROS, type CatalogoRecepcion, type IconKey } from "@/shared/recepcion";
 
-interface Row { id: number; name: string; icon: string; detail: boolean }
+interface Row { id: number; name: string; icon: string; detail: boolean; imei: boolean }
 type Lista = "devices" | "accessories";
 
 let seq = 0;
 const toRows = (c: CatalogoRecepcion) => ({
-  devices: c.devices.map((d) => ({ id: ++seq, name: d.name, icon: d.icon, detail: false })),
-  accessories: c.accessories.map((a) => ({ id: ++seq, ...a })),
+  devices: c.devices.map((d) => ({ id: ++seq, name: d.name, icon: d.icon, detail: false, imei: d.imei })),
+  accessories: c.accessories.map((a) => ({ id: ++seq, ...a, imei: false })),
 });
-const firma = (r: { devices: Row[]; accessories: Row[] }) => JSON.stringify([r.devices.map((d) => [d.name.trim(), d.icon]), r.accessories.map((a) => [a.name.trim(), a.icon, a.detail])]);
+const firma = (r: { devices: Row[]; accessories: Row[] }) => JSON.stringify([r.devices.map((d) => [d.name.trim(), d.icon, d.imei]), r.accessories.map((a) => [a.name.trim(), a.icon, a.detail])]);
 
 function Icono({ k, size = 18 }: { k: string; size?: number }) {
   return createElement(iconoRecepcion(k) || ICONOS_RECEPCION.otros.I, { size, strokeWidth: STROKE, "aria-hidden": true });
@@ -36,7 +36,7 @@ export default function RecepcionPanel() {
   const mover = (l: Lista, i: number, d: -1 | 1) => setRows((r) => { const a = [...r[l]]; [a[i], a[i + d]] = [a[i + d], a[i]]; return { ...r, [l]: a }; });
   const quitar = (l: Lista, id: number) => { setRows((r) => ({ ...r, [l]: r[l].filter((x) => x.id !== id) })); setBorrar(null); };
   const agregar = (l: Lista) => setRows((r) => {
-    const nuevo = { id: ++seq, name: "", icon: l === "devices" ? "pc" : "caja", detail: false };
+    const nuevo = { id: ++seq, name: "", icon: l === "devices" ? "pc" : "caja", detail: false, imei: false };
     if (l === "devices") return { ...r, devices: [...r.devices, nuevo] };
     const otros = r.accessories.filter((a) => a.name === OTROS);
     return { ...r, accessories: [...r.accessories.filter((a) => a.name !== OTROS), nuevo, ...otros] };
@@ -58,7 +58,7 @@ export default function RecepcionPanel() {
     if (error) return;
     setSaving(true);
     try {
-      const body = { devices: rows.devices.map(({ name, icon }) => ({ name: name.trim(), icon })), accessories: rows.accessories.map(({ name, icon, detail }) => ({ name: name.trim(), icon, detail })) };
+      const body = { devices: rows.devices.map(({ name, icon, imei }) => ({ name: name.trim(), icon, imei })), accessories: rows.accessories.map(({ name, icon, detail }) => ({ name: name.trim(), icon, detail })) };
       const res = await apiFetch("/api/recepcion", { method: "PUT", body: JSON.stringify(body) });
       const d = await res.json().catch(() => null);
       if (!res.ok || !d) { sileo.error({ title: d?.error || "No se pudo guardar" }); return; }
@@ -91,6 +91,8 @@ export default function RecepcionPanel() {
                   <button type="button" className="rcp-ico" aria-label={`Cambiar ícono de ${x.name || "la fila"}`} aria-expanded={picker === x.id} onClick={() => setPicker(picker === x.id ? null : x.id)}><Icono k={x.icon} /></button>
                   {fijo ? <span className="rcp-fixed">{OTROS} <small>siempre al final</small></span>
                     : <input className="rcp-name" value={x.name} maxLength={MAX_NAME} aria-label="Nombre" autoFocus={!x.name} onChange={(e) => upd(l, x.id, { name: e.target.value })} />}
+                  {/* Celular/Tablet: el formulario pide IMEI; el resto, N° de serie */}
+                  {l === "devices" && <label className="rcp-det"><input type="checkbox" checked={x.imei} onChange={(e) => upd(l, x.id, { imei: e.target.checked })} /> Usa IMEI</label>}
                   {l === "accessories" && <label className="rcp-det"><input type="checkbox" checked={x.detail} onChange={(e) => upd(l, x.id, { detail: e.target.checked })} /> Pedir detalle</label>}
                   {!fijo && (borrar === x.id
                     ? <button type="button" className="rcp-del sure" onClick={() => quitar(l, x.id)} onBlur={() => setBorrar(null)} autoFocus>¿Quitar?</button>
@@ -113,7 +115,7 @@ export default function RecepcionPanel() {
 
   return (
     <>
-      {lista("devices", "Tipos de equipo", "Los botones de \"Equipo\" al recibir una orden.")}
+      {lista("devices", "Tipos de equipo", "Los botones de \"Equipo\" al recibir una orden. \"Usa IMEI\" pide el IMEI; si no, el N° de serie.")}
       {lista("accessories", "Accesorios", "Lo que el cliente deja con el equipo. \"Pedir detalle\" abre un campo para anotar modelo, color, etc.")}
       <p className="rcp-note">Las órdenes ya creadas no cambian: guardan el tipo y los accesorios como texto.</p>
       {error && <p className="rcp-err" role="alert">{error}</p>}

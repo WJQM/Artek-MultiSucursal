@@ -24,6 +24,7 @@ import { PartsPicker, countIds, partsPayload } from "@/frontend/components/Parts
 import { FormModal, FormSection, Field, oxLabelStyle, oxFieldStyle, nudgeOnBackdrop } from "@/frontend/components/FormKit";
 import { ACCESSORIES_HINTS, PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
 import { useRecepcion } from "@/frontend/components/RecepcionProvider";
+import { modoIdentificador } from "@/shared/recepcion";
 import { CountUp, SaveButton } from "@/frontend/components/Motion";
 import { askConfirm } from "@/frontend/lib/dialog";
 import { pressKey, mouseOnly } from "@/frontend/lib/a11y";
@@ -582,7 +583,7 @@ return (
                 <Field label="Marca"><input className="ox-input" value={editBrand} onChange={(e) => setEditBrand(e.target.value)} /></Field>
                 <Field label="Modelo"><input className="ox-input" value={editModel} onChange={(e) => setEditModel(e.target.value)} /></Field>
               </div>
-              <div style={{ marginTop: 12 }}><ImeiField value={editImei} onChange={setEditImei} repairId={editingRepair.id} labelStyle={oxLabelStyle} fieldStyle={oxFieldStyle} /></div>
+              <div style={{ marginTop: 12 }}><ImeiField value={editImei} onChange={setEditImei} modo={modoIdentificador(catalogo, editDevice)} repairId={editingRepair.id} labelStyle={oxLabelStyle} fieldStyle={oxFieldStyle} /></div>
             </FormSection>
 
             <FormSection icon={<Stethoscope size={18} strokeWidth={STROKE} aria-hidden="true" />} title="Problema y estado del equipo">

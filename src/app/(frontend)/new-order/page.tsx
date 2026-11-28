@@ -6,7 +6,8 @@ import { sileo } from "@/frontend/lib/toast";
 import { apiFetch, setActiveBranchId, type SessionUser } from "@/frontend/lib/api";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ImeiField, imeiState } from "@/frontend/components/ImeiField";
+import { ImeiField, imeiState, serieState } from "@/frontend/components/ImeiField";
+import { modoIdentificador } from "@/shared/recepcion";
 import { AppSidebar } from "@/frontend/components/AppSidebar";
 import { FormSection, Field, oxLabelStyle, oxFieldStyle } from "@/frontend/components/FormKit";
 import { PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
@@ -116,7 +117,9 @@ export default function NewOrderPage() {
 
   const createRepair = async (e: React.FormEvent) => {
     e.preventDefault(); const token = sessionStorage.getItem("token"); if (!token) return;
-    if (["bad", "typing"].includes(imeiState(imei))) { sileo.error({ title: "El IMEI no es válido", description: "Revisa los 15 dígitos (marca *#06# en el celular) o déjalo vacío." }); return; }
+    // Celular/Tablet: IMEI de 15 dígitos; otros equipos: N° de serie
+    if (modoIdentificador(catalogo, device) === "serie") { if (["bad", "typing"].includes(serieState(imei))) { sileo.error({ title: "El N° de serie no es válido", description: "Usa solo letras y números, de 6 a 30, o déjalo vacío." }); return; } }
+    else if (["bad", "typing"].includes(imeiState(imei))) { sileo.error({ title: "El IMEI no es válido", description: "Revisa los 15 dígitos (marca *#06# en el celular) o déjalo vacío." }); return; }
     setSaving(true);
     try {
       const imageData = imageUrls.length > 0 ? JSON.stringify(imageUrls) : null; const accArray = buildAccessoriesArray();
@@ -240,7 +243,7 @@ export default function NewOrderPage() {
                   <input className="ox-input" value={model} onChange={(e) => setModel(e.target.value)} />
                 </Field>
               </div>
-              <div style={{ marginTop: 14 }}><ImeiField value={imei} onChange={setImei} labelStyle={oxLabelStyle} fieldStyle={oxFieldStyle} /></div>
+              <div style={{ marginTop: 14 }}><ImeiField value={imei} onChange={setImei} modo={modoIdentificador(catalogo, device)} labelStyle={oxLabelStyle} fieldStyle={oxFieldStyle} /></div>
             </FormSection>
 
             {/* PROBLEMA Y FOTOS */}
