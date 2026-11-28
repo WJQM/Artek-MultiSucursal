@@ -154,9 +154,9 @@ export function FichaMedia({ s, icon, docLabel, kind, cond, code, name, price, i
       {specs.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
           {specs.slice(0, 6).map((sp) => (
-            <div key={sp.label} style={{ ...box, padding: "4px 8px", minWidth: 0 }}>
-              <small style={{ display: "block", fontSize: 10, color: "#444" }}>{sp.label}</small>
-              <b style={{ display: "block", fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sp.value}</b>
+            <div key={sp.label} style={{ ...box, padding: 0, minWidth: 0, overflow: "hidden" }}>
+              <small style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#fff", background: "var(--doc-band, #000)", padding: "2px 8px" }}>{sp.label}</small>
+              <b style={{ display: "block", fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "3px 8px 4px" }}>{sp.value}</b>
             </div>
           ))}
         </div>
@@ -177,10 +177,12 @@ function Incluye({ text, cols, size, max, style }: { text: string; cols: number;
   const items = listaIncluye(text);
   const vis = max && items.length > max ? items.slice(0, max - 1) : items;
   const resto = items.length - vis.length;
+  const { padding, ...rest } = style || {};
+  // Etiqueta "Incluye" como franja rellena con el color Oscuro (igual que las especificaciones y los comprobantes)
   return (
-    <div style={{ border: "1px solid #000", borderRadius: 6, breakInside: "avoid", ...style }}>
-      <small style={{ display: "block", fontSize: size - 2.5, color: "var(--doc-label)", marginBottom: 2 }}>Incluye</small>
-      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "2px 12px", fontSize: size, fontWeight: 600 }}>
+    <div style={{ border: "1px solid #000", borderRadius: 6, breakInside: "avoid", overflow: "hidden", ...rest }}>
+      <small style={{ display: "block", fontSize: size - 2.5, fontWeight: 700, color: "#fff", background: "var(--doc-band, #000)", padding: "2px 10px" }}>Incluye</small>
+      <ul style={{ listStyle: "none", margin: 0, padding: padding ?? "6px 10px", display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "2px 12px", fontSize: size, fontWeight: 600 }}>
         {vis.map((x, i) => <li key={i} style={{ display: "flex", gap: 6, minWidth: 0 }}><span aria-hidden="true" style={{ color: "var(--doc-accent)" }}>•</span><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x}</span></li>)}
         {resto > 0 && <li style={{ color: "#444" }}>y {resto} más</li>}
       </ul>

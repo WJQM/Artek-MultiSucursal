@@ -2437,3 +2437,8 @@ a, button, summary, select, label, [role="button"] { touch-action: manipulation;
    Configuración (--doc-band; negro en blanco y negro) y letra blanca, igual que el encabezado de tabla del extracto. */
 .dk-box h4, .dk-card > h3, .dk-card.ok > h3 { background: var(--doc-band, #000); color: #fff; border-bottom: 0; }
 .dk-table th, .dk-ftable th { background: var(--doc-band, #000); color: #fff; font-weight: 600; border-bottom: 0; }
+
+/* Fichas de venta: la etiqueta de cada especificación como franja rellena con el color Oscuro (--doc-band) */
+.dk-specs > div { padding: 0; overflow: hidden; }
+.dk-specs small { display: block; background: var(--doc-band, #000); color: #fff; font-weight: 700; padding: 3px 10px; }
+.dk-specs b { padding: 5px 10px 7px; }
