@@ -2449,10 +2449,35 @@ a, button, summary, select, label, [role="button"] { touch-action: manipulation;
 .acc-lbl img, .acc-qr-ph { width: 18mm; height: 18mm; flex-shrink: 0; display: block; }
 .acc-txt { min-width: 0; display: flex; flex-direction: column; gap: 0.6mm; line-height: 1.1; }
 .acc-txt b { font-size: 10pt; font-weight: 800; font-family: ui-monospace, Consolas, monospace; letter-spacing: -0.02em; }
-.acc-name { font-size: 7.5pt; font-weight: 700; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.acc-name { font-size: 7.5pt; font-weight: 700; overflow-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .acc-txt small { font-size: 6pt; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media print { .acc-sheet { gap: 2mm; } .dk:has(.acc-sheet) > div:last-child { padding: 0 !important; display: block !important; } }
+.acc-sheet-bandera { grid-template-columns: repeat(2, 70mm); gap: 3mm 6mm; }
+.acc-bandera { width: 70mm; height: 20mm; padding: 0; gap: 0; }
+.acc-half { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 1.2mm; padding: 1.2mm; box-sizing: border-box; }
+.acc-half .acc-name { font-size: 7pt; overflow-wrap: break-word; }
+.acc-half img, .acc-half .acc-qr-ph { width: 15mm; height: 15mm; }
+.acc-fold { width: 6mm; align-self: stretch; flex-shrink: 0; border-left: 0.3mm dashed #888; border-right: 0.3mm dashed #888; writing-mode: vertical-rl; display: grid; place-items: center; font-size: 5.5pt; color: #777; letter-spacing: 0.1em; }
+.acc-sheet-unica { grid-template-columns: 50mm; }
+.acc-unica { width: 50mm; height: 30mm; gap: 2mm; }
+.acc-unica img, .acc-unica .acc-qr-ph { width: 24mm; height: 24mm; }
+.acc-unica ul { list-style: none; margin: 0.5mm 0 0; padding: 0; font-size: 6.5pt; font-weight: 700; line-height: 1.25; overflow: hidden; max-height: 16mm; }
+.acc-unica li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media print { .acc-page { padding: 0 !important; display: block !important; } }
 /* Botón "Etiquetas" junto al título Accesorios del detalle de la orden */
 .oxd-sub-act { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .oxd-sub-act button { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 3px 9px; cursor: pointer; }
 .oxd-sub-act button:hover { color: var(--text-primary); border-color: var(--text-muted); }
+/* Opción "Etiquetas para accesorios" del modal de impresión: se despliega con casillas y formatos */
+.alp { width: 100%; text-align: left; font: inherit; color: inherit; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-primary); display: flex; flex-direction: column; gap: 2px; cursor: pointer; transition: border-color .15s, background-color .15s; }
+button.alp:hover { border-color: #2563eb; background: rgba(59,130,246,0.06); }
+.alp-open { cursor: default; border: 1.5px solid #2563eb; background: rgba(59,130,246,0.04); }
+.alp-t { font-size: 13px; font-weight: 700; }
+.alp-d { font-size: 11px; color: var(--text-muted); }
+.alp-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 4px; max-height: 180px; overflow-y: auto; }
+.alp-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.alp-list input { width: 16px; height: 16px; accent-color: #2563eb; }
+.alp-fmts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.alp-fmts button { font: inherit; font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
+.alp-fmts button.on { background: rgba(59,130,246,0.12); border-color: #2563eb; color: #2563eb; }
+.alp-go { margin-top: 12px; font: inherit; font-size: 13px; font-weight: 700; padding: 9px 12px; border-radius: 10px; border: none; background: #2563eb; color: #fff; cursor: pointer; }
+.alp-go:disabled { opacity: .45; cursor: not-allowed; }

@@ -19,6 +19,7 @@ import { AppSidebar } from "@/frontend/components/AppSidebar";
 import { useLiveRefresh } from "@/frontend/lib/live";
 import { useFlashChanges, celebrate, slideOut } from "@/frontend/lib/motion";
 import { ImeiField, ImeiInfo } from "@/frontend/components/ImeiField";
+import { AccLabelsPicker, type AccLabelFmt } from "@/frontend/components/AccLabelsPicker";
 import { PartsPicker, countIds, partsPayload } from "@/frontend/components/PartsPicker";
 import { FormModal, FormSection, Field, oxLabelStyle, oxFieldStyle, nudgeOnBackdrop } from "@/frontend/components/FormKit";
 import { DEVICE_TYPES, ACCESSORIES_LIST, ACCESSORIES_HINTS, PRIORITIES, TECH_COLORS, initials } from "@/frontend/lib/order-ui";
@@ -507,7 +508,10 @@ function DashboardPage() {
     window.open(`/print-qr/${urlType}/${code}${bid}`, "_blank");
   };
   // Etiquetas XS (38×25 mm) con mini QR de seguimiento, una por accesorio (cargador, funda, batería…)
-  const printAccLabels = (code: string) => { window.open(`/print/${code}/accesorios${activeBranch ? `?branchId=${activeBranch}` : ""}`, "_blank"); };
+  const printAccLabels = (code: string, off: number[] = [], fmt: AccLabelFmt = "xs") => {
+    const q = new URLSearchParams(); if (activeBranch) q.set("branchId", activeBranch); if (fmt !== "xs") q.set("f", fmt); if (off.length) q.set("off", off.join(","));
+    window.open(`/print/${code}/accesorios${q.size ? `?${q}` : ""}`, "_blank");
+  };
 
   const filteredRepairs = repairs;
 
@@ -942,15 +946,11 @@ return (
                   <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{printModal.type === "reception" ? "QR azul de seguimiento para el cliente" : "QR verde comprobante de entrega"}</div>
                 </div>
               </button>
-              {/* Solo si la orden registró accesorios */}
-              {printModal.type === "reception" && parseAccessoriesDisplay(repairs.find((r) => r.code === printModal.code)?.accessories ?? null).length > 0 && (
-              <button type="button" onClick={() => { printAccLabels(printModal.code); setPrintModal(null); }} style={{ width: "100%", textAlign: "left", fontFamily: "inherit", color: "inherit", padding: "16px 20px", borderRadius: 12, cursor: "pointer", border: "1px solid var(--border)", background: "var(--bg-primary)", display: "flex", alignItems: "center", gap: 14, transitionProperty: "var(--tr-ui)", transitionDuration: "0.15s" }} onPointerEnter={mouseOnly((e) => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.background = "rgba(59,130,246,0.06)"; })} onPointerLeave={mouseOnly((e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-tertiary)"; })}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Etiquetas para accesorios</div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Mini QR para cargador, funda, batería…</div>
-                </div>
-              </button>
-              )}
+              {/* Se despliega en el mismo modal: casillas por accesorio y formato XS / Bandera / Única */}
+              {printModal.type === "reception" && (() => {
+                const acc = parseAccessoriesDisplay(repairs.find((r) => r.code === printModal.code)?.accessories ?? null).map((a) => parseAccWithDetail(a).name);
+                return acc.length > 0 && <AccLabelsPicker items={acc} onPrint={(off, fmt) => { printAccLabels(printModal.code, off, fmt); setPrintModal(null); }} />;
+              })()}
               <button type="button" onClick={() => setPrintModal(null)} style={{ marginTop: 2, padding: "10px", border: "none", background: "transparent", color: "var(--text-muted)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", borderRadius: 10 }}>{printModal.justDone ? (printModal.type === "delivery" ? "Listo, cerrar" : "Ahora no, imprimir después") : "Cancelar"}</button>
             </div>
             </div>
