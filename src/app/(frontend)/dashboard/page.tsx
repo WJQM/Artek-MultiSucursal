@@ -506,6 +506,8 @@ function DashboardPage() {
     const bid = activeBranch ? `?branchId=${activeBranch}` : "";
     window.open(`/print-qr/${urlType}/${code}${bid}`, "_blank");
   };
+  // Etiquetas XS (38×25 mm) con mini QR de seguimiento, una por accesorio (cargador, funda, batería…)
+  const printAccLabels = (code: string) => { window.open(`/print/${code}/accesorios${activeBranch ? `?branchId=${activeBranch}` : ""}`, "_blank"); };
 
   const filteredRepairs = repairs;
 
@@ -940,6 +942,15 @@ return (
                   <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{printModal.type === "reception" ? "QR azul de seguimiento para el cliente" : "QR verde comprobante de entrega"}</div>
                 </div>
               </button>
+              {/* Solo si la orden registró accesorios */}
+              {printModal.type === "reception" && parseAccessoriesDisplay(repairs.find((r) => r.code === printModal.code)?.accessories ?? null).length > 0 && (
+              <button type="button" onClick={() => { printAccLabels(printModal.code); setPrintModal(null); }} style={{ width: "100%", textAlign: "left", fontFamily: "inherit", color: "inherit", padding: "16px 20px", borderRadius: 12, cursor: "pointer", border: "1px solid var(--border)", background: "var(--bg-primary)", display: "flex", alignItems: "center", gap: 14, transitionProperty: "var(--tr-ui)", transitionDuration: "0.15s" }} onPointerEnter={mouseOnly((e) => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.background = "rgba(59,130,246,0.06)"; })} onPointerLeave={mouseOnly((e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-tertiary)"; })}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Etiquetas para accesorios</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Mini QR para cargador, funda, batería…</div>
+                </div>
+              </button>
+              )}
               <button type="button" onClick={() => setPrintModal(null)} style={{ marginTop: 2, padding: "10px", border: "none", background: "transparent", color: "var(--text-muted)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", borderRadius: 10 }}>{printModal.justDone ? (printModal.type === "delivery" ? "Listo, cerrar" : "Ahora no, imprimir después") : "Cancelar"}</button>
             </div>
             </div>
@@ -1262,7 +1273,7 @@ return (
                                 {isDelivered && repairDeliveryNotes && <><dt>Notas de entrega</dt><dd>{repairDeliveryNotes}</dd></>}
                               </dl>
                               <ImeiInfo key={`${repair.id}:${repair.imei || ""}`} repair={repair} />
-                              {repairAcc.length > 0 && <><div className="oxd-sub">Accesorios ({repairAcc.length})</div>{chips(repairAcc)}</>}
+                              {repairAcc.length > 0 && <><div className="oxd-sub oxd-sub-act">Accesorios ({repairAcc.length}){!isDelivered && <button type="button" onClick={() => printAccLabels(repair.code)} title="Imprimir etiquetas para los accesorios"><Printer size={13} strokeWidth={STROKE} aria-hidden="true" /> Etiquetas</button>}</div>{chips(repairAcc)}</>}
                             </>)}
                             {/* Trabajo y costo: servicios, repuestos e instalaciones; con descuento muestra subtotal, descuento y total */}
                             {card(<Wrench size={15} strokeWidth={STROKE} />, "Trabajo y costo", <OrderCost parsed={parsedAll} isDelivered={isDelivered} estimatedCost={repair.estimatedCost} />)}
