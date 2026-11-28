@@ -1,5 +1,5 @@
 "use client";
-// Etiquetas de accesorios de una orden en tres formatos: S 48×30 (una por accesorio), Bandera 70×20 (se dobla alrededor del cable)
+// Etiquetas de accesorios de una orden en tres formatos: S 48×30 (una por accesorio), Bandera 96×30 (se dobla alrededor del cable)
 // y Única 50×30 (un QR con la lista). El modal pasa ?f=formato&off=índices desmarcados; la barra permite cambiarlos. Ruta bajo /print/ para heredar la sesión.
 import { Backpack, Printer, X } from "@/frontend/components/icons";
 import { STROKE } from "@/frontend/components/UiIcons";
