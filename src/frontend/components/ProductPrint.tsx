@@ -134,26 +134,29 @@ export function FichaMedia({ s, icon, docLabel, kind, cond, code, name, price, i
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, minHeight: "7.5in" }}>
       <DocHead s={s} label={docLabel} code={code} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
         <div style={{ ...box, aspectRatio: "1 / 1", position: "relative", overflow: "hidden", display: "grid", placeItems: "center", color: "#999", background: "#fff" }}>
           {image ? <img src={image} alt={name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", padding: 6 }} /> : <span aria-hidden="true" style={{ display: "grid", transform: "scale(3.5)", color: "#b8bfc9" }}>{icon}</span>}
         </div>
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
           <p style={{ fontSize: 11, color: "#444", margin: 0 }}>{kind} · {cond.label}</p>
           <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.15, margin: "3px 0 10px", overflowWrap: "anywhere" }}>{name}</h2>
           <div style={{ borderTop: "1.5px solid var(--doc-accent)", paddingTop: 4 }}>
             <small style={{ display: "block", fontSize: 10.5, fontWeight: 700, color: "var(--doc-accent)" }}>Precio</small>
             <b className="tabular" style={{ fontSize: 26 }}>{bs(price)}</b>
           </div>
+          {/* QR grande en el espacio libre bajo el precio (antes iba chico en una fila aparte) */}
+          {url && (
+            <div style={{ ...box, marginTop: "auto", display: "flex", gap: 8, alignItems: "center", padding: 6 }}>
+              <img src={qrSrc(url, 300)} alt="Código QR" width={110} height={110} style={{ flexShrink: 0 }} />
+              <div style={{ fontSize: 11, lineHeight: 1.35 }}><b>Escanea</b> para ver fotos y pedirlo por WhatsApp</div>
+            </div>
+          )}
         </div>
-      </div>
-      <div style={{ ...box, display: "flex", gap: 10, alignItems: "center", padding: 6 }}>
-        {url ? <img src={qrSrc(url, 200)} alt="Código QR" width={68} height={68} style={{ flexShrink: 0 }} /> : null}
-        <div style={{ fontSize: 11.5, lineHeight: 1.4 }}><b>Escanea</b> para ver fotos y pedirlo por WhatsApp</div>
       </div>
       {specs.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-          {specs.slice(0, 6).map((sp) => (
+          {specs.slice(0, 8).map((sp) => (
             <div key={sp.label} style={{ ...box, padding: 0, minWidth: 0, overflow: "hidden" }}>
               <small style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#fff", background: "var(--doc-band, #000)", padding: "2px 8px" }}>{sp.label}</small>
               <b style={{ display: "block", fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "3px 8px 4px" }}>{sp.value}</b>
