@@ -134,8 +134,9 @@ export function FichaMedia({ s, icon, docLabel, kind, cond, code, name, price, i
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, minHeight: "7.5in" }}>
       <DocHead s={s} label={docLabel} code={code} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
-        <div style={{ ...box, aspectRatio: "1 / 1", position: "relative", overflow: "hidden", display: "grid", placeItems: "center", color: "#999", background: "#fff" }}>
+      {/* minmax(0, 1fr) y sin aspect-ratio: la foto se estira al alto de la columna derecha sin ensancharse y tapar el texto al imprimir */}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 12, alignItems: "stretch" }}>
+        <div style={{ ...box, minHeight: 200, minWidth: 0, position: "relative", overflow: "hidden", display: "grid", placeItems: "center", color: "#999", background: "#fff" }}>
           {image ? <img src={image} alt={name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", padding: 6 }} /> : <span aria-hidden="true" style={{ display: "grid", transform: "scale(3.5)", color: "#b8bfc9" }}>{icon}</span>}
         </div>
         <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
