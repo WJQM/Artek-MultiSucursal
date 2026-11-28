@@ -2432,3 +2432,8 @@ a, button, summary, select, label, [role="button"] { touch-action: manipulation;
   .pc-req { grid-template-columns: 1fr; }
   .pc-rel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Comprobantes (DocKit): títulos de recuadro y encabezados de tabla rellenos con el color Oscuro de
+   Configuración (--doc-band; negro en blanco y negro) y letra blanca, igual que el encabezado de tabla del extracto. */
+.dk-box h4, .dk-card > h3, .dk-card.ok > h3 { background: var(--doc-band, #000); color: #fff; border-bottom: 0; }
+.dk-table th, .dk-ftable th { background: var(--doc-band, #000); color: #fff; font-weight: 600; border-bottom: 0; }
